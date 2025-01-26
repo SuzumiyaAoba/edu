@@ -3,9 +3,19 @@
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@biomejs/biome": "1.9.4",
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/bun": "latest",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "format": "bunx biome format --write .",
+    "lint": "bunx biome lint --write .",
+    "check": "bunx biome check --write ."
   }
 }
