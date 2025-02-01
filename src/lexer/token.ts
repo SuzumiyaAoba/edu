@@ -75,18 +75,18 @@ export type NegativeLookahead = {
   type: "NegativeLookahead";
 };
 
-/** 文字列 `"`. */
+/** 文字列 `"..."`. */
 export type Literal = {
   type: "Literal";
   value: string;
 };
 
-/** セミコロン `.` */
+/** セミコロン `;` */
 export type Semicolon = {
   type: "Semicolon";
 };
 
-/** コメント. */
+/** コメント `-- ...`. */
 export type Comment = {
   type: "Comment";
   value: string;
