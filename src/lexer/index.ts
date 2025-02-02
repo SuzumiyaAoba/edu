@@ -53,11 +53,7 @@ const consumeIdentifier = async (
   let buf = fl;
 
   let p: CharIteratorResult;
-  while (
-    // biome-ignore lint/suspicious/noAssignInExpressions:
-    (p = await gen.next()) &&
-    !p.done
-  ) {
+  for (p = await gen.next(); !p.done; p = await gen.next()) {
     const { char } = p.value;
 
     if (!char.match(identifierRegex)) {
@@ -78,12 +74,7 @@ const consumeLiteral = async (
   // TODO: escape
 
   let buf = "";
-  let p: CharIteratorResult;
-  while (
-    // biome-ignore lint/suspicious/noAssignInExpressions:
-    (p = await gen.next()) &&
-    !p.done
-  ) {
+  for (let p = await gen.next(); !p.done; p = await gen.next()) {
     const { char } = p.value;
     if (char === '"') {
       break;
@@ -103,12 +94,7 @@ const consumeCharClass = async (
   // TODO: escape
 
   let buf = "";
-  let p: CharIteratorResult;
-  while (
-    // biome-ignore lint/suspicious/noAssignInExpressions:
-    (p = await gen.next()) &&
-    !p.done
-  ) {
+  for (let p = await gen.next(); !p.done; p = await gen.next()) {
     const { char } = p.value;
     if (char === "]") {
       break;
@@ -126,12 +112,7 @@ const consumeComment = async (
   gen: CharGenerator,
 ): Promise<ConsumeResult<Comment>> => {
   let buf = "";
-  let p: CharIteratorResult;
-  while (
-    // biome-ignore lint/suspicious/noAssignInExpressions:
-    (p = await gen.next()) &&
-    !p.done
-  ) {
+  for (let p = await gen.next(); !p.done; p = await gen.next()) {
     const { char } = p.value;
     if (char === "\n") {
       break;
@@ -159,11 +140,10 @@ export const parse = async function* (input: Input): AsyncGenerator<
   const gen = charGenerator(readable);
 
   let lookahead: [] | [CharIteratorResult] = [];
-  let p: CharIteratorResult;
-  while (
-    // biome-ignore lint/suspicious/noAssignInExpressions:
-    (p = lookahead.length === 0 ? await gen.next() : lookahead[0]) &&
-    !p.done
+  for (
+    let p = await gen.next();
+    !p.done;
+    p = lookahead.length === 0 ? await gen.next() : lookahead[0]
   ) {
     lookahead = [];
     const { char, pos } = p.value;

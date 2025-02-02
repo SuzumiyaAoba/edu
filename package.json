@@ -22,6 +22,7 @@
     "check": "bunx biome check --write ."
   },
   "dependencies": {
+    "type-fest": "^4.33.0",
     "unicode-segmenter": "^0.11.3"
   }
 }

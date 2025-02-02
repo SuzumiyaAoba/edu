@@ -1,51 +1,52 @@
+import { print } from "../utils/io";
 import type { Token } from "./token";
 
 export const prittyPrint = (token: Token) => {
   switch (token.type) {
     case "Identifier":
-      process.stdout.write(token.value);
+      print(token.value);
       break;
     case "LeftArrow":
-      process.stdout.write("<-");
+      print("<-");
       break;
     case "LeftBracket":
-      process.stdout.write("(");
+      print("(");
       break;
     case "RightBracket":
-      process.stdout.write(")");
+      print(")");
       break;
     case "CharClass":
-      process.stdout.write(`[${token.value}]`);
+      print(`[${token.value}]`);
       break;
     case "Choice":
-      process.stdout.write("/");
+      print("/");
       break;
     case "KleeneStar":
-      process.stdout.write("*");
+      print("*");
       break;
     case "OneOrMore":
-      process.stdout.write("+");
+      print("+");
       break;
     case "Optional":
-      process.stdout.write("?");
+      print("?");
       break;
     case "PositiveLookahead":
-      process.stdout.write("&");
+      print("&");
       break;
     case "NegativeLookahead":
-      process.stdout.write("!");
+      print("!");
       break;
     case "Literal":
-      process.stdout.write(`"${token.value}"`);
+      print(`"${token.value}"`);
       break;
     case "Semicolon":
-      process.stdout.write(";");
+      print(";");
       break;
     case "Comment":
-      process.stdout.write(`-- ${token.value}`);
+      print(`-- ${token.value}`);
       break;
     case "EOL":
-      process.stdout.write("\n");
+      print("\n");
       break;
     case "EOF":
       break;
