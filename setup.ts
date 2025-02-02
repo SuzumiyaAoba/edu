@@ -1,4 +1,4 @@
-import { afterEach, jest, mock } from "bun:test";
+import { afterEach, mock } from "bun:test";
 
 afterEach(() => {
   mock.restore();
