@@ -1,6 +1,7 @@
 import { describe, expect, it, jest } from "bun:test";
 import { mockModule } from "../test/mockModule";
-import { type Expr, printExpr } from "./rule";
+import { type Expression, printExpr } from "./grammar";
+import * as g from "./grammar";
 
 import * as ioModule from "../utils/io";
 
@@ -10,7 +11,7 @@ describe("printExpr", async () => {
       print: jest.fn(),
     }));
 
-    const expr: Expr = { type: "Identifier", value: "id" };
+    const expr: Expression = g.id("id");
 
     printExpr(expr);
 
@@ -22,31 +23,31 @@ describe("printExpr", async () => {
       print: jest.fn(),
     }));
 
-    const expr: Expr = { type: "Literal", value: "+" };
+    const expr: Expression = g.lit("+");
 
     printExpr(expr);
 
     expect((ioModule.print as jest.Mock).mock.calls).toEqual([['"+"']]);
   });
 
-  it("CharClass", async () => {
+  it("CharacterClass", async () => {
     using _ioModuleMock = await mockModule("../utils/io", () => ({
       print: jest.fn(),
     }));
 
-    const expr: Expr = { type: "CharClass", value: "a-z" };
+    const expr: Expression = g.charClass("a-z");
 
     printExpr(expr);
 
     expect((ioModule.print as jest.Mock).mock.calls).toEqual([["[a-z]"]]);
   });
 
-  it("WildCard", async () => {
+  it("AnyCharacter", async () => {
     using _ioModuleMock = await mockModule("../utils/io", () => ({
       print: jest.fn(),
     }));
 
-    const expr: Expr = { type: "WildCard" };
+    const expr: Expression = g.anyChar();
 
     printExpr(expr);
 
@@ -55,35 +56,12 @@ describe("printExpr", async () => {
     expect(ioModule.print).toHaveBeenCalledWith(".");
   });
 
-  it("Choice", async () => {
+  it("ZeroOrMore", async () => {
     using _ioModuleMock = await mockModule("../utils/io", () => ({
       print: jest.fn(),
     }));
 
-    const expr: Expr = {
-      type: "Choice",
-      lhs: { type: "Identifier", value: "id" },
-      rhs: { type: "Literal", value: "+" },
-    };
-
-    printExpr(expr);
-
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([
-      ["id"],
-      [" / "],
-      ['"+"'],
-    ]);
-  });
-
-  it("Repeat", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
-      print: jest.fn(),
-    }));
-
-    const expr: Expr = {
-      type: "Repeat",
-      expr: { type: "Identifier", value: "id" },
-    };
+    const expr: Expression = g.star(g.id("id"));
 
     printExpr(expr);
 
@@ -95,10 +73,7 @@ describe("printExpr", async () => {
       print: jest.fn(),
     }));
 
-    const expr: Expr = {
-      type: "OneOrMore",
-      expr: { type: "Identifier", value: "id" },
-    };
+    const expr: Expression = g.plus(g.id("id"));
 
     printExpr(expr);
 
@@ -110,44 +85,51 @@ describe("printExpr", async () => {
       print: jest.fn(),
     }));
 
-    const expr: Expr = {
-      type: "Optional",
-      expr: { type: "Identifier", value: "id" },
-    };
+    const expr: Expression = g.opt(g.id("id"));
 
     printExpr(expr);
 
     expect((ioModule.print as jest.Mock).mock.calls).toEqual([["id"], ["?"]]);
   });
 
-  it("PositiveLookahead", async () => {
+  it("AndPredicate", async () => {
     using _ioModuleMock = await mockModule("../utils/io", () => ({
       print: jest.fn(),
     }));
 
-    const expr: Expr = {
-      type: "PositiveLookahead",
-      expr: { type: "Identifier", value: "id" },
-    };
+    const expr: Expression = g.and(g.id("id"));
 
     printExpr(expr);
 
     expect((ioModule.print as jest.Mock).mock.calls).toEqual([["&"], ["id"]]);
   });
 
-  it("NegativeLookahead", async () => {
+  it("NotPredicate", async () => {
     using _ioModuleMock = await mockModule("../utils/io", () => ({
       print: jest.fn(),
     }));
 
-    const expr: Expr = {
-      type: "NegativeLookahead",
-      expr: { type: "Identifier", value: "id" },
-    };
+    const expr: Expression = g.not(g.id("id"));
 
     printExpr(expr);
 
     expect((ioModule.print as jest.Mock).mock.calls).toEqual([["!"], ["id"]]);
+  });
+
+  it("PrioritizedChoice", async () => {
+    using _ioModuleMock = await mockModule("../utils/io", () => ({
+      print: jest.fn(),
+    }));
+
+    const expr: Expression = g.choice(g.id("id"), g.lit("+"));
+
+    printExpr(expr);
+
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([
+      ["id"],
+      [" / "],
+      ['"+"'],
+    ]);
   });
 
   it("Sequence", async () => {
@@ -155,13 +137,7 @@ describe("printExpr", async () => {
       print: jest.fn(),
     }));
 
-    const expr: Expr = {
-      type: "Sequence",
-      exprs: [
-        { type: "Identifier", value: "id" },
-        { type: "Literal", value: "+" },
-      ],
-    };
+    const expr: Expression = g.seq([g.id("id"), g.lit("+")]);
 
     printExpr(expr);
 
