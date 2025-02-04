@@ -177,26 +177,10 @@ export const parse = async function* (input: Input): AsyncGenerator<
       yield token.negativeLookahead({ pos });
     } else if (char === ";") {
       yield token.semicolon({ pos });
-    } else if (char === "-") {
-      const { value, done } = await gen.next();
-      if (done) {
-        throw new PegSyntaxError(
-          "Expected `-`, but actual is EOF",
-          "Comment",
-          pos,
-        );
-      }
-      if (value.char === "-") {
-        const comment = await consumeComment(gen);
-        yield token.comment(comment.token.value, { pos });
-        lookahead = comment.lookahead ?? [];
-      } else {
-        throw new PegSyntaxError(
-          `Expected \`-\`, but actual is \`${value.char}\` at ${JSON.stringify(pos)}`,
-          "Comment",
-          pos,
-        );
-      }
+    } else if (char === "#") {
+      const comment = await consumeComment(gen);
+      yield token.comment(comment.token.value, { pos });
+      lookahead = comment.lookahead ?? [];
     } else if (char.match(identifierRegex)) {
       const identifier = await consumeIdentifier(char, gen);
       yield token.identifier(identifier.token.value, { pos });

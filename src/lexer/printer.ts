@@ -1,4 +1,4 @@
-import { print } from "../utils/io";
+import { print } from "@/utils/io";
 import type { Token } from "./token";
 
 export const prittyPrint = (token: Token) => {
@@ -43,7 +43,7 @@ export const prittyPrint = (token: Token) => {
       print(";");
       break;
     case "Comment":
-      print(`-- ${token.value}`);
+      print(`# ${token.value}`);
       break;
     case "EOL":
       print("\n");

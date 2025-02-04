@@ -3,20 +3,21 @@ export type TokenType = Token["type"];
 export type Token =
   | Identifier
   | LeftArrow
-  | LeftBracket
-  | RightBracket
-  | CharClass
-  | Choice
-  | KleeneStar
-  | OneOrMore
-  | Optional
-  | PositiveLookahead
-  | NegativeLookahead
+  | Open
+  | Close
+  | CharacterClass
+  | Slash
+  | Dot
+  | Star
+  | Plus
+  | Question
+  | And
+  | Not
   | Literal
   | Semicolon
   | Comment
-  | Eol
-  | Eof;
+  | EndOfLine
+  | EndOfFile;
 
 /** 非終端記号. */
 export type Identifier = {
@@ -26,53 +27,58 @@ export type Identifier = {
 
 /** 左矢印 `<-`. */
 export type LeftArrow = {
-  type: "LeftArrow";
+  type: "LEFTARROW";
 };
 
-/** 左括弧 `(`. */
-export type LeftBracket = {
-  type: "LeftBracket";
+/** OPEN `(`. */
+export type Open = {
+  type: "OPEN";
 };
 
-/** 右括弧 `)`. */
-export type RightBracket = {
-  type: "RightBracket";
+/** CLOSE `)`. */
+export type Close = {
+  type: "CLOSE";
 };
 
 /** 文字クラス `[...]`. */
-export type CharClass = {
-  type: "CharClass";
+export type CharacterClass = {
+  type: "CharacterClass";
   value: string;
 };
 
-/** 選択 `/`. */
-export type Choice = {
-  type: "Choice";
+/** STAR `/`. */
+export type Slash = {
+  type: "SLASH";
 };
 
-/** クリーネ・スター `*`. */
-export type KleeneStar = {
-  type: "KleeneStar";
+/** DOT `.`. */
+export type Dot = {
+  type: "DOT";
 };
 
-/** 1回以上の繰り返し `+`. */
-export type OneOrMore = {
-  type: "OneOrMore";
+/** STAR `*`. */
+export type Star = {
+  type: "STAR";
 };
 
-/** 0回または1回 `?`. */
-export type Optional = {
-  type: "Optional";
+/** PLUS `+`. */
+export type Plus = {
+  type: "PLUS";
 };
 
-/** 肯定先読み `&`. */
-export type PositiveLookahead = {
-  type: "PositiveLookahead";
+/** QUESTION `?`. */
+export type Question = {
+  type: "QUESTION";
 };
 
-/** 否定先読み `!`. */
-export type NegativeLookahead = {
-  type: "NegativeLookahead";
+/** AND `&`. */
+export type And = {
+  type: "AND";
+};
+
+/** NOT `!`. */
+export type Not = {
+  type: "NOT";
 };
 
 /** 文字列 `"..."`. */
@@ -83,23 +89,23 @@ export type Literal = {
 
 /** セミコロン `;` */
 export type Semicolon = {
-  type: "Semicolon";
+  type: "SEMICOLON";
 };
 
-/** コメント `-- ...`. */
+/** コメント `# ...`. */
 export type Comment = {
   type: "Comment";
   value: string;
 };
 
 /** 行の終端. */
-export type Eol = {
-  type: "EOL";
+export type EndOfLine = {
+  type: "EndOfLine";
 };
 
 /** ファイルの終端. */
-export type Eof = {
-  type: "EOF";
+export type EndOfFile = {
+  type: "EndOfFile";
 };
 
 export type TokenWith<T extends Token, Meta> = { token: T } & Meta;
@@ -117,21 +123,21 @@ export const identifier = <T>(
 
 export const leftArrow = <T>(meta: T): TokenWith<LeftArrow, T> => ({
   token: {
-    type: "LeftArrow",
+    type: "LEFTARROW",
   },
   ...meta,
 });
 
-export const leftBracket = <T>(meta: T): TokenWith<LeftBracket, T> => ({
+export const open = <T>(meta: T): TokenWith<Open, T> => ({
   token: {
-    type: "LeftBracket",
+    type: "OPEN",
   },
   ...meta,
 });
 
-export const rightBracket = <T>(meta: T): TokenWith<RightBracket, T> => ({
+export const close = <T>(meta: T): TokenWith<Close, T> => ({
   token: {
-    type: "RightBracket",
+    type: "CLOSE",
   },
   ...meta,
 });
@@ -139,56 +145,63 @@ export const rightBracket = <T>(meta: T): TokenWith<RightBracket, T> => ({
 export const charClass = <T>(
   value: string,
   meta: T,
-): TokenWith<CharClass, T> => ({
+): TokenWith<CharacterClass, T> => ({
   token: {
-    type: "CharClass",
+    type: "CharacterClass",
     value,
   },
   ...meta,
 });
 
-export const choice = <T>(meta: T): TokenWith<Choice, T> => ({
+export const slash = <T>(meta: T): TokenWith<Slash, T> => ({
   token: {
-    type: "Choice",
+    type: "SLASH",
   },
   ...meta,
 });
 
-export const kleeneStar = <T>(meta: T): TokenWith<KleeneStar, T> => ({
+export const dot = <T>(meta: T): TokenWith<Dot, T> => ({
   token: {
-    type: "KleeneStar",
+    type: "DOT",
   },
   ...meta,
 });
 
-export const oneOrMore = <T>(meta: T): TokenWith<OneOrMore, T> => ({
+export const star = <T>(meta: T): TokenWith<Star, T> => ({
   token: {
-    type: "OneOrMore",
+    type: "STAR",
   },
   ...meta,
 });
 
-export const optional = <T>(meta: T): TokenWith<Optional, T> => ({
+export const plus = <T>(meta: T): TokenWith<Plus, T> => ({
   token: {
-    type: "Optional",
+    type: "PLUS",
   },
   ...meta,
 });
 
-export const positiveLookahead = <T>(
+export const question = <T>(meta: T): TokenWith<Question, T> => ({
+  token: {
+    type: "QUESTION",
+  },
+  ...meta,
+});
+
+export const and = <T>(
   meta: T,
-): TokenWith<PositiveLookahead, T> => ({
+): TokenWith<And, T> => ({
   token: {
-    type: "PositiveLookahead",
+    type: "AND",
   },
   ...meta,
 });
 
-export const negativeLookahead = <T>(
+export const not = <T>(
   meta: T,
-): TokenWith<NegativeLookahead, T> => ({
+): TokenWith<Not, T> => ({
   token: {
-    type: "NegativeLookahead",
+    type: "NOT",
   },
   ...meta,
 });
@@ -203,7 +216,7 @@ export const literal = <T>(value: string, meta: T): TokenWith<Literal, T> => ({
 
 export const semicolon = <T>(meta: T): TokenWith<Semicolon, T> => ({
   token: {
-    type: "Semicolon",
+    type: "SEMICOLON",
   },
   ...meta,
 });
@@ -216,16 +229,16 @@ export const comment = <T>(value: string, meta: T): TokenWith<Comment, T> => ({
   ...meta,
 });
 
-export const eol = <T>(meta: T): TokenWith<Eol, T> => ({
+export const endOfLine = <T>(meta: T): TokenWith<EndOfLine, T> => ({
   token: {
-    type: "EOL",
+    type: "EndOfLine",
   },
   ...meta,
 });
 
-export const eof = <T>(meta: T): TokenWith<Eof, T> => ({
+export const endOfFile = <T>(meta: T): TokenWith<EndOfFile, T> => ({
   token: {
-    type: "EOF",
+    type: "EndOfFile",
   },
   ...meta,
 });
