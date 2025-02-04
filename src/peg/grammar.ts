@@ -222,7 +222,7 @@ export const characterClass = <Meta>(
 /** Alias for `characterClass`. */
 export const charClass = characterClass;
 
-export const anyCharacter = <Meta>(
+export const anyCharacter = <Meta = unknown>(
   meta?: Meta,
 ): AnyCharacter<Meta> => {
   return {
