@@ -3,7 +3,7 @@ import { print } from "../utils/io";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 
-export type Definition<Meta> = {
+export type Definition<Meta = unknown> = {
   identifier: Identifier<Meta>;
   expression: Expression<Meta>;
 };
@@ -29,7 +29,7 @@ export type WithMeta<T, Meta> = T & {
 /**
  * Identifier.
  */
-export type Identifier<Meta> = WithMeta<
+export type Identifier<Meta = unknown> = WithMeta<
   {
     type: "Identifier";
     name: string;
@@ -40,9 +40,9 @@ export type Identifier<Meta> = WithMeta<
 /**
  * Literal string.
  *
- * Operator: `` ` ` `` or `" "`
+ * Operator: `' '` or `" "`
  */
-export type Literal<Meta> = WithMeta<
+export type Literal<Meta = unknown> = WithMeta<
   {
     type: "Literal";
     value: string;
@@ -55,7 +55,7 @@ export type Literal<Meta> = WithMeta<
  *
  * Operator: `[ ]`
  */
-export type CharacterClass<Meta> = WithMeta<
+export type CharacterClass<Meta = unknown> = WithMeta<
   {
     type: "CharacterClass";
     value: string;
@@ -68,7 +68,7 @@ export type CharacterClass<Meta> = WithMeta<
  *
  * Operator: `.`
  */
-export type AnyCharacter<Meta> = WithMeta<
+export type AnyCharacter<Meta = unknown> = WithMeta<
   {
     type: "AnyCharacter";
   },
@@ -80,7 +80,7 @@ export type AnyCharacter<Meta> = WithMeta<
  *
  * Operator: `(e)`
  */
-export type Grouping<Meta> = WithMeta<
+export type Grouping<Meta = unknown> = WithMeta<
   {
     type: "Grouping";
     expression: Expression<Meta>;
@@ -93,7 +93,7 @@ export type Grouping<Meta> = WithMeta<
  *
  * Operator: `e?`
  */
-export type Optional<Meta> = WithMeta<
+export type Optional<Meta = unknown> = WithMeta<
   {
     type: "Optional";
     expression: Expression<Meta>;
@@ -106,7 +106,7 @@ export type Optional<Meta> = WithMeta<
  *
  * Operator: `𝑒*`
  */
-export type ZeroOrMore<Meta> = WithMeta<
+export type ZeroOrMore<Meta = unknown> = WithMeta<
   {
     type: "ZeroOrMore";
     expression: Expression<Meta>;
@@ -119,7 +119,7 @@ export type ZeroOrMore<Meta> = WithMeta<
  *
  * Operator: `𝑒+`
  */
-export type OneOrMore<Meta> = WithMeta<
+export type OneOrMore<Meta = unknown> = WithMeta<
   {
     type: "OneOrMore";
     expression: Expression<Meta>;
@@ -132,7 +132,7 @@ export type OneOrMore<Meta> = WithMeta<
  *
  * Operator: `&𝑒`
  */
-export type AndPredicate<Meta> = WithMeta<
+export type AndPredicate<Meta = unknown> = WithMeta<
   {
     type: "AndPredicate";
     expression: Expression<Meta>;
@@ -145,7 +145,7 @@ export type AndPredicate<Meta> = WithMeta<
  *
  * Operator: `!𝑒`
  */
-export type NotPredicate<Meta> = WithMeta<
+export type NotPredicate<Meta = unknown> = WithMeta<
   {
     type: "NotPredicate";
     expression: Expression<Meta>;
@@ -158,7 +158,7 @@ export type NotPredicate<Meta> = WithMeta<
  *
  * Operator: `𝑒₁ 𝑒₂`
  */
-export type Sequence<Meta> = WithMeta<
+export type Sequence<Meta = unknown> = WithMeta<
   {
     type: "Sequence";
     expressions: NonEmptyTuple<Expression<Meta>>;
@@ -171,7 +171,7 @@ export type Sequence<Meta> = WithMeta<
  *
  * Operator: `𝑒₁ / 𝑒₂`
  */
-export type PrioritizedChoice<Meta> = WithMeta<
+export type PrioritizedChoice<Meta = unknown> = WithMeta<
   {
     type: "PrioritizedChoice";
     firstChoice: Expression<Meta>;
@@ -180,7 +180,7 @@ export type PrioritizedChoice<Meta> = WithMeta<
   Meta
 >;
 
-export const identifier = <Meta = unknown>(
+export const identifier = <Meta>(
   name: string,
   meta?: Meta,
 ): Identifier<Meta> => {
@@ -194,7 +194,7 @@ export const identifier = <Meta = unknown>(
 /** Alias for `identifier`. */
 export const id = identifier;
 
-export const literal = <Meta = unknown>(
+export const literal = <Meta>(
   value: string,
   meta?: Meta,
 ): Literal<Meta> => {
@@ -208,7 +208,7 @@ export const literal = <Meta = unknown>(
 /** Alias for `literal`. */
 export const lit = literal;
 
-export const characterClass = <Meta = unknown>(
+export const characterClass = <Meta>(
   value: string,
   meta?: Meta,
 ): CharacterClass<Meta> => {
@@ -304,7 +304,7 @@ export const notPredicate = <Meta>(
 /** Alias for `notPredicate`. */
 export const not = notPredicate;
 
-export const prioritizedChoice = <Meta = unknown>(
+export const prioritizedChoice = <Meta>(
   firstChoice: Expression<Meta>,
   secondChoice: Expression<Meta>,
   meta?: Meta,
@@ -320,7 +320,7 @@ export const prioritizedChoice = <Meta = unknown>(
 /** Alias for `prioritizedChoice`. */
 export const choice = prioritizedChoice;
 
-export const sequence = <Meta = unknown>(
+export const sequence = <Meta>(
   expressions: NonEmptyTuple<Expression<Meta>>,
   meta?: Meta,
 ): Sequence<Meta> => {
@@ -334,7 +334,7 @@ export const sequence = <Meta = unknown>(
 /** Alias for `sequence`. */
 export const seq = sequence;
 
-export const printExpr = <Meta = unknown>(expr: Expression<Meta>) => {
+export const printExpr = <Meta>(expr: Expression<Meta>) => {
   switch (expr.type) {
     case "Identifier":
       print(expr.name);
