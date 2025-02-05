@@ -2,73 +2,49 @@ export type TokenType = Token["type"];
 
 export type Token =
   | Identifier
+  | Literal
+  | CharClass
   | LeftArrow
-  | Open
-  | Close
-  | CharacterClass
   | Slash
-  | Dot
-  | Star
-  | Plus
-  | Question
   | And
   | Not
-  | Literal
+  | Question
+  | Star
+  | Plus
+  | Open
+  | Close
+  | Dot
   | Semicolon
   | Comment
   | EndOfLine
   | EndOfFile;
 
-/** 非終端記号. */
+/** Identifier. */
 export type Identifier = {
   type: "Identifier";
   value: string;
 };
 
-/** 左矢印 `<-`. */
+/** Literal `"..."`/`'...'`. */
+export type Literal = {
+  type: "Literal";
+  value: string;
+};
+
+/** Class `[...]`. */
+export type CharClass = {
+  type: "CharClass";
+  value: string;
+};
+
+/** LEFTARROW `<-`. */
 export type LeftArrow = {
   type: "LEFTARROW";
 };
 
-/** OPEN `(`. */
-export type Open = {
-  type: "OPEN";
-};
-
-/** CLOSE `)`. */
-export type Close = {
-  type: "CLOSE";
-};
-
-/** 文字クラス `[...]`. */
-export type CharacterClass = {
-  type: "CharacterClass";
-  value: string;
-};
-
-/** STAR `/`. */
+/** SLASH `/`. */
 export type Slash = {
   type: "SLASH";
-};
-
-/** DOT `.`. */
-export type Dot = {
-  type: "DOT";
-};
-
-/** STAR `*`. */
-export type Star = {
-  type: "STAR";
-};
-
-/** PLUS `+`. */
-export type Plus = {
-  type: "PLUS";
-};
-
-/** QUESTION `?`. */
-export type Question = {
-  type: "QUESTION";
 };
 
 /** AND `&`. */
@@ -81,10 +57,34 @@ export type Not = {
   type: "NOT";
 };
 
-/** 文字列 `"..."`. */
-export type Literal = {
-  type: "Literal";
-  value: string;
+/** QUESTION `?`. */
+export type Question = {
+  type: "QUESTION";
+};
+
+/** STAR `*`. */
+export type Star = {
+  type: "STAR";
+};
+
+/** PLUS `+`. */
+export type Plus = {
+  type: "PLUS";
+};
+
+/** OPEN `(`. */
+export type Open = {
+  type: "OPEN";
+};
+
+/** CLOSE `)`. */
+export type Close = {
+  type: "CLOSE";
+};
+
+/** DOT `.`. */
+export type Dot = {
+  type: "DOT";
 };
 
 /** セミコロン `;` */
@@ -145,9 +145,9 @@ export const close = <T>(meta: T): TokenWith<Close, T> => ({
 export const charClass = <T>(
   value: string,
   meta: T,
-): TokenWith<CharacterClass, T> => ({
+): TokenWith<CharClass, T> => ({
   token: {
-    type: "CharacterClass",
+    type: "CharClass",
     value,
   },
   ...meta,
@@ -188,18 +188,14 @@ export const question = <T>(meta: T): TokenWith<Question, T> => ({
   ...meta,
 });
 
-export const and = <T>(
-  meta: T,
-): TokenWith<And, T> => ({
+export const and = <T>(meta: T): TokenWith<And, T> => ({
   token: {
     type: "AND",
   },
   ...meta,
 });
 
-export const not = <T>(
-  meta: T,
-): TokenWith<Not, T> => ({
+export const not = <T>(meta: T): TokenWith<Not, T> => ({
   token: {
     type: "NOT",
   },
