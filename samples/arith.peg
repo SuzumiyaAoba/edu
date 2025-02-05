@@ -1,0 +1,19 @@
+# PEG 定義ファイルのサンプル
+
+# # から末尾まではコメントとして扱われます。
+
+expr <-  space
+       / term ( "+" term
+              / "-" term
+              );
+
+term <- factor ( "*" factor
+               / "/" factor
+               / "%" factor
+               );
+
+factor <- "(" expr ")" / number;
+
+number <- digit+;
+
+digit <- [0-9];
