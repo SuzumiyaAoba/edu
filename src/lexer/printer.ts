@@ -1,4 +1,4 @@
-import { print } from "../utils/io";
+import { print } from "@/utils/io";
 import type { Token } from "./token";
 
 export const prittyPrint = (token: Token) => {
@@ -6,49 +6,49 @@ export const prittyPrint = (token: Token) => {
     case "Identifier":
       print(token.value);
       break;
-    case "LeftArrow":
+    case "LEFTARROW":
       print("<-");
       break;
-    case "LeftBracket":
+    case "OPEN":
       print("(");
       break;
-    case "RightBracket":
+    case "CLOSE":
       print(")");
       break;
     case "CharClass":
       print(`[${token.value}]`);
       break;
-    case "Choice":
+    case "SLASH":
       print("/");
       break;
-    case "KleeneStar":
+    case "STAR":
       print("*");
       break;
-    case "OneOrMore":
+    case "PLUS":
       print("+");
       break;
-    case "Optional":
+    case "QUESTION":
       print("?");
       break;
-    case "PositiveLookahead":
+    case "AND":
       print("&");
       break;
-    case "NegativeLookahead":
+    case "NOT":
       print("!");
       break;
     case "Literal":
       print(`"${token.value}"`);
       break;
-    case "Semicolon":
+    case "SEMICOLON":
       print(";");
       break;
     case "Comment":
-      print(`-- ${token.value}`);
+      print(`# ${token.value}`);
       break;
-    case "EOL":
+    case "EndOfLine":
       print("\n");
       break;
-    case "EOF":
+    case "EndOfFile":
       break;
   }
 };

@@ -194,10 +194,7 @@ export const identifier = <Meta>(
 /** Alias for `identifier`. */
 export const id = identifier;
 
-export const literal = <Meta>(
-  value: string,
-  meta?: Meta,
-): Literal<Meta> => {
+export const literal = <Meta>(value: string, meta?: Meta): Literal<Meta> => {
   return {
     type: "Literal",
     value,

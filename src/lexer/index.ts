@@ -34,7 +34,7 @@ const consumeLeftArrow = async (
     if (char === "-") {
       return {
         token: {
-          type: "LeftArrow",
+          type: "LEFTARROW",
         },
         lookahead: [],
       };
@@ -149,7 +149,7 @@ export const parse = async function* (input: Input): AsyncGenerator<
     const { char, pos } = p.value;
 
     if (char === "\n") {
-      yield token.eol({ pos });
+      yield token.endOfLine({ pos });
     } else if (char.match(spaceRegex)) {
     } else if (char === '"') {
       const literal = await consumeLiteral(gen);
@@ -159,44 +159,28 @@ export const parse = async function* (input: Input): AsyncGenerator<
       await consumeLeftArrow(gen);
       yield token.leftArrow({ pos });
     } else if (char === "/") {
-      yield token.choice({ pos });
+      yield token.slash({ pos });
     } else if (char === "(") {
-      yield token.leftBracket({ pos });
+      yield token.open({ pos });
     } else if (char === ")") {
-      yield token.rightBracket({ pos });
+      yield token.close({ pos });
     } else if (char === "[") {
       const charClass = await consumeCharClass(gen);
       yield token.charClass(charClass.token.value, { pos });
     } else if (char === "*") {
-      yield token.kleeneStar({ pos });
+      yield token.star({ pos });
     } else if (char === "+") {
-      yield token.oneOrMore({ pos });
+      yield token.plus({ pos });
     } else if (char === "&") {
-      yield token.positiveLookahead({ pos });
+      yield token.and({ pos });
     } else if (char === "!") {
-      yield token.negativeLookahead({ pos });
+      yield token.not({ pos });
     } else if (char === ";") {
       yield token.semicolon({ pos });
-    } else if (char === "-") {
-      const { value, done } = await gen.next();
-      if (done) {
-        throw new PegSyntaxError(
-          "Expected `-`, but actual is EOF",
-          "Comment",
-          pos,
-        );
-      }
-      if (value.char === "-") {
-        const comment = await consumeComment(gen);
-        yield token.comment(comment.token.value, { pos });
-        lookahead = comment.lookahead ?? [];
-      } else {
-        throw new PegSyntaxError(
-          `Expected \`-\`, but actual is \`${value.char}\` at ${JSON.stringify(pos)}`,
-          "Comment",
-          pos,
-        );
-      }
+    } else if (char === "#") {
+      const comment = await consumeComment(gen);
+      yield token.comment(comment.token.value, { pos });
+      lookahead = comment.lookahead ?? [];
     } else if (char.match(identifierRegex)) {
       const identifier = await consumeIdentifier(char, gen);
       yield token.identifier(identifier.token.value, { pos });
@@ -204,7 +188,7 @@ export const parse = async function* (input: Input): AsyncGenerator<
     }
   }
 
-  yield token.eof({
+  yield token.endOfFile({
     pos: {
       column: -1,
       line: -1,

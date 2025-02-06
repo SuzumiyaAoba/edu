@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { Readable } from "node:stream";
-import { graphemesGenerator } from "./unicode";
+import { graphemesGenerator } from "@/libs/unicode";
 
 export type Input =
   | {
