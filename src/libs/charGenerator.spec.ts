@@ -17,9 +17,11 @@ describe("bufferableAsyncIterator", () => {
 
     const actual: string[] = [];
     for await (const result of iter) {
-      const { value, done } = result;
-      if (!done) {
-        actual.push(value);
+      if (result) {
+        const { value, done } = result;
+        if (!done) {
+          actual.push(value);
+        }
       }
     }
 
@@ -33,9 +35,11 @@ describe("bufferableAsyncIterator", () => {
     const actual: string[] = [];
 
     for await (const result of iter) {
-      const { value, done } = result;
-      if (!done) {
-        actual.push(value);
+      if (result) {
+        const { value, done } = result;
+        if (!done) {
+          actual.push(value);
+        }
       }
     }
 
@@ -47,9 +51,11 @@ describe("bufferableAsyncIterator", () => {
     const actual: string[] = [];
 
     for await (const result of iter) {
-      const { value, done } = result;
-      if (!done) {
-        actual.push(value);
+      if (result) {
+        const { value, done } = result;
+        if (!done) {
+          actual.push(value);
+        }
       }
     }
 
@@ -66,9 +72,11 @@ describe("bufferableAsyncIterator", () => {
     const actual: string[] = [];
 
     for await (const result of iter) {
-      const { value, done } = result;
-      if (!done) {
-        actual.push(value);
+      if (result) {
+        const { value, done } = result;
+        if (!done) {
+          actual.push(value);
+        }
       }
     }
 
@@ -97,9 +105,11 @@ describe("bufferableAsyncIterator", () => {
     const peek3 = await iter.peek();
 
     for await (const result of iter) {
-      const { value, done } = result;
-      if (!done) {
-        actual.push(value);
+      if (result) {
+        const { value, done } = result;
+        if (!done) {
+          actual.push(value);
+        }
       }
     }
 
