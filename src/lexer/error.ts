@@ -2,10 +2,10 @@ import type { Pos } from "./input";
 import type { TokenType } from "./token";
 
 export class PegSyntaxError extends Error {
-  readonly expected: TokenType;
+  readonly expected: TokenType[];
   readonly pos: Pos;
 
-  constructor(message: string, expected: TokenType, pos: Pos) {
+  constructor(message: string, expected: TokenType[], pos: Pos) {
     super(message);
 
     this.expected = expected;

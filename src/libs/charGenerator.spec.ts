@@ -16,13 +16,8 @@ describe("bufferableAsyncIterator", () => {
     );
 
     const actual: string[] = [];
-    for await (const result of iter) {
-      if (result) {
-        const { value, done } = result;
-        if (!done) {
-          actual.push(value);
-        }
-      }
+    for await (const value of iter) {
+      actual.push(value);
     }
 
     expect(actual).toEqual(["a", "b", "c"]);
@@ -34,13 +29,8 @@ describe("bufferableAsyncIterator", () => {
     );
     const actual: string[] = [];
 
-    for await (const result of iter) {
-      if (result) {
-        const { value, done } = result;
-        if (!done) {
-          actual.push(value);
-        }
-      }
+    for await (const value of iter) {
+      actual.push(value);
     }
 
     expect(actual).toEqual(["line 1", "line 2"]);
@@ -50,13 +40,8 @@ describe("bufferableAsyncIterator", () => {
     const iter = sut.bufferableAsyncIterator(arrayToAsyncGenrator([]));
     const actual: string[] = [];
 
-    for await (const result of iter) {
-      if (result) {
-        const { value, done } = result;
-        if (!done) {
-          actual.push(value);
-        }
-      }
+    for await (const value of iter) {
+      actual.push(value);
     }
 
     expect(actual).toEqual([]);
@@ -71,13 +56,8 @@ describe("bufferableAsyncIterator", () => {
     const peekY = await iter.peek();
     const actual: string[] = [];
 
-    for await (const result of iter) {
-      if (result) {
-        const { value, done } = result;
-        if (!done) {
-          actual.push(value);
-        }
-      }
+    for await (const value of iter) {
+      actual.push(value);
     }
 
     expect(peekX).toEqual({ value: "x", done: false });
@@ -104,13 +84,8 @@ describe("bufferableAsyncIterator", () => {
     const peek2 = await iter.peek();
     const peek3 = await iter.peek();
 
-    for await (const result of iter) {
-      if (result) {
-        const { value, done } = result;
-        if (!done) {
-          actual.push(value);
-        }
-      }
+    for await (const value of iter) {
+      actual.push(value);
     }
 
     expect(peek1).toEqual({ value: "1", done: false });

@@ -50,19 +50,16 @@ export const bufferableAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
   let right = 0;
 
   return {
-    async *[Symbol.asyncIterator]() {
+    [Symbol.asyncIterator]() {
+      return this;
+    },
+    next: async () => {
       while (true) {
         if (left < right) {
-          yield buffer[left++];
-          continue;
+          return buffer[left++];
         }
 
-        const result = await gen.next();
-        if (result.done) {
-          return result;
-        }
-
-        yield result;
+        return await gen.next();
       }
     },
     peek: async () => {
@@ -100,3 +97,9 @@ export const bufferableAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
     bufferSize: () => buffer.length,
   };
 };
+
+export type BufferableAsyncIterator<
+  T,
+  TReturn = unknown,
+  TNext = unknown,
+> = ReturnType<typeof bufferableAsyncIterator<T, TReturn, TNext>>;
