@@ -17,6 +17,7 @@
     "prepare": "husky",
     "dev": "bun run src/index.ts",
     "typecheck": "tsc --noEmit",
+    "build": "bun run typecheck && bun build ./src/index.ts --outdir ./build",
     "format": "bunx biome format --write .",
     "lint": "bunx biome lint --write .",
     "check": "bunx biome check --write ."

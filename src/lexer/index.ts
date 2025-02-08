@@ -1,4 +1,4 @@
-import { bufferableAsyncIterator } from "@/libs/charGenerator";
+import { bufferableAsyncIterator } from "@/libs/bufferable-iterator";
 import { PegSyntaxError } from "./error";
 import { type Input, charGenerator, toReadable } from "./input";
 import type {

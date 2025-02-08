@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import * as sut from "./charGenerator";
+import * as sut from "./bufferable-iterator";
 
 const arrayToAsyncGenrator = (arr: string[]) => {
   return (async function* () {
