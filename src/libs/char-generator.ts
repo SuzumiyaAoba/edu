@@ -21,14 +21,14 @@ export const charGenerator = async function* (
 
   for await (const c of gen) {
     if (c === "\n") {
-      pos.column = 0;
       yield {
         char: c,
         pos: {
           line: pos.line++,
-          column: 0,
+          column: pos.column,
         },
       };
+      pos.column = 0;
     } else {
       yield {
         char: c,

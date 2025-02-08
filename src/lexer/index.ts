@@ -119,7 +119,7 @@ const octalDigitToChar = (char: string): string => {
 
 const consumeChar = async (iter: CharIterator): Promise<string> => {
   let buf = "";
-  let p = await iter.next();
+  let p = await iter.peek();
   if (p.done) {
     throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
   }
@@ -131,15 +131,10 @@ const consumeChar = async (iter: CharIterator): Promise<string> => {
       throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
     }
 
-    const { char } = p.value;
-    if (isEscapedChar(char)) {
-      buf += char;
-    } else if (char === "0") {
+    if (isEscapedChar(p.value.char)) {
+      buf += p.value.char;
     } else {
-      throw new PegSyntaxError("Invalid escape sequence", [], {
-        column: -1,
-        line: -1,
-      });
+      buf += p.value.char;
     }
 
     buf += p.value.char;

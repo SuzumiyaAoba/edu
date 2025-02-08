@@ -1,5 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import { Readable } from "node:stream";
 import * as sut from "./bufferable-iterator";
+import { type CharGeneratorResult, charGenerator } from "./char-generator";
 
 const arrayToAsyncGenrator = (arr: string[]) => {
   return (async function* () {
@@ -93,5 +95,56 @@ describe("bufferableAsyncIterator", () => {
     expect(peek3).toEqual({ value: "3", done: false });
     expect(actual).toEqual(["1", "2", "3", "4", "5"]);
     expect(iter.bufferSize()).toEqual(4);
+  });
+});
+
+describe("charGenerator", () => {
+  it("should correctly peek n characters without consuming them", async () => {
+    const input = Readable.from("abcdef\n");
+    const gen = charGenerator(input);
+    const iter = sut.bufferableAsyncIterator(gen);
+
+    const peek1 = await iter.peek(3);
+    const peek2 = await iter.peek(3);
+    const actual: string[] = [];
+
+    for await (const result of iter) {
+      actual.push(result.char);
+    }
+
+    expect(peek1).toEqual({
+      done: false,
+      value: [
+        { char: "a", pos: { line: 1, column: 0 } },
+        { char: "b", pos: { line: 1, column: 1 } },
+        { char: "c", pos: { line: 1, column: 2 } },
+      ],
+    });
+    expect(peek2).toEqual({
+      done: false,
+      value: [
+        { char: "d", pos: { line: 1, column: 3 } },
+        { char: "e", pos: { line: 1, column: 4 } },
+        { char: "f", pos: { line: 1, column: 5 } },
+      ],
+    });
+    expect(actual).toEqual(["a", "b", "c", "d", "e", "f", "\n"]);
+  });
+
+  it("should return done true when peeking beyond the end of the iterator", async () => {
+    const input = Readable.from("abc\n");
+    const gen = charGenerator(input);
+    const iter = sut.bufferableAsyncIterator(gen);
+
+    const peek = await iter.peek(10);
+    expect(peek).toEqual({
+      done: false,
+      value: [
+        { char: "a", pos: { line: 1, column: 0 } },
+        { char: "b", pos: { line: 1, column: 1 } },
+        { char: "c", pos: { line: 1, column: 2 } },
+        { char: "\n", pos: { line: 1, column: 3 } },
+      ],
+    });
   });
 });

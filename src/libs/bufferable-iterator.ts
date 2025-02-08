@@ -17,7 +17,30 @@ export const bufferableAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
 
       return await gen.next();
     },
-    async peek(): Promise<IteratorResult<T, TReturn>> {
+    async peek(n?: number) {
+      if (n) {
+        const buffer: T[] = [];
+
+        for (let i = 0; i < n; i++) {
+          const result = await this._peek();
+
+          if (!result.done) {
+            buffer.push(result.value);
+          } else {
+            return { value: buffer, done: false } satisfies IteratorYieldResult<
+              T[]
+            > as IteratorYieldResult<T[]>;
+          }
+        }
+
+        return { value: buffer, done: false } satisfies IteratorYieldResult<
+          T[]
+        > as IteratorYieldResult<T[]>;
+      }
+
+      return await this._peek();
+    },
+    async _peek(): Promise<IteratorResult<T, TReturn>> {
       const result = await gen.next();
       if (right >= bufferSize) {
         const size = right - left;
