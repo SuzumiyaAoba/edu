@@ -2,10 +2,9 @@
 
 # # から末尾まではコメントとして扱われます。
 
-expr <-  space
-       / term ( "+" term
-              / "-" term
-              );
+expr <- term ( "+" term
+             / "-" term
+             );
 
 term <- factor ( "*" factor
                / "/" factor

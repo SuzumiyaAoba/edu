@@ -53,16 +53,14 @@ export const bufferableAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
     [Symbol.asyncIterator]() {
       return this;
     },
-    next: async () => {
-      while (true) {
-        if (left < right) {
-          return buffer[left++];
-        }
-
-        return await gen.next();
+    async next(...[_value]: [] | [TNext]) {
+      if (left < right) {
+        return buffer[left++] as (typeof buffer)[number];
       }
+
+      return await gen.next();
     },
-    peek: async () => {
+    async peek(): Promise<IteratorResult<T, TReturn>> {
       const result = await gen.next();
       if (right >= bufferSize) {
         const size = right - left;
@@ -87,14 +85,19 @@ export const bufferableAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
 
       return result;
     },
-    prev: (): IteratorResult<T, TReturn> | undefined => {
+    async consume(): Promise<void> {
+      await this.next();
+    },
+    prev(): IteratorResult<T, TReturn> | undefined {
       return buffer[right - 1];
     },
-    reset: (): void => {
+    reset(): void {
       left = 0;
       right = 0;
     },
-    bufferSize: () => buffer.length,
+    bufferSize() {
+      return buffer.length;
+    },
   };
 };
 

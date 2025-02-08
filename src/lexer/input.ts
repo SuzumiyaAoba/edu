@@ -26,13 +26,9 @@ export const toReadable = (input: Input): Readable => {
   }
 };
 
-export type CharGeneratorResult = { char: string; pos: Pos };
-export type CharGenerator = AsyncGenerator<CharGeneratorResult, void, unknown>;
-export type CharIteratorResult = IteratorResult<CharGeneratorResult, void>;
-
 export const charGenerator = async function* (
   readable: Readable,
-): CharGenerator {
+): AsyncGenerator<{ char: string; pos: Pos }, void, unknown> {
   const gen = graphemesGenerator(readable);
   const pos: Pos = {
     line: 1,

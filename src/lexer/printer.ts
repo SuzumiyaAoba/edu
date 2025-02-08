@@ -7,7 +7,7 @@ export const prittyPrint = (token: Token) => {
       print(token.value);
       break;
     case "LEFTARROW":
-      print("<-");
+      print(" <- ");
       break;
     case "OPEN":
       print("(");
@@ -43,7 +43,7 @@ export const prittyPrint = (token: Token) => {
       print(";");
       break;
     case "Comment":
-      print(`# ${token.value}`);
+      print(`#${token.value}`);
       break;
     case "EndOfLine":
       print("\n");

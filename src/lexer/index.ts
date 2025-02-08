@@ -1,16 +1,6 @@
-import {
-  type BufferableAsyncIterator,
-  type CharGeneratorResult,
-  bufferableAsyncIterator,
-} from "@/libs/charGenerator";
+import { bufferableAsyncIterator } from "@/libs/charGenerator";
 import { PegSyntaxError } from "./error";
-import {
-  type CharIteratorResult,
-  type Input,
-  type Pos,
-  charGenerator,
-  toReadable,
-} from "./input";
+import { type Input, charGenerator, toReadable } from "./input";
 import type {
   CharClass,
   Comment,
@@ -21,21 +11,30 @@ import type {
 } from "./token";
 import * as token from "./token";
 
-type Lookahead = [CharIteratorResult] | [];
+type Pos = {
+  column: number;
+  line: number;
+};
+
+type Char<T> = T & {
+  char: string;
+};
+
+type CharWithPos = Char<{ pos: Pos }>;
+
+type CharIteratorResult = IteratorResult<CharWithPos, unknown>;
+type CharIterator = {
+  next: () => Promise<CharIteratorResult>;
+  peek: () => Promise<CharIteratorResult>;
+  reset: () => void;
+};
 
 type ConsumeResult<T extends Token> = {
   token: T;
-  lookahead: Lookahead;
 };
 
-type IteratorForLexer = BufferableAsyncIterator<
-  CharGeneratorResult,
-  void,
-  unknown
->;
-
 const consumeLeftArrow = async (
-  iter: IteratorForLexer,
+  iter: CharIterator,
 ): Promise<ConsumeResult<LeftArrow>> => {
   const p = await iter.next();
   if (!p.done) {
@@ -46,7 +45,6 @@ const consumeLeftArrow = async (
         token: {
           type: "LEFTARROW",
         },
-        lookahead: [],
       };
     }
   }
@@ -58,12 +56,12 @@ const identifierRegex = /[a-zA-Z]/;
 
 const consumeIdentifier = async (
   fl: string,
-  iter: IteratorForLexer,
+  iter: CharIterator,
 ): Promise<ConsumeResult<Identifier>> => {
   let buf = fl;
 
   let p: CharIteratorResult;
-  for (p = await iter.next(); !p.done; p = await iter.next()) {
+  for (p = await iter.peek(); !p.done; p = await iter.peek()) {
     const { char } = p.value;
 
     if (!char.match(identifierRegex)) {
@@ -71,31 +69,32 @@ const consumeIdentifier = async (
     }
 
     buf += char;
+
+    iter.reset();
   }
 
-  return token.identifier(buf, {
-    lookahead: [p],
-  });
+  return token.identifier(buf, {});
 };
 
 const consumeLiteral = async (
-  iter: IteratorForLexer,
+  iter: CharIterator,
 ): Promise<ConsumeResult<Literal>> => {
   // TODO: escape
 
   let buf = "";
-  for (let p = await iter.next(); !p.done; p = await iter.next()) {
+  for (let p = await iter.peek(); !p.done; p = await iter.peek()) {
     const { char } = p.value;
     if (char === '"') {
+      iter.reset();
       break;
     }
 
     buf += char;
+
+    iter.reset();
   }
 
-  return token.literal(buf, {
-    lookahead: [],
-  });
+  return token.literal(buf, {});
 };
 
 const isEscapedChar = (char: string): boolean => {
@@ -118,7 +117,7 @@ const octalDigitToChar = (char: string): string => {
   return String.fromCharCode(Number.parseInt(char, 8));
 };
 
-const consumeChar = async (iter: IteratorForLexer): Promise<string> => {
+const consumeChar = async (iter: CharIterator): Promise<string> => {
   let buf = "";
   let p = await iter.next();
   if (p.done) {
@@ -153,7 +152,7 @@ const consumeChar = async (iter: IteratorForLexer): Promise<string> => {
 };
 
 const consumeCharClass = async (
-  iter: IteratorForLexer,
+  iter: CharIterator,
 ): Promise<ConsumeResult<CharClass>> => {
   // TODO: escape
   let buf = "";
@@ -166,27 +165,25 @@ const consumeCharClass = async (
     buf += char;
   }
 
-  return token.charClass(buf, {
-    lookahead: [],
-  });
+  return token.charClass(buf, {});
 };
 
 const consumeComment = async (
-  iter: IteratorForLexer,
+  iter: CharIterator,
 ): Promise<ConsumeResult<Comment>> => {
   let buf = "";
-  for (let p = await iter.next(); !p.done; p = await iter.next()) {
+  for (let p = await iter.peek(); !p.done; p = await iter.peek()) {
     const { char } = p.value;
     if (char === "\n") {
       break;
     }
 
     buf += char;
+
+    iter.reset();
   }
 
-  return token.comment(buf, {
-    lookahead: [],
-  });
+  return token.comment(buf, {});
 };
 
 const spaceRegex = /\s/;
@@ -201,15 +198,9 @@ export const parse = async function* (input: Input): AsyncGenerator<
 > {
   const readable = toReadable(input);
   const charGen = charGenerator(readable);
-  const iter = bufferableAsyncIterator(charGen);
+  const iter: CharIterator = bufferableAsyncIterator(charGen);
 
-  let lookahead: [] | [CharIteratorResult] = [];
-  for (
-    let p = await iter.next();
-    !p.done;
-    p = lookahead.length === 0 ? await iter.next() : lookahead[0]
-  ) {
-    lookahead = [];
+  for (let p = await iter.next(); !p.done; p = await iter.next()) {
     const { char, pos } = p.value;
 
     if (char === "\n") {
@@ -218,7 +209,6 @@ export const parse = async function* (input: Input): AsyncGenerator<
     } else if (char === '"') {
       const literal = await consumeLiteral(iter);
       yield token.literal(literal.token.value, { pos });
-      lookahead = literal.lookahead ?? [];
     } else if (char === "<") {
       await consumeLeftArrow(iter);
       yield token.leftArrow({ pos });
@@ -244,11 +234,9 @@ export const parse = async function* (input: Input): AsyncGenerator<
     } else if (char === "#") {
       const comment = await consumeComment(iter);
       yield token.comment(comment.token.value, { pos });
-      lookahead = comment.lookahead ?? [];
     } else if (char.match(identifierRegex)) {
       const identifier = await consumeIdentifier(char, iter);
       yield token.identifier(identifier.token.value, { pos });
-      lookahead = identifier.lookahead ?? [];
     }
   }
 
