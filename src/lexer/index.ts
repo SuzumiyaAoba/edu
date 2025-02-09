@@ -1,4 +1,5 @@
 import { bufferableAsyncIterator } from "@/libs/bufferable-iterator";
+import { isOctalDigit, octalDigitToChar } from "@/libs/octal";
 import { PegSyntaxError } from "./error";
 import { type Input, charGenerator, toReadable } from "./input";
 import type {
@@ -26,6 +27,8 @@ type CharIteratorResult = IteratorResult<CharWithPos, unknown>;
 type CharIterator = {
   next: () => Promise<CharIteratorResult>;
   peek: () => Promise<CharIteratorResult>;
+  peekN: (n: number) => Promise<IteratorResult<CharWithPos[], unknown>>;
+  consume: () => Promise<void>;
   reset: () => void;
 };
 
@@ -97,26 +100,6 @@ const consumeLiteral = async (
   return token.literal(buf, {});
 };
 
-const isEscapedChar = (char: string): boolean => {
-  return (
-    char === "n" ||
-    char === "r" ||
-    char === "t" ||
-    char === "'" ||
-    char === "[" ||
-    char === "]" ||
-    char === "\\"
-  );
-};
-
-const isOctalDigit = (char: string): boolean => {
-  return char >= "0" && char <= "7";
-};
-
-const octalDigitToChar = (char: string): string => {
-  return String.fromCharCode(Number.parseInt(char, 8));
-};
-
 const consumeChar = async (iter: CharIterator): Promise<string> => {
   let buf = "";
   let p = await iter.peek();
@@ -131,13 +114,31 @@ const consumeChar = async (iter: CharIterator): Promise<string> => {
       throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
     }
 
+    // '\x'
     if (isEscapedChar(p.value.char)) {
-      buf += p.value.char;
-    } else {
-      buf += p.value.char;
+      return unescape(p.value.char);
     }
 
+    if (!isOctalDigit(p.value.char)) {
+      throw new PegSyntaxError("Octal digit expected", [], p.value.pos);
+    }
+
+    // octal digits
     buf += p.value.char;
+    const { value, done } = await iter.peekN(2);
+    if (done) {
+      throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
+    }
+    for (const c of value) {
+      if (isOctalDigit(c.char)) {
+        buf += c.char;
+        iter.consume();
+      } else {
+        break;
+      }
+    }
+
+    buf = octalDigitToChar(buf);
   } else {
     // normal char
     buf += p.value.char;

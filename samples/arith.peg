@@ -2,17 +2,20 @@
 
 # # から末尾まではコメントとして扱われます。
 
-expr <- term ( "+" term
-             / "-" term
+expr <- term ( '+' term
+             / '-' term
              );
 
-term <- factor ( "*" factor
-               / "/" factor
-               / "%" factor
+term <- factor ( '*' factor
+               / '/' factor
+               / '%' factor
                );
 
-factor <- "(" expr ")" / number;
+factor <- '(' expr ')' / number;
 
 number <- digit+;
 
 digit <- [0-9];
+
+spacing <- ' ' / '\t' / eof;
+eof <- '\r\n' / '\n' / '\r';

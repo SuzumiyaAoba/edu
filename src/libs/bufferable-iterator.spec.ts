@@ -104,8 +104,8 @@ describe("charGenerator", () => {
     const gen = charGenerator(input);
     const iter = sut.bufferableAsyncIterator(gen);
 
-    const peek1 = await iter.peek(3);
-    const peek2 = await iter.peek(3);
+    const peek1 = await iter.peekN(3);
+    const peek2 = await iter.peekN(3);
     const actual: string[] = [];
 
     for await (const result of iter) {
@@ -136,7 +136,7 @@ describe("charGenerator", () => {
     const gen = charGenerator(input);
     const iter = sut.bufferableAsyncIterator(gen);
 
-    const peek = await iter.peek(10);
+    const peek = await iter.peekN(10);
     expect(peek).toEqual({
       done: false,
       value: [
