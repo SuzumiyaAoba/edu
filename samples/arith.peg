@@ -18,4 +18,4 @@ number <- digit+;
 digit <- [0-9];
 
 spacing <- ' ' / '\t' / eof;
-eof <- '\r\n' / '\n' / '\r';
+eof     <- '\r\n' / '\n' / '\r';
