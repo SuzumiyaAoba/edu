@@ -1,4 +1,4 @@
-export type Escapable = "n" | "r" | "t" | "'" | "[" | "]" | "\\";
+export type Escapable = "n" | "r" | "t" | "'" | '"' | "[" | "]" | "\\";
 
 export const isEscapableChar = (char: string): char is Escapable => {
   return (
@@ -6,6 +6,7 @@ export const isEscapableChar = (char: string): char is Escapable => {
     char === "r" ||
     char === "t" ||
     char === "'" ||
+    char === '"' ||
     char === "[" ||
     char === "]" ||
     char === "\\"
@@ -22,6 +23,8 @@ export const unescapeChar = (char: Escapable): string => {
       return "\t";
     case "'":
       return "'";
+    case '"':
+      return '"';
     case "[":
       return "[";
     case "]":

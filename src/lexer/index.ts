@@ -93,52 +93,62 @@ const consumeIdentifier = async (
   return token.identifier(buf, {});
 };
 
-const consumeLiteral = async (
+export const consumeLiteral = async (
   iter: CharIterator,
 ): Promise<ConsumeResult<Literal>> => {
   const open = await iter.next();
-  if (open.done) {
+  if (open.done || (open.value.char !== '"' && open.value.char !== "'")) {
     throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
   }
 
   const close = open.value.char === '"' ? '"' : "'";
-  // TODO: escape
 
   let buf = "";
-  for (let p = await iter.peek(); !p.done; p = await iter.peek()) {
-    const { char } = p.value;
-    if (char === close) {
-      iter.reset();
+  for (let p = await consumeChar(iter); !p.done; p = await consumeChar(iter)) {
+    const {
+      value: { char, escaped },
+    } = p;
+    if (!escaped && char === close) {
       break;
     }
 
     buf += char;
-
-    iter.reset();
   }
+
+  iter.reset();
 
   return token.literal(buf, {});
 };
 
-export const consumeChar = async (iter: CharIterator): Promise<string> => {
+export const consumeChar = async (
+  iter: CharIterator,
+): Promise<IteratorResult<{ char: string; escaped: boolean }, unknown>> => {
   let buf = "";
-  let p = await iter.peek();
+  let p = await iter.next();
   if (p.done) {
-    throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
+    return { value: undefined, done: true };
   }
 
-  if (p.value.char === "\\") {
+  if (p.value.char !== '\\') {
+    // normal char
+    buf += p.value.char;
+  } else {
     // escaped char
     p = await iter.next();
+
     if (p.done) {
       throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
     }
 
     // '\x'
     if (isEscapableChar(p.value.char)) {
-      iter.reset();
-
-      return unescapeChar(p.value.char);
+      return {
+        value: {
+          char: unescapeChar(p.value.char),
+          escaped: true,
+        },
+        done: false,
+      };
     }
 
     if (!isOctalDigit(p.value.char)) {
@@ -147,6 +157,8 @@ export const consumeChar = async (iter: CharIterator): Promise<string> => {
 
     // octal digits
     buf += p.value.char;
+    iter.reset();
+
     const { value, done } = await iter.peekN(2);
     if (done) {
       throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
@@ -154,6 +166,7 @@ export const consumeChar = async (iter: CharIterator): Promise<string> => {
     for (const c of value) {
       if (isOctalDigit(c.char)) {
         buf += c.char;
+
         iter.consume();
       } else {
         break;
@@ -161,14 +174,23 @@ export const consumeChar = async (iter: CharIterator): Promise<string> => {
     }
 
     buf = octalDigitToChar(buf);
-  } else {
-    // normal char
-    buf += p.value.char;
+
+    return {
+      value: {
+        char: buf,
+        escaped: true,
+      },
+      done: false,
+    };
   }
 
-  iter.reset();
-
-  return buf;
+  return {
+    value: {
+      char: buf,
+      escaped: false,
+    },
+    done: false,
+  };
 };
 
 const consumeCharClass = async (
