@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Readable } from "node:stream";
 import * as sut from "./bufferable-iterator";
-import { type CharGeneratorResult, charGenerator } from "./char-generator";
+import { charGenerator } from "./char-generator";
 
 const arrayToAsyncGenrator = (arr: string[]) => {
   return (async function* () {
@@ -75,10 +75,13 @@ describe("bufferableAsyncIterator", () => {
   });
 
   it("should handle buffer overflow correctly", async () => {
-    const bufferSize = 2;
+    const options = {
+      size: 2,
+      multiplier: 2,
+    };
     const iter = sut.bufferableAsyncIterator(
       arrayToAsyncGenrator(["1", "2", "3", "4", "5"]),
-      bufferSize,
+      options,
     );
     const actual: string[] = [];
 

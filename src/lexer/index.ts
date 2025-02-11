@@ -9,6 +9,7 @@ import type {
   Identifier,
   LeftArrow,
   Literal,
+  Range,
   Token,
 } from "./token";
 import * as token from "./token";
@@ -29,7 +30,7 @@ type CharIterator = {
   next: () => Promise<CharIteratorResult>;
   peek: () => Promise<CharIteratorResult>;
   peekN: (n: number) => Promise<IteratorResult<CharWithPos[], unknown>>;
-  consume: () => Promise<void>;
+  skip: () => Promise<void>;
   reset: () => void;
 };
 
@@ -125,71 +126,63 @@ export const consumeLiteral = async (
 export const consumeChar = async (
   iter: CharIterator,
 ): Promise<IteratorResult<{ char: string; escaped: boolean }, unknown>> => {
-  let buf = "";
   let p = await iter.next();
   if (p.done) {
     return { value: undefined, done: true };
   }
 
-  if (p.value.char !== '\\') {
+  if (p.value.char !== "\\") {
     // normal char
-    buf += p.value.char;
-  } else {
-    // escaped char
-    p = await iter.next();
-
-    if (p.done) {
-      throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
-    }
-
-    // '\x'
-    if (isEscapableChar(p.value.char)) {
-      return {
-        value: {
-          char: unescapeChar(p.value.char),
-          escaped: true,
-        },
-        done: false,
-      };
-    }
-
-    if (!isOctalDigit(p.value.char)) {
-      throw new PegSyntaxError("Octal digit expected", [], p.value.pos);
-    }
-
-    // octal digits
-    buf += p.value.char;
-    iter.reset();
-
-    const { value, done } = await iter.peekN(2);
-    if (done) {
-      throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
-    }
-    for (const c of value) {
-      if (isOctalDigit(c.char)) {
-        buf += c.char;
-
-        iter.consume();
-      } else {
-        break;
-      }
-    }
-
-    buf = octalDigitToChar(buf);
-
     return {
       value: {
-        char: buf,
+        char: p.value.char,
+        escaped: false,
+      },
+      done: false,
+    };
+  }
+
+  // escaped char
+  p = await iter.next();
+  if (p.done) {
+    throw new PegSyntaxError("Unexpected EOF", [], EofPos);
+  }
+
+  // '\x'
+  if (isEscapableChar(p.value.char)) {
+    return {
+      value: {
+        char: unescapeChar(p.value.char),
         escaped: true,
       },
       done: false,
     };
   }
 
+  if (!isOctalDigit(p.value.char)) {
+    throw new PegSyntaxError("Octal digit expected", [], p.value.pos);
+  }
+
+  // octal digits
+  let buf = p.value.char;
+
+  const { value, done } = await iter.peekN(2);
+  if (done) {
+    throw new PegSyntaxError("Unexpected EOF", [], EofPos);
+  }
+  for (const v of value) {
+    if (!isOctalDigit(v.char)) {
+      break;
+    }
+    buf += v.char;
+
+    iter.skip();
+  }
+
   return {
     value: {
-      char: buf,
-      escaped: false,
+      char: octalDigitToChar(buf),
+      escaped: true,
     },
     done: false,
   };
@@ -198,20 +191,46 @@ export const consumeChar = async (
 const consumeCharClass = async (
   iter: CharIterator,
 ): Promise<ConsumeResult<CharClass>> => {
-  iter.reset();
+  const { value, done } = await iter.next();
+  if (done) {
+    throw new PegSyntaxError("Unexpected EOF", [], EofPos);
+  }
 
-  // TODO: escape
-  let buf = "";
-  for (let p = await iter.next(); !p.done; p = await iter.next()) {
+  if (value.char !== "[") {
+    throw new PegSyntaxError("Unexpected char", ["CLOSE"], value.pos);
+  }
+
+  const buf: (string | Range)[] = [];
+  for (let p = await consumeChar(iter); !p.done; p = await consumeChar(iter)) {
     const { char } = p.value;
     if (char === "]") {
       break;
     }
 
-    buf += char;
+    const end = await consumeRange(iter);
+
+    buf.push(end ? token.range([char, end], {}).token : char);
   }
 
   return token.charClass(buf, {});
+};
+
+const consumeRange = async (
+  iter: CharIterator,
+): Promise<string | undefined> => {
+  const { value, done } = await iter.peek();
+  if (done || value.char !== "-") {
+    return undefined;
+  }
+
+  iter.skip();
+
+  const end = await consumeChar(iter);
+  if (end.done) {
+    throw new PegSyntaxError("Unexpected EOF", [], EofPos);
+  }
+
+  return end.value.char;
 };
 
 const consumeComment = async (
@@ -253,7 +272,7 @@ export const parse = async function* (input: Input): AsyncGenerator<
 
     if (char === "\n") {
       yield token.endOfLine({ pos });
-    } else if (char.match(spaceRegex)) {
+      iter.reset();
     } else if (char === '"' || char === "'") {
       const literal = await consumeLiteral(iter);
       yield token.literal(literal.token.value, { pos });
@@ -262,23 +281,31 @@ export const parse = async function* (input: Input): AsyncGenerator<
       yield token.leftArrow({ pos });
     } else if (char === "/") {
       yield token.slash({ pos });
+      iter.reset();
     } else if (char === "(") {
       yield token.open({ pos });
+      iter.reset();
     } else if (char === ")") {
       yield token.close({ pos });
+      iter.reset();
     } else if (char === "[") {
       const charClass = await consumeCharClass(iter);
       yield token.charClass(charClass.token.value, { pos });
     } else if (char === "*") {
       yield token.star({ pos });
+      iter.reset();
     } else if (char === "+") {
       yield token.plus({ pos });
+      iter.reset();
     } else if (char === "&") {
       yield token.and({ pos });
+      iter.reset();
     } else if (char === "!") {
       yield token.not({ pos });
+      iter.reset();
     } else if (char === ";") {
       yield token.semicolon({ pos });
+      iter.reset();
     } else if (char === "#") {
       const comment = await consumeComment(iter);
       yield token.comment(comment.token.value, { pos });
@@ -287,7 +314,9 @@ export const parse = async function* (input: Input): AsyncGenerator<
       yield token.identifier(identifier.token.value, { pos });
     }
 
-    iter.reset();
+    if (char.match(spaceRegex)) {
+      iter.reset();
+    }
   }
 
   yield token.endOfFile({

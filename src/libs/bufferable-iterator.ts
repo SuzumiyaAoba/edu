@@ -1,10 +1,47 @@
+/**
+ * Bufferable async iterator.
+ *
+ * Provide following operations:
+ *
+ * - `next`
+ * - `consume`
+ * - `peek`
+ * - `skip`
+ * - `backtrack`
+ */
 export const bufferableAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
   gen: AsyncGenerator<T, TReturn, TNext>,
-  bufferSize = 1024,
+  options: {
+    size: number,
+    multiplier: number,
+  } = {
+    size: 1024,
+    multiplier: 2,
+  },
 ) => {
-  let buffer: IteratorResult<T, TReturn>[] = Array(bufferSize);
+  const { size, multiplier } = options;
+  let buffer: IteratorResult<T, TReturn>[] = Array(size);
   let left = 0;
   let right = 0;
+
+  const expandBuffer = () => {
+    const size = right - left;
+
+    const src = buffer;
+    const dst: IteratorResult<T, TReturn>[] =
+          left > size / 2 ? buffer : Array(size * multiplier);
+
+    for (let i = 0; i < size; i++) {
+      const value = src[left + i];
+      if (value) {
+        dst[i] = value;
+      }
+    }
+
+    buffer = dst;
+    left = 0;
+    right = size;
+  };
 
   return {
     [Symbol.asyncIterator]() {
@@ -19,23 +56,8 @@ export const bufferableAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
     },
     async peek() {
       const result = await gen.next();
-      if (right >= bufferSize) {
-        const size = right - left;
-
-        const src = buffer;
-        const dst: IteratorResult<T, TReturn>[] =
-          left > bufferSize / 2 ? buffer : Array(bufferSize * 2);
-
-        for (let i = 0; i < size; i++) {
-          const value = src[left + i];
-          if (value) {
-            dst[i] = value;
-          }
-        }
-
-        buffer = dst;
-        left = 0;
-        right = size;
+      if (right >= size) {
+        expandBuffer();
       }
 
       buffer[right++] = result;
@@ -61,7 +83,7 @@ export const bufferableAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
         T[]
       > as IteratorYieldResult<T[]>;
     },
-    async consume(): Promise<void> {
+    async skip(): Promise<void> {
       await this.next();
     },
     prev(): IteratorResult<T, TReturn> | undefined {

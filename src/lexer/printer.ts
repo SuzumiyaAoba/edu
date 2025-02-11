@@ -16,7 +16,7 @@ export const prittyPrint = (token: Token) => {
       print(")");
       break;
     case "CharClass":
-      print('[');
+      print("[");
       for (const v of token.value) {
         if (typeof v === "string") {
           print(v);
