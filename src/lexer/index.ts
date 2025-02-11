@@ -37,6 +37,11 @@ type ConsumeResult<T extends Token> = {
   token: T;
 };
 
+const EofPos: Pos = {
+  column: -1,
+  line: -1,
+} as const;
+
 const consumeLeftArrow = async (
   iter: CharIterator,
 ): Promise<ConsumeResult<LeftArrow>> => {
@@ -60,10 +65,7 @@ const consumeLeftArrow = async (
     );
   }
 
-  throw new PegSyntaxError("Syntax Error", ["LEFTARROW"], {
-    column: -1,
-    line: -1,
-  });
+  throw new PegSyntaxError("Syntax Error", ["LEFTARROW"], EofPos);
 };
 
 const identifierRegex = /[a-zA-Z]/;
@@ -71,12 +73,12 @@ const identifierRegex = /[a-zA-Z]/;
 const consumeIdentifier = async (
   iter: CharIterator,
 ): Promise<ConsumeResult<Identifier>> => {
-  const first = await iter.next();
-  if (first.done) {
-    throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
+  const { value, done } = await iter.next();
+  if (done) {
+    throw new PegSyntaxError("Unexpected EOF", [], EofPos);
   }
 
-  let buf = first.value.char;
+  let buf = value.char;
 
   for (let p = await iter.peek(); !p.done; p = await iter.peek()) {
     const { char } = p.value;
@@ -98,7 +100,7 @@ export const consumeLiteral = async (
 ): Promise<ConsumeResult<Literal>> => {
   const open = await iter.next();
   if (open.done || (open.value.char !== '"' && open.value.char !== "'")) {
-    throw new PegSyntaxError("Unexpected EOF", [], { column: -1, line: -1 });
+    throw new PegSyntaxError("Unexpected EOF", [], EofPos);
   }
 
   const close = open.value.char === '"' ? '"' : "'";

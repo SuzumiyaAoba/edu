@@ -38,7 +38,10 @@ describe("consumeChar", () => {
     const gen = charGenerator(input);
     const iter = bufferableAsyncIterator(gen);
 
-    const actual: IteratorResult<{ char: string; escaped: boolean }, unknown>[] = [];
+    const actual: IteratorResult<
+      { char: string; escaped: boolean },
+      unknown
+    >[] = [];
 
     for (let i = 0; i < 6; i++) {
       actual.push(await sut.consumeChar(iter));
