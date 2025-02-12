@@ -1,4 +1,4 @@
-import { bufferableAsyncIterator } from "@/libs/bufferable-iterator";
+import { bufferedAsyncIterator } from "@/libs/bufferable-iterator";
 import { isOctalDigit, octalDigitToChar } from "@/libs/octal";
 import { PegSyntaxError } from "./error";
 import { isEscapableChar, unescapeChar } from "./escape";
@@ -27,11 +27,10 @@ type CharWithPos = Char<{ pos: Pos }>;
 
 type CharIteratorResult = IteratorResult<CharWithPos, unknown>;
 type CharIterator = {
-  next: () => Promise<CharIteratorResult>;
-  peek: () => Promise<CharIteratorResult>;
-  peekN: (n: number) => Promise<IteratorResult<CharWithPos[], unknown>>;
-  skip: () => Promise<void>;
-  reset: () => void;
+  next(): Promise<CharIteratorResult>;
+  peek(n?: number): Promise<CharIteratorResult>;
+  skip(): Promise<void>;
+  reset(resetBuffer?: boolean): void;
 };
 
 type ConsumeResult<T extends Token> = {
@@ -265,7 +264,7 @@ export const parse = async function* (input: Input): AsyncGenerator<
 > {
   const readable = toReadable(input);
   const charGen = charGenerator(readable);
-  const iter: CharIterator = bufferableAsyncIterator(charGen);
+  const iter: CharIterator = bufferedAsyncIterator(charGen);
 
   for (let p = await iter.peek(); !p.done; p = await iter.peek()) {
     const { char, pos } = p.value;
