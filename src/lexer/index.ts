@@ -1,5 +1,5 @@
 import { bufferedAsyncIterator } from "@/libs/bufferable-iterator";
-import { isOctalDigit, octalDigitToChar } from "@/libs/octal";
+import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
 import { PegSyntaxError } from "./error";
 import { isEscapableChar, unescapeChar } from "./escape";
 import { type Input, charGenerator, toReadable } from "./input";
@@ -147,11 +147,13 @@ export const consumeChar = async (
     throw new PegSyntaxError("Unexpected EOF", [], EofPos);
   }
 
+  let buf = p.value.char;
+
   // '\x'
-  if (isEscapableChar(p.value.char)) {
+  if (isEscapableChar(buf)) {
     return {
       value: {
-        char: unescapeChar(p.value.char),
+        char: unescapeChar(buf),
         escaped: true,
       },
       done: false,
@@ -163,19 +165,23 @@ export const consumeChar = async (
   }
 
   // octal digits
-  let buf = p.value.char;
-
-  const { value, done } = await iter.peekN(2);
-  if (done) {
-    throw new PegSyntaxError("Unexpected EOF", [], EofPos);
-  }
-  for (const v of value) {
-    if (!isOctalDigit(v.char)) {
+  for (let i = 0; i < 2; i++) {
+    const { value, done } = await iter.peek();
+    if (done) {
       break;
     }
-    buf += v.char;
 
-    iter.skip();
+    if (!isOctalDigit(value.char)) {
+      break;
+    }
+
+    buf += value.char;
+
+    await iter.skip();
+  }
+
+  if (!isOctalAscii(buf)) {
+    throw new PegSyntaxError(`Invalid octal ASCII: ${buf}`, [], p.value.pos);
   }
 
   return {
