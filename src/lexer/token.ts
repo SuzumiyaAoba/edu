@@ -4,6 +4,7 @@ export type Token =
   | Identifier
   | Literal
   | CharClass
+  | Range
   | LeftArrow
   | Slash
   | And
@@ -34,7 +35,12 @@ export type Literal = {
 /** Class `[...]`. */
 export type CharClass = {
   type: "CharClass";
-  value: string;
+  value: (string | Range)[];
+};
+
+export type Range = {
+  type: "Range";
+  value: [string, string];
 };
 
 /** LEFTARROW `<-`. */
@@ -113,128 +119,157 @@ export type TokenWith<T extends Token, Meta> = { token: T } & Meta;
 export const identifier = <T>(
   value: string,
   meta: T,
-): TokenWith<Identifier, T> => ({
-  token: {
-    type: "Identifier",
-    value,
-  },
-  ...meta,
-});
+): TokenWith<Identifier, T> =>
+  ({
+    token: {
+      type: "Identifier",
+      value,
+    },
+    ...meta,
+  }) as const;
 
-export const leftArrow = <T>(meta: T): TokenWith<LeftArrow, T> => ({
-  token: {
-    type: "LEFTARROW",
-  },
-  ...meta,
-});
+export const leftArrow = <T>(meta: T): TokenWith<LeftArrow, T> =>
+  ({
+    token: {
+      type: "LEFTARROW",
+    },
+    ...meta,
+  }) as const;
 
-export const open = <T>(meta: T): TokenWith<Open, T> => ({
-  token: {
-    type: "OPEN",
-  },
-  ...meta,
-});
+export const open = <T>(meta: T): TokenWith<Open, T> =>
+  ({
+    token: {
+      type: "OPEN",
+    },
+    ...meta,
+  }) as const;
 
-export const close = <T>(meta: T): TokenWith<Close, T> => ({
-  token: {
-    type: "CLOSE",
-  },
-  ...meta,
-});
+export const close = <T>(meta: T): TokenWith<Close, T> =>
+  ({
+    token: {
+      type: "CLOSE",
+    },
+    ...meta,
+  }) as const;
 
 export const charClass = <T>(
-  value: string,
+  value: (string | Range)[],
   meta: T,
-): TokenWith<CharClass, T> => ({
-  token: {
-    type: "CharClass",
-    value,
-  },
-  ...meta,
-});
+): TokenWith<CharClass, T> =>
+  ({
+    token: {
+      type: "CharClass",
+      value,
+    },
+    ...meta,
+  }) as const;
 
-export const slash = <T>(meta: T): TokenWith<Slash, T> => ({
-  token: {
-    type: "SLASH",
-  },
-  ...meta,
-});
+export const range = <T>(
+  value: [string, string],
+  meta: T,
+): TokenWith<Range, T> =>
+  ({
+    token: {
+      type: "Range",
+      value,
+    },
+    ...meta,
+  }) as const;
 
-export const dot = <T>(meta: T): TokenWith<Dot, T> => ({
-  token: {
-    type: "DOT",
-  },
-  ...meta,
-});
+export const slash = <T>(meta: T): TokenWith<Slash, T> =>
+  ({
+    token: {
+      type: "SLASH",
+    },
+    ...meta,
+  }) as const;
 
-export const star = <T>(meta: T): TokenWith<Star, T> => ({
-  token: {
-    type: "STAR",
-  },
-  ...meta,
-});
+export const dot = <T>(meta: T): TokenWith<Dot, T> =>
+  ({
+    token: {
+      type: "DOT",
+    },
+    ...meta,
+  }) as const;
 
-export const plus = <T>(meta: T): TokenWith<Plus, T> => ({
-  token: {
-    type: "PLUS",
-  },
-  ...meta,
-});
+export const star = <T>(meta: T): TokenWith<Star, T> =>
+  ({
+    token: {
+      type: "STAR",
+    },
+    ...meta,
+  }) as const;
 
-export const question = <T>(meta: T): TokenWith<Question, T> => ({
-  token: {
-    type: "QUESTION",
-  },
-  ...meta,
-});
+export const plus = <T>(meta: T): TokenWith<Plus, T> =>
+  ({
+    token: {
+      type: "PLUS",
+    },
+    ...meta,
+  }) as const;
 
-export const and = <T>(meta: T): TokenWith<And, T> => ({
-  token: {
-    type: "AND",
-  },
-  ...meta,
-});
+export const question = <T>(meta: T): TokenWith<Question, T> =>
+  ({
+    token: {
+      type: "QUESTION",
+    },
+    ...meta,
+  }) as const;
 
-export const not = <T>(meta: T): TokenWith<Not, T> => ({
-  token: {
-    type: "NOT",
-  },
-  ...meta,
-});
+export const and = <T>(meta: T): TokenWith<And, T> =>
+  ({
+    token: {
+      type: "AND",
+    },
+    ...meta,
+  }) as const;
 
-export const literal = <T>(value: string, meta: T): TokenWith<Literal, T> => ({
-  token: {
-    type: "Literal",
-    value,
-  },
-  ...meta,
-});
+export const not = <T>(meta: T): TokenWith<Not, T> =>
+  ({
+    token: {
+      type: "NOT",
+    },
+    ...meta,
+  }) as const;
 
-export const semicolon = <T>(meta: T): TokenWith<Semicolon, T> => ({
-  token: {
-    type: "SEMICOLON",
-  },
-  ...meta,
-});
+export const literal = <T>(value: string, meta: T): TokenWith<Literal, T> =>
+  ({
+    token: {
+      type: "Literal",
+      value,
+    },
+    ...meta,
+  }) as const;
 
-export const comment = <T>(value: string, meta: T): TokenWith<Comment, T> => ({
-  token: {
-    type: "Comment",
-    value,
-  },
-  ...meta,
-});
+export const semicolon = <T>(meta: T): TokenWith<Semicolon, T> =>
+  ({
+    token: {
+      type: "SEMICOLON",
+    },
+    ...meta,
+  }) as const;
 
-export const endOfLine = <T>(meta: T): TokenWith<EndOfLine, T> => ({
-  token: {
-    type: "EndOfLine",
-  },
-  ...meta,
-});
+export const comment = <T>(value: string, meta: T): TokenWith<Comment, T> =>
+  ({
+    token: {
+      type: "Comment",
+      value,
+    },
+    ...meta,
+  }) as const;
 
-export const endOfFile = <T>(meta: T): TokenWith<EndOfFile, T> => ({
-  token: {
-    type: "EndOfFile",
-  },
-  ...meta,
-});
+export const endOfLine = <T>(meta: T): TokenWith<EndOfLine, T> =>
+  ({
+    token: {
+      type: "EndOfLine",
+    },
+    ...meta,
+  }) as const;
+
+export const endOfFile = <T>(meta: T): TokenWith<EndOfFile, T> =>
+  ({
+    token: {
+      type: "EndOfFile",
+    },
+    ...meta,
+  }) as const;
