@@ -45,12 +45,21 @@ const EofPos: Pos = {
 const consumeLeftArrow = async (
   iter: CharIterator,
 ): Promise<ConsumeResult<LeftArrow>> => {
-  iter.reset();
+  let p = await iter.next();
+  if (p.done) {
+    throw new PegSyntaxError(
+      `'<' is expected, but EOF found`,
+      ["LEFTARROW"],
+      EofPos,
+    );
+  }
 
-  const p = await iter.next();
+  p = await iter.next();
   if (!p.done) {
     const { char } = p.value;
     if (char === "-") {
+      iter.reset();
+
       return {
         token: {
           type: "LEFTARROW",
@@ -177,7 +186,7 @@ export const consumeChar = async (
 
     buf += value.char;
 
-    await iter.skip();
+    iter.reset();
   }
 
   if (!isOctalAscii(buf)) {
@@ -277,7 +286,6 @@ export const parse = async function* (input: Input): AsyncGenerator<
 
     if (char === "\n") {
       yield token.endOfLine({ pos });
-      iter.reset();
     } else if (char === '"' || char === "'") {
       const literal = await consumeLiteral(iter);
       yield token.literal(literal.token.value, { pos });
