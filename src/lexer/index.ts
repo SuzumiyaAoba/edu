@@ -31,6 +31,7 @@ type CharIterator = {
   peek(n?: number): Promise<CharIteratorResult>;
   skip(): Promise<void>;
   reset(resetBuffer?: boolean): void;
+  backtrack(n?: number): void;
 };
 
 type ConsumeResult<T extends Token> = {
@@ -216,8 +217,8 @@ const consumeCharClass = async (
 
   const buf: (string | Range)[] = [];
   for (let p = await consumeChar(iter); !p.done; p = await consumeChar(iter)) {
-    const { char } = p.value;
-    if (char === "]") {
+    const { char, escaped } = p.value;
+    if (char === "]" && !escaped) {
       break;
     }
 
@@ -234,10 +235,10 @@ const consumeRange = async (
 ): Promise<string | undefined> => {
   const { value, done } = await iter.peek();
   if (done || value.char !== "-") {
-    return undefined;
+    return;
   }
 
-  iter.skip();
+  await iter.skip();
 
   const end = await consumeChar(iter);
   if (end.done) {
@@ -304,11 +305,17 @@ export const parse = async function* (input: Input): AsyncGenerator<
     } else if (char === "[") {
       const charClass = await consumeCharClass(iter);
       yield token.charClass(charClass.token.value, { pos });
+    } else if (char === ".") {
+      yield token.dot({ pos });
+      iter.reset();
     } else if (char === "*") {
       yield token.star({ pos });
       iter.reset();
     } else if (char === "+") {
       yield token.plus({ pos });
+      iter.reset();
+    } else if (char === "?") {
+      yield token.question({ pos });
       iter.reset();
     } else if (char === "&") {
       yield token.and({ pos });

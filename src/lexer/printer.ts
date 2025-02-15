@@ -4,16 +4,16 @@ import type { Token } from "./token";
 export const prittyPrint = (token: Token) => {
   switch (token.type) {
     case "Identifier":
-      print(`${token.value}`);
+      print(` ${token.value}`);
       break;
     case "LEFTARROW":
-      print("<-");
+      print(" <-");
       break;
     case "OPEN":
-      print("(");
+      print(" (");
       break;
     case "CLOSE":
-      print(")");
+      print(" )");
       break;
     case "CharClass":
       print("[");
@@ -30,7 +30,10 @@ export const prittyPrint = (token: Token) => {
       print(`${token.value[0]}-${token.value[1]}`);
       break;
     case "SLASH":
-      print("/");
+      print(" /");
+      break;
+    case "DOT":
+      print(" .");
       break;
     case "STAR":
       print("*");
@@ -48,7 +51,7 @@ export const prittyPrint = (token: Token) => {
       print("!");
       break;
     case "Literal":
-      print(JSON.stringify(token.value));
+      print(` ${JSON.stringify(token.value)}`);
       break;
     case "SEMICOLON":
       print(";");

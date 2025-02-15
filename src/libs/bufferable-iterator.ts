@@ -47,6 +47,9 @@ export const bufferedAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
   };
 
   return {
+    current(): number {
+      return current;
+    },
     [Symbol.asyncIterator]() {
       return this;
     },
@@ -56,25 +59,30 @@ export const bufferedAsyncIterator = <T, TReturn = unknown, TNext = unknown>(
 
       return result;
     },
-    async peek(n: number = 1): Promise<IteratorResult<T, TReturn>> {
-      const index = current + n;
-      if (index >= right) {
-        if (right + n > buffer.length) {
+    async peek(n = 1): Promise<IteratorResult<T, TReturn>> {
+      const lookahead = current + n;
+      if (lookahead >= right) {
+        if (lookahead >= buffer.length) {
           adjustBuffer();
         }
 
-        for (let i = 1; i <= n; i++) {
+        const overflow = lookahead - right + 1;
+        for (let i = 0; i < overflow; i++) {
           const result = await gen.next();
-          buffer[current + i] = result;
+          buffer[right++] = result;
         }
-
-        right = index + 1;
       }
 
-      return buffer[index] as IteratorResult<T, TReturn>;
+      return buffer[lookahead] as IteratorResult<T, TReturn>;
     },
     async skip(): Promise<void> {
       await this.next();
+    },
+    backtrack(n = 1): void {
+      const index = current - n;
+      if (index >= left) {
+        current = index;
+      }
     },
     reset(resetBuffer = false): void {
       current = -1;

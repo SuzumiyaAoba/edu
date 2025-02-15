@@ -10,7 +10,11 @@ describe("consumeChar", () => {
     const gen = charGenerator(input);
     const iter = bufferedAsyncIterator(gen);
 
-    const actual: Awaited<ReturnType<(typeof sut)["consumeChar"]>>[] = [];
+    const actual: IteratorResult<
+      { char: string; escaped: boolean },
+      unknown
+    >[] = [];
+
     for (let i = 0; i < 3; i++) {
       actual.push(await sut.consumeChar(iter));
     }
@@ -41,6 +45,7 @@ describe("consumeChar", () => {
       { char: string; escaped: boolean },
       unknown
     >[] = [];
+
     for (let i = 0; i < 6; i++) {
       actual.push(await sut.consumeChar(iter));
     }
@@ -60,7 +65,11 @@ describe("consumeChar", () => {
     const gen = charGenerator(input);
     const iter = bufferedAsyncIterator(gen);
 
-    const actual: Awaited<ReturnType<(typeof sut)["consumeChar"]>>[] = [];
+    const actual: IteratorResult<
+      { char: string; escaped: boolean },
+      unknown
+    >[] = [];
+
     for (let i = 0; i < 2; i++) {
       actual.push(await sut.consumeChar(iter));
     }

@@ -3,7 +3,7 @@ import { prittyPrint } from "./lexer/printer";
 
 const input = {
   type: "file",
-  path: "./samples/arith.peg",
+  path: "./samples/peg.peg",
 } as const;
 
 for await (const token of parse(input)) {
