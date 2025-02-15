@@ -23,10 +23,10 @@ type Char<T> = T & {
   char: string;
 };
 
-type CharWithPos = Char<{ pos: Pos }>;
+export type CharWithPos = Char<{ pos: Pos }>;
 
-type CharIteratorResult = IteratorResult<CharWithPos, unknown>;
-type CharIterator = {
+export type CharIteratorResult = IteratorResult<CharWithPos, unknown>;
+export type CharIterator = {
   next(): Promise<CharIteratorResult>;
   peek(n?: number): Promise<CharIteratorResult>;
   skip(): Promise<void>;
