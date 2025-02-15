@@ -166,7 +166,7 @@ export const charClass = <T>(
 
 export const range = <T>(
   value: [string, string],
-  meta: T
+  meta: T,
 ): TokenWith<Range, T> =>
   ({
     token: {
