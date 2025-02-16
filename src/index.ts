@@ -9,18 +9,17 @@ const input = {
   path: "./samples/peg.peg",
 } as const;
 
-let line: { token: Token; pos: Pos }[] = [];
+let lineTokens: { token: Token; pos: Pos }[] = [];
+let line = 1;
 
 const readable = await toReadable(input);
 
 for await (const token of new Lexer(readable)) {
-  // prittyPrint(token.token);
-  // debugPrinter(token);
   if (token.token.type === "EndOfLine") {
-    prettyPrintTokens(line);
+    prettyPrintTokens(lineTokens, line++);
 
-    line = [];
+    lineTokens = [];
   } else {
-    line.push(token);
+    lineTokens.push(token);
   }
 }

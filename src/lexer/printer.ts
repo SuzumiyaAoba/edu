@@ -75,17 +75,13 @@ export const printToken = (token: Token) => {
   }
 };
 
-export const prettyPrintTokens = (tokens: TokenWith<Token, { pos: Pos }>[]) => {
-  for (const { token } of tokens) {
-    printToken(token);
-  }
-  print("\n");
-
+const printLine = (
+  tokens: TokenWith<Token, { pos: Pick<Pos, "column"> }>[],
+  callback: (_arg: TokenWith<Token, { pos: Pick<Pos, "column"> }>) => void,
+) => {
   let column = 0;
-  let tokenNum = 0;
-  let lastTokenPos: Pos = { line: 0, column: 0 };
   for (const { token, pos } of tokens) {
-    if (token.type === "Comment" || token.type === "EndOfLine") {
+    if (token.type === "EndOfLine") {
       break;
     }
 
@@ -99,32 +95,43 @@ export const prettyPrintTokens = (tokens: TokenWith<Token, { pos: Pos }>[]) => {
       print(" ");
     }
 
+    callback({ token, pos });
+  }
+};
+
+export const prettyPrintTokens = (
+  tokens: TokenWith<Token, { pos: Pick<Pos, "column"> }>[],
+  line?: number,
+) => {
+  const linePart = line ? ` ${line} │ ` : "";
+  print(linePart);
+
+  const offset = " ".repeat(linePart.length);
+
+  for (const { token } of tokens) {
+    printToken(token);
+  }
+  print("\n");
+
+  print(offset);
+
+  let tokenNum = 0;
+  let lastTokenPos: Pick<Pos, "column"> = { column: 0 };
+  printLine(tokens, ({ pos }) => {
     print(".");
 
     tokenNum++;
     lastTokenPos = pos;
-  }
+  });
+
   print("\n");
 
   for (let i = 0; i < tokenNum; i++) {
     let j = 0;
 
-    let column = 0;
-    for (const { token, pos } of tokens) {
-      if (token.type === "Comment" || token.type === "EndOfLine") {
-        break;
-      }
+    print(offset);
 
-      if (token.type === "Space") {
-        print(token.value);
-        column++;
-        continue;
-      }
-
-      while (++column < pos.column) {
-        print(" ");
-      }
-
+    printLine(tokens, ({ token, pos }) => {
       j++;
 
       if (j < tokenNum - i) {
@@ -138,7 +145,8 @@ export const prettyPrintTokens = (tokens: TokenWith<Token, { pos: Pos }>[]) => {
         print(" ");
         print(token.type);
       }
-    }
+    });
+
     print("\n");
   }
 
