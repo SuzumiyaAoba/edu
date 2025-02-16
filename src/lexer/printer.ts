@@ -2,7 +2,7 @@ import { print } from "@/utils/io";
 import type { Pos } from "./index";
 import type { Token, TokenWith } from "./token";
 
-export const prittyPrint = (token: Token) => {
+export const prettyPrint = (token: Token) => {
   switch (token.type) {
     case "Identifier":
       print(`${token.value}`);
@@ -22,7 +22,7 @@ export const prittyPrint = (token: Token) => {
         if (typeof v === "string") {
           print(v);
         } else {
-          prittyPrint(v);
+          prettyPrint(v);
         }
       }
       print("]");
@@ -125,9 +125,9 @@ export const debugPrinter = ({
   }
 };
 
-export const pritty = (tokens: TokenWith<Token, { pos: Pos }>[]) => {
+export const pretty = (tokens: TokenWith<Token, { pos: Pos }>[]) => {
   for (const { token } of tokens) {
-    prittyPrint(token);
+    prettyPrint(token);
   }
   print("\n");
 
