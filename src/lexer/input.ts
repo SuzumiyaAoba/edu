@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import { Readable } from "node:stream";
-import { graphemesGenerator } from "@/libs/unicode";
 
 export type Input =
   | {
@@ -11,11 +10,6 @@ export type Input =
       type: "file";
       path: string;
     };
-
-export type Pos = {
-  column: number;
-  line: number;
-};
 
 export const toReadable = (input: Input): Readable => {
   switch (input.type) {

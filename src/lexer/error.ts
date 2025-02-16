@@ -1,4 +1,4 @@
-import type { Pos } from "./input";
+import type { Pos } from "./index";
 import type { TokenType } from "./token";
 
 export class PegSyntaxError extends Error {

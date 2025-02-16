@@ -16,7 +16,7 @@ import type {
 import * as token from "./token";
 import type { TokenWith } from "./token";
 
-type Pos = {
+export type Pos = {
   column: number;
   line: number;
 };
