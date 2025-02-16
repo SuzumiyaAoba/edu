@@ -1,6 +1,7 @@
 import { Lexer } from "./lexer";
 import type { Pos } from "./lexer";
-import { debugPrinter, pritty, prittyPrint } from "./lexer/printer";
+import { toReadable } from "./lexer/input";
+import { prettyPrintTokens } from "./lexer/printer";
 import type { Token } from "./lexer/token";
 
 const input = {
@@ -10,11 +11,13 @@ const input = {
 
 let line: { token: Token; pos: Pos }[] = [];
 
-for await (const token of new Lexer(input)) {
+const readable = await toReadable(input);
+
+for await (const token of new Lexer(readable)) {
   // prittyPrint(token.token);
   // debugPrinter(token);
   if (token.token.type === "EndOfLine") {
-    pritty(line);
+    prettyPrintTokens(line);
 
     line = [];
   } else {

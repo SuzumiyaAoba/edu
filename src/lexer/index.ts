@@ -278,10 +278,15 @@ export class Lexer
   #charGenerator: CharAsyncGenerator;
   #iterator: CharIterator;
 
-  constructor(input: Input) {
-    const readable = toReadable(input);
-    this.#charGenerator = CharAsyncGenerator.from(readable);
+  constructor(readableStream: ReadableStream) {
+    this.#charGenerator = CharAsyncGenerator.from(readableStream);
     this.#iterator = BufferedAsyncIterator.from(this.#charGenerator);
+  }
+
+  static async from(input: Input) {
+    const readableStream = await toReadable(input);
+
+    return new Lexer(readableStream);
   }
 
   async next(

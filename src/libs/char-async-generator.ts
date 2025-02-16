@@ -1,4 +1,3 @@
-import { Readable } from "node:stream";
 import type { PrivateConstructorParameters } from "@/libs/types";
 import { graphemesGenerator } from "@/libs/unicode";
 
@@ -21,10 +20,15 @@ export class CharAsyncGenerator
     line: 1,
   };
 
-  private constructor(source: Readable | string) {
+  private constructor(source: ReadableStream | string) {
     if (typeof source === "string") {
-      const readable = Readable.from(source);
-      this.#generator = graphemesGenerator(readable);
+      const readableStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(source);
+          controller.close();
+        },
+      });
+      this.#generator = graphemesGenerator(readableStream);
     } else {
       this.#generator = graphemesGenerator(source);
     }

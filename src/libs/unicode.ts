@@ -1,60 +1,42 @@
-import {
-  type Readable,
-  Transform,
-  type TransformCallback,
-  type TransformOptions,
-} from "node:stream";
 import { graphemeSegments } from "unicode-segmenter/grapheme";
 
-export class GraphemeStream extends Transform {
-  #buffer: string;
+export class GraphemeStream extends TransformStream<Uint8Array, string> {
+  constructor() {
+    let buffer = "";
 
-  constructor(options?: TransformOptions) {
-    super(options);
-    this.#buffer = "";
-  }
+    super({
+      transform(chunk, controller) {
+        buffer += new TextDecoder().decode(chunk);
+        let lastIndex = 0;
 
-  override _transform(
-    chunk: Buffer | string,
-    _encoding: BufferEncoding,
-    callback: TransformCallback,
-  ): void {
-    this.#buffer += chunk.toString();
-    let lastIndex = 0;
+        for (const { segment, index } of graphemeSegments(buffer)) {
+          controller.enqueue(segment);
+          lastIndex = index + segment.length;
+        }
 
-    for (const { segment, index } of graphemeSegments(this.#buffer)) {
-      this.push(segment);
-      lastIndex = index + segment.length;
-    }
-
-    this.#buffer = this.#buffer.slice(lastIndex);
-    callback();
-  }
-
-  override _flush(callback: TransformCallback): void {
-    if (this.#buffer) {
-      for (const { segment } of graphemeSegments(this.#buffer)) {
-        this.push(segment);
-      }
-    }
-    callback();
+        buffer = buffer.slice(lastIndex);
+      },
+    });
   }
 }
 
 export const bufferToGraphemes = (buffer: Buffer) => {
   const text = buffer.toString("utf8");
 
-  const graphemes = [...graphemeSegments(text)].map(
-    (segment) => segment.segment,
-  );
+  const graphemes = [...graphemeSegments(text)].map(({ segment }) => segment);
 
   return graphemes;
 };
 
-export const graphemesGenerator = async function* (readable: Readable) {
-  const stream = readable.pipe(new GraphemeStream());
-  for await (const chunk of stream.iterator()) {
-    for (const c of bufferToGraphemes(chunk.toString())) {
+export const graphemesGenerator = async function* (
+  readableStream: ReadableStream<Uint8Array>,
+) {
+  // see: https://github.com/oven-sh/bun/issues/8765
+  const stream = readableStream.pipeThrough(
+    new GraphemeStream(),
+  ) as unknown as AsyncIterable<string, void, unknown>;
+  for await (const chunk of stream) {
+    for (const c of chunk) {
       yield c;
     }
   }
