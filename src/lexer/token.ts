@@ -17,6 +17,7 @@ export type Token =
   | Dot
   | Semicolon
   | Comment
+  | Space
   | EndOfLine
   | EndOfFile;
 
@@ -101,6 +102,12 @@ export type Semicolon = {
 /** コメント `# ...`. */
 export type Comment = {
   type: "Comment";
+  value: string;
+};
+
+/** スペース. */
+export type Space = {
+  type: "Space";
   value: string;
 };
 
@@ -253,6 +260,15 @@ export const comment = <T>(value: string, meta: T): TokenWith<Comment, T> =>
   ({
     token: {
       type: "Comment",
+      value,
+    },
+    ...meta,
+  }) as const;
+
+export const space = <T>(value: string, meta: T): TokenWith<Space, T> =>
+  ({
+    token: {
+      type: "Space",
       value,
     },
     ...meta,

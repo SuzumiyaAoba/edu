@@ -1,9 +1,6 @@
 import { Readable } from "node:stream";
-import { debuglog } from "node:util";
 import type { PrivateConstructorParameters } from "@/libs/types";
 import { graphemesGenerator } from "@/libs/unicode";
-
-const debug = debuglog("char-async-generator");
 
 export type Pos = {
   column: number;
@@ -19,8 +16,10 @@ export class CharAsyncGenerator
 {
   #generator: ReturnType<typeof graphemesGenerator>;
 
-  #line: number;
-  #column: number;
+  #pos: Pos = {
+    column: 0,
+    line: 1,
+  };
 
   private constructor(source: Readable | string) {
     if (typeof source === "string") {
@@ -29,9 +28,6 @@ export class CharAsyncGenerator
     } else {
       this.#generator = graphemesGenerator(source);
     }
-
-    this.#line = 1;
-    this.#column = 0;
   }
 
   static from(
@@ -43,20 +39,16 @@ export class CharAsyncGenerator
   async next(
     ...[_value]: [] | [unknown]
   ): Promise<IteratorResult<CharGeneratorResult, void>> {
-    debug("[next]");
-    debug(`line  : ${this.#line}`);
-    debug(`column: ${this.#column}`);
-
     const char = await this.#generator.next();
     if (char.done) {
       return { done: true, value: undefined };
     }
 
     if (char.value === "\n") {
-      this.#line++;
-      this.#column = 0;
+      this.#pos.line++;
+      this.#pos.column = 0;
     } else {
-      this.#column++;
+      this.#pos.column++;
     }
 
     return {
@@ -64,8 +56,8 @@ export class CharAsyncGenerator
       value: {
         char: char.value,
         pos: {
-          line: this.#line,
-          column: this.#column,
+          line: this.#pos.line,
+          column: this.#pos.column,
         },
       },
     };
