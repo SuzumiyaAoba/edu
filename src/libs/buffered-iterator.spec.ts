@@ -1,7 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { Readable } from "node:stream";
-import * as sut from "./bufferable-iterator";
-import { charGenerator } from "./char-generator";
+import { BufferedAsyncIterator } from "./buffered-iterator";
 
 const arrayToAsyncGenrator = (arr: string[]) => {
   return (async function* () {
@@ -13,7 +11,7 @@ const arrayToAsyncGenrator = (arr: string[]) => {
 
 describe("bufferableAsyncIterator", () => {
   it("should generate a bufferable async iterator", async () => {
-    const iter = sut.bufferedAsyncIterator(
+    const iter = BufferedAsyncIterator.from(
       arrayToAsyncGenrator(["a", "b", "c"]),
     );
 
@@ -26,7 +24,7 @@ describe("bufferableAsyncIterator", () => {
   });
 
   it("should handle multiple lines correctly", async () => {
-    const iter = sut.bufferedAsyncIterator(
+    const iter = BufferedAsyncIterator.from(
       arrayToAsyncGenrator(["line 1", "line 2"]),
     );
     const actual: string[] = [];
@@ -39,7 +37,7 @@ describe("bufferableAsyncIterator", () => {
   });
 
   it("should handle empty input", async () => {
-    const iter = sut.bufferedAsyncIterator(arrayToAsyncGenrator([]));
+    const iter = BufferedAsyncIterator.from(arrayToAsyncGenrator([]));
     const actual: string[] = [];
 
     for await (const value of iter) {
@@ -50,7 +48,7 @@ describe("bufferableAsyncIterator", () => {
   });
 
   it("should correctly peek values without consuming them", async () => {
-    const iter = sut.bufferedAsyncIterator(
+    const iter = BufferedAsyncIterator.from(
       arrayToAsyncGenrator(["x", "y", "z"]),
     );
 
@@ -68,7 +66,7 @@ describe("bufferableAsyncIterator", () => {
   });
 
   it("should return done true when peeking at the end of the iterator", async () => {
-    const iter = sut.bufferedAsyncIterator(arrayToAsyncGenrator([]));
+    const iter = BufferedAsyncIterator.from(arrayToAsyncGenrator([]));
 
     const peek = await iter.peek();
     expect(peek).toEqual({ value: undefined, done: true });
@@ -79,7 +77,7 @@ describe("bufferableAsyncIterator", () => {
       size: 2,
       multiplier: 2,
     };
-    const iter = sut.bufferedAsyncIterator(
+    const iter = BufferedAsyncIterator.from(
       arrayToAsyncGenrator(["1", "2", "3", "4", "5"]),
       options,
     );

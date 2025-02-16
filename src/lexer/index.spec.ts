@@ -1,14 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import { Readable } from "node:stream";
-import { bufferedAsyncIterator } from "@/libs/bufferable-iterator";
-import { charGenerator } from "@/libs/char-generator";
+import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
+import { CharAsyncGenerator } from "@/libs/char-async-generator";
 import * as sut from "./index";
 
 const iteratorFromString = (str: string) => {
   const input = Readable.from(str);
-  const gen = charGenerator(input);
+  const gen = new CharAsyncGenerator(input);
 
-  return bufferedAsyncIterator(gen);
+  return new BufferedAsyncIterator(gen);
 };
 
 const consumeCharN = async (iter: sut.CharIterator, n: number) => {

@@ -1,5 +1,5 @@
 import { parse } from "./lexer";
-import { prittyPrint } from "./lexer/printer";
+import { debugPrinter, prittyPrint } from "./lexer/printer";
 
 const input = {
   type: "file",
@@ -7,5 +7,6 @@ const input = {
 } as const;
 
 for await (const token of parse(input)) {
-  prittyPrint(token.token);
+  // prittyPrint(token.token);
+  debugPrinter(token);
 }
