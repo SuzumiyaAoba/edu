@@ -25,34 +25,3 @@ export const toReadable = (input: Input): Readable => {
       return fs.createReadStream(input.path);
   }
 };
-
-export const charGenerator = async function* (
-  readable: Readable,
-): AsyncGenerator<{ char: string; pos: Pos }, void, unknown> {
-  const gen = graphemesGenerator(readable);
-  const pos: Pos = {
-    line: 1,
-    column: 0,
-  };
-
-  for await (const c of gen) {
-    if (c === "\n") {
-      pos.column = 0;
-      yield {
-        char: c,
-        pos: {
-          line: pos.line++,
-          column: 0,
-        },
-      };
-    } else {
-      yield {
-        char: c,
-        pos: {
-          line: pos.line,
-          column: pos.column++,
-        },
-      };
-    }
-  }
-};

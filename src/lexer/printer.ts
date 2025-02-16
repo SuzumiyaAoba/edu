@@ -1,5 +1,6 @@
 import { print } from "@/utils/io";
-import type { Token } from "./token";
+import type { Pos } from "./input";
+import type { Token, TokenWith } from "./token";
 
 export const prittyPrint = (token: Token) => {
   switch (token.type) {
@@ -64,5 +65,65 @@ export const prittyPrint = (token: Token) => {
       break;
     case "EndOfFile":
       break;
+    default: {
+      const _exhaustiveCheck: never = token;
+      throw new Error(`Unreachable: ${_exhaustiveCheck}`);
+    }
   }
+};
+
+export const debugPrinter = ({
+  token,
+  pos,
+}: TokenWith<Token, { pos: Pos }>) => {
+  const loc = `${pos.line}:${pos.column}`;
+  switch (token.type) {
+    case "Identifier":
+    case "Comment":
+      console.log(`[${loc}] ${token.type}: ${token.value}`);
+      break;
+    case "Literal":
+      console.log(`[${loc}] ${token.type}: ${JSON.stringify(token.value)}`);
+      break;
+    case "CharClass": {
+      let value = "";
+      for (const v of token.value) {
+        if (typeof v === "string") {
+          value += v;
+        } else {
+          value += `${v.value[0]}-${v.value[1]}`;
+        }
+      }
+      console.log(`[${loc}] ${token.type}: ${value}`);
+      break;
+    }
+    case "Range":
+      break;
+    case "LEFTARROW":
+    case "OPEN":
+    case "CLOSE":
+    case "SLASH":
+    case "DOT":
+    case "STAR":
+    case "PLUS":
+    case "QUESTION":
+    case "AND":
+    case "NOT":
+    case "SEMICOLON":
+    case "EndOfLine":
+    case "EndOfFile":
+      console.log(`[${loc}] ${token.type}`);
+      break;
+    default: {
+      const _exhaustiveCheck: never = token;
+      throw new Error(`Unreachable: ${_exhaustiveCheck}`);
+    }
+  }
+};
+
+export const pritty = (
+  line: string,
+  tokens: TokenWith<Token, { pos: Pos }>[],
+) => {
+  console.log(line);
 };

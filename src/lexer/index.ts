@@ -1,8 +1,9 @@
-import { bufferedAsyncIterator } from "@/libs/bufferable-iterator";
+import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
+import { CharAsyncGenerator } from "@/libs/char-async-generator";
 import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
 import { PegSyntaxError } from "./error";
 import { isEscapableChar, unescapeChar } from "./escape";
-import { type Input, charGenerator, toReadable } from "./input";
+import { type Input, toReadable } from "./input";
 import type {
   CharClass,
   Comment,
@@ -23,10 +24,10 @@ type Char<T> = T & {
   char: string;
 };
 
-type CharWithPos = Char<{ pos: Pos }>;
+export type CharWithPos = Char<{ pos: Pos }>;
 
-type CharIteratorResult = IteratorResult<CharWithPos, unknown>;
-type CharIterator = {
+export type CharIteratorResult = IteratorResult<CharWithPos, unknown>;
+export type CharIterator = {
   next(): Promise<CharIteratorResult>;
   peek(n?: number): Promise<CharIteratorResult>;
   skip(): Promise<void>;
@@ -279,8 +280,8 @@ export const parse = async function* (input: Input): AsyncGenerator<
   unknown
 > {
   const readable = toReadable(input);
-  const charGen = charGenerator(readable);
-  const iter: CharIterator = bufferedAsyncIterator(charGen);
+  const charGen = new CharAsyncGenerator(readable);
+  const iter: CharIterator = new BufferedAsyncIterator(charGen);
 
   for (let p = await iter.peek(); !p.done; p = await iter.peek()) {
     const { char, pos } = p.value;
