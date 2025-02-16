@@ -1,7 +1,4 @@
-import { debuglog } from "node:util";
 import type { PrivateConstructorParameters } from "@/libs/types";
-
-const debug = debuglog("buffered-iterator");
 
 export type Options = {
   size: number;
@@ -71,9 +68,6 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
    * @returns Promise<IteratorResult<T, TReturn>> - The result of the next element.
    */
   async next(...[_value]: [] | [TNext]): Promise<IteratorResult<T, TReturn>> {
-    debug("[next]");
-    this.#debug();
-
     const result = await this.peek();
     this.#current++;
 
@@ -87,9 +81,6 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
    * @returns Promise<IteratorResult<T, TReturn>> - The result of the lookahead.
    */
   async peek(n = 1): Promise<IteratorResult<T, TReturn>> {
-    debug("[peek]");
-    this.#debug();
-
     const lookahead = this.#current + n;
     if (lookahead >= this.#right) {
       if (lookahead >= this.#buffer.length) {
@@ -113,8 +104,6 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
    * @returns Promise<void> - The result of the skip.
    */
   async skip(n = 1): Promise<void> {
-    debug("[skip]");
-
     for (let i = 0; i < n; i++) {
       await this.next();
     }
@@ -126,8 +115,6 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
    * @param n - Number of elements to backtrack.
    */
   backtrack(n = 1): void {
-    debug("[backtrack] n = %s", n);
-
     const index = this.#current - n;
     if (index >= this.#left) {
       this.#current = index;
@@ -142,8 +129,6 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
    * @param resetBuffer - Whether to reset the buffer.
    */
   reset(resetBuffer = false): void {
-    debug("[reset] resetBuffer = %s", resetBuffer);
-
     this.#current = -1;
     this.#left = 0;
     this.#right = 0;
@@ -166,8 +151,6 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
    * Adjust the buffer.
    */
   #adjustBuffer() {
-    debug("[adjustBuffer]");
-
     const size = this.#right - this.#left;
 
     const src = this.#buffer;
@@ -188,11 +171,5 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
     this.#current = this.#current - this.#left;
     this.#left = 0;
     this.#right = size;
-  }
-
-  #debug() {
-    debug(`left   : ${this.#left}`);
-    debug(`right  : ${this.#right}`);
-    debug(`current: ${this.#current}`);
   }
 }

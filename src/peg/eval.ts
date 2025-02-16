@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
-import { bufferedAsyncIterator } from "@/libs/bufferable-iterator";
-import { charGenerator } from "@/libs/char-generator";
+import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
+import { CharAsyncGenerator } from "@/libs/char-async-generator";
 import type { Definition, Expression } from "./grammar";
 
 export const accept = <Meta = unknown>(
@@ -8,8 +8,8 @@ export const accept = <Meta = unknown>(
   input: string,
 ): boolean => {
   const readable = Readable.from(input);
-  const charGen = charGenerator(readable);
-  const iter = bufferedAsyncIterator(charGen);
+  const charGen = CharAsyncGenerator.from(readable);
+  const iter = BufferedAsyncIterator.from(charGen);
 
   /*
   switch (expr.type) {

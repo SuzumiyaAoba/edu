@@ -14,6 +14,7 @@ import type {
   Token,
 } from "./token";
 import * as token from "./token";
+import type { TokenWith } from "./token";
 
 type Pos = {
   column: number;
@@ -271,79 +272,108 @@ const consumeComment = async (
 
 const spaceRegex = /\s/;
 
-export const parse = async function* (input: Input): AsyncGenerator<
-  {
-    token: Token;
-    pos: Pos;
-  },
-  void,
-  unknown
-> {
-  const readable = toReadable(input);
-  const charGen = new CharAsyncGenerator(readable);
-  const iter: CharIterator = new BufferedAsyncIterator(charGen);
+export class Lexer
+  implements AsyncGenerator<{ token: Token; pos: Pos }, void, unknown>
+{
+  #charGenerator: CharAsyncGenerator;
+  #iterator: CharIterator;
 
-  for (let p = await iter.peek(); !p.done; p = await iter.peek()) {
-    const { char, pos } = p.value;
-
-    if (char === "\n") {
-      yield token.endOfLine({ pos });
-    } else if (char === '"' || char === "'") {
-      const literal = await consumeLiteral(iter);
-      yield token.literal(literal.token.value, { pos });
-    } else if (char === "<") {
-      await consumeLeftArrow(iter);
-      yield token.leftArrow({ pos });
-    } else if (char === "/") {
-      yield token.slash({ pos });
-      iter.reset();
-    } else if (char === "(") {
-      yield token.open({ pos });
-      iter.reset();
-    } else if (char === ")") {
-      yield token.close({ pos });
-      iter.reset();
-    } else if (char === "[") {
-      const charClass = await consumeCharClass(iter);
-      yield token.charClass(charClass.token.value, { pos });
-    } else if (char === ".") {
-      yield token.dot({ pos });
-      iter.reset();
-    } else if (char === "*") {
-      yield token.star({ pos });
-      iter.reset();
-    } else if (char === "+") {
-      yield token.plus({ pos });
-      iter.reset();
-    } else if (char === "?") {
-      yield token.question({ pos });
-      iter.reset();
-    } else if (char === "&") {
-      yield token.and({ pos });
-      iter.reset();
-    } else if (char === "!") {
-      yield token.not({ pos });
-      iter.reset();
-    } else if (char === ";") {
-      yield token.semicolon({ pos });
-      iter.reset();
-    } else if (char === "#") {
-      const comment = await consumeComment(iter);
-      yield token.comment(comment.token.value, { pos });
-    } else if (char.match(identifierRegex)) {
-      const identifier = await consumeIdentifier(iter);
-      yield token.identifier(identifier.token.value, { pos });
-    }
-
-    if (char.match(spaceRegex)) {
-      iter.reset();
-    }
+  constructor(input: Input) {
+    const readable = toReadable(input);
+    this.#charGenerator = CharAsyncGenerator.from(readable);
+    this.#iterator = BufferedAsyncIterator.from(this.#charGenerator);
   }
 
-  yield token.endOfFile({
-    pos: {
-      column: -1,
-      line: -1,
-    },
-  });
-};
+  async next(
+    ...[_value]: [] | [unknown]
+  ): Promise<IteratorResult<{ token: Token; pos: Pos }, void>> {
+    const p = await this.#iterator.peek();
+    if (p.done) {
+      return { done: true, value: undefined };
+    }
+
+    const { char, pos } = p.value;
+
+    let value: TokenWith<Token, { pos: Pos }> = token.endOfFile({ pos });
+    if (char === "\n") {
+      value = token.endOfLine({ pos });
+      this.#iterator.reset();
+    } else if (char === '"' || char === "'") {
+      const literal = await consumeLiteral(this.#iterator);
+      value = token.literal(literal.token.value, { pos });
+    } else if (char === "<") {
+      await consumeLeftArrow(this.#iterator);
+      value = token.leftArrow({ pos });
+    } else if (char === "/") {
+      value = token.slash({ pos });
+      this.#iterator.reset();
+    } else if (char === "(") {
+      value = token.open({ pos });
+      this.#iterator.reset();
+    } else if (char === ")") {
+      value = token.close({ pos });
+      this.#iterator.reset();
+    } else if (char === "[") {
+      const charClass = await consumeCharClass(this.#iterator);
+      value = token.charClass(charClass.token.value, { pos });
+    } else if (char === ".") {
+      value = token.dot({ pos });
+      this.#iterator.reset();
+    } else if (char === "*") {
+      value = token.star({ pos });
+      this.#iterator.reset();
+    } else if (char === "+") {
+      value = token.plus({ pos });
+      this.#iterator.reset();
+    } else if (char === "?") {
+      value = token.question({ pos });
+      this.#iterator.reset();
+    } else if (char === "&") {
+      value = token.and({ pos });
+      this.#iterator.reset();
+    } else if (char === "!") {
+      value = token.not({ pos });
+      this.#iterator.reset();
+    } else if (char === ";") {
+      value = token.semicolon({ pos });
+      this.#iterator.reset();
+    } else if (char === "#") {
+      const comment = await consumeComment(this.#iterator);
+      value = token.comment(comment.token.value, { pos });
+    } else if (char.match(identifierRegex)) {
+      const identifier = await consumeIdentifier(this.#iterator);
+      value = token.identifier(identifier.token.value, { pos });
+    } else if (char.match(spaceRegex)) {
+      value = token.space(char, { pos });
+      this.#iterator.reset();
+    } else {
+      throw new Error(`Unexpected char: ${char}`);
+    }
+
+    return { done: false, value };
+  }
+
+  return(
+    _value: void | PromiseLike<void>,
+  ): Promise<IteratorResult<{ token: Token; pos: Pos }, void>> {
+    throw new Error("Method not implemented.");
+  }
+
+  throw(
+    _e: unknown,
+  ): Promise<IteratorResult<{ token: Token; pos: Pos }, void>> {
+    throw new Error("Method not implemented.");
+  }
+
+  [Symbol.asyncIterator](): AsyncGenerator<
+    { token: Token; pos: Pos },
+    void,
+    unknown
+  > {
+    return this;
+  }
+
+  [Symbol.asyncDispose](): PromiseLike<void> {
+    throw new Error("Method not implemented.");
+  }
+}

@@ -60,6 +60,9 @@ export const prittyPrint = (token: Token) => {
     case "Comment":
       print(`#${token.value}`);
       break;
+    case "Space":
+      print(token.value);
+      break;
     case "EndOfLine":
       print("\n");
       break;
@@ -82,6 +85,7 @@ export const debugPrinter = ({
     case "Comment":
       console.log(`[${loc}] ${token.type}: ${token.value}`);
       break;
+    case "Space":
     case "Literal":
       console.log(`[${loc}] ${token.type}: ${JSON.stringify(token.value)}`);
       break;
