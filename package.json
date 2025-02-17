@@ -20,7 +20,8 @@
     "build": "bun run typecheck && bun build ./src/index.ts --outdir ./build",
     "format": "bunx biome format --write ./src",
     "lint": "bunx biome lint --write ./src",
-    "check": "bunx biome check --write ./src"
+    "check": "bunx biome check --write ./src",
+    "fix": "bunx biome check --fix --unsafe ./src"
   },
   "dependencies": {
     "type-fest": "^4.34.1",

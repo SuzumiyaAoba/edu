@@ -102,42 +102,40 @@ const printLine = (
 export const prettyPrintTokens = (
   tokens: TokenWith<Token, { pos: Pick<Pos, "column"> }>[],
   line?: number,
+  linePadStart = 0,
 ) => {
-  const linePart = line ? ` ${line} │ ` : "";
+  const linePart = line ? ` ${line.toString().padStart(linePadStart)} │ ` : "";
+  const offset = line ? `${" ".repeat(linePart.length - 2)}│ ` : "";
+
   print(linePart);
-
-  const offset = " ".repeat(linePart.length);
-
   for (const { token } of tokens) {
     printToken(token);
   }
   print("\n");
 
-  print(offset);
-
   let tokenNum = 0;
   let lastTokenPos: Pick<Pos, "column"> = { column: 0 };
+
+  print(offset);
   printLine(tokens, ({ pos }) => {
     print(".");
 
     tokenNum++;
     lastTokenPos = pos;
   });
-
   print("\n");
 
   for (let i = 0; i < tokenNum; i++) {
     let j = 0;
 
     print(offset);
-
     printLine(tokens, ({ token, pos }) => {
       j++;
 
       if (j < tokenNum - i) {
         print("│");
       } else if (j === tokenNum - i) {
-        print("└──");
+        print("└───");
         for (let k = pos.column; k < lastTokenPos.column; k++) {
           print("─");
         }
@@ -146,9 +144,8 @@ export const prettyPrintTokens = (
         print(token.type);
       }
     });
-
     print("\n");
   }
-
+  print(offset);
   print("\n");
 };
