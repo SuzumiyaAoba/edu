@@ -6,9 +6,9 @@
     "@biomejs/biome": "1.9.4",
     "@tsconfig/strictest": "^2.0.5",
     "@types/bun": "latest",
-    "@types/node": "^22.10.10",
+    "@types/node": "^22.13.4",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.2"
+    "lint-staged": "^15.4.3"
   },
   "peerDependencies": {
     "typescript": "^5.7.3"
@@ -18,12 +18,13 @@
     "dev": "bun run src/index.ts",
     "typecheck": "tsc --noEmit",
     "build": "bun run typecheck && bun build ./src/index.ts --outdir ./build",
-    "format": "bunx biome format --write .",
-    "lint": "bunx biome lint --write .",
-    "check": "bunx biome check --write ."
+    "format": "bunx biome format --write ./src",
+    "lint": "bunx biome lint --write ./src",
+    "check": "bunx biome check --write ./src",
+    "fix": "bunx biome check --fix --unsafe ./src"
   },
   "dependencies": {
-    "type-fest": "^4.33.0",
+    "type-fest": "^4.34.1",
     "unicode-segmenter": "^0.11.3"
   }
 }

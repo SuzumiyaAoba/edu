@@ -1,20 +1,20 @@
 import { print } from "@/utils/io";
-import type { Pos } from "./input";
+import type { Pos } from "./index";
 import type { Token, TokenWith } from "./token";
 
-export const prittyPrint = (token: Token) => {
+export const printToken = (token: Token) => {
   switch (token.type) {
     case "Identifier":
-      print(` ${token.value}`);
+      print(`${token.value}`);
       break;
     case "LEFTARROW":
-      print(" <-");
+      print("<-");
       break;
     case "OPEN":
-      print(" (");
+      print("(");
       break;
     case "CLOSE":
-      print(" )");
+      print(")");
       break;
     case "CharClass":
       print("[");
@@ -22,7 +22,7 @@ export const prittyPrint = (token: Token) => {
         if (typeof v === "string") {
           print(v);
         } else {
-          prittyPrint(v);
+          printToken(v);
         }
       }
       print("]");
@@ -31,10 +31,10 @@ export const prittyPrint = (token: Token) => {
       print(`${token.value[0]}-${token.value[1]}`);
       break;
     case "SLASH":
-      print(" /");
+      print("/");
       break;
     case "DOT":
-      print(" .");
+      print(".");
       break;
     case "STAR":
       print("*");
@@ -52,7 +52,7 @@ export const prittyPrint = (token: Token) => {
       print("!");
       break;
     case "Literal":
-      print(` ${JSON.stringify(token.value)}`);
+      print(`${JSON.stringify(token.value)}`);
       break;
     case "SEMICOLON":
       print(";");
@@ -75,59 +75,77 @@ export const prittyPrint = (token: Token) => {
   }
 };
 
-export const debugPrinter = ({
-  token,
-  pos,
-}: TokenWith<Token, { pos: Pos }>) => {
-  const loc = `${pos.line}:${pos.column}`;
-  switch (token.type) {
-    case "Identifier":
-    case "Comment":
-      console.log(`[${loc}] ${token.type}: ${token.value}`);
-      break;
-    case "Space":
-    case "Literal":
-      console.log(`[${loc}] ${token.type}: ${JSON.stringify(token.value)}`);
-      break;
-    case "CharClass": {
-      let value = "";
-      for (const v of token.value) {
-        if (typeof v === "string") {
-          value += v;
-        } else {
-          value += `${v.value[0]}-${v.value[1]}`;
-        }
-      }
-      console.log(`[${loc}] ${token.type}: ${value}`);
+const printLine = (
+  tokens: TokenWith<Token, { pos: Pick<Pos, "column"> }>[],
+  callback: (_arg: TokenWith<Token, { pos: Pick<Pos, "column"> }>) => void,
+) => {
+  let column = 0;
+  for (const { token, pos } of tokens) {
+    if (token.type === "EndOfLine") {
       break;
     }
-    case "Range":
-      break;
-    case "LEFTARROW":
-    case "OPEN":
-    case "CLOSE":
-    case "SLASH":
-    case "DOT":
-    case "STAR":
-    case "PLUS":
-    case "QUESTION":
-    case "AND":
-    case "NOT":
-    case "SEMICOLON":
-    case "EndOfLine":
-    case "EndOfFile":
-      console.log(`[${loc}] ${token.type}`);
-      break;
-    default: {
-      const _exhaustiveCheck: never = token;
-      throw new Error(`Unreachable: ${_exhaustiveCheck}`);
+
+    if (token.type === "Space") {
+      print(token.value);
+      column++;
+      continue;
     }
+
+    while (++column < pos.column) {
+      print(" ");
+    }
+
+    callback({ token, pos });
   }
 };
 
-export const pritty = (
-  line: string,
-  tokens: TokenWith<Token, { pos: Pos }>[],
+export const prettyPrintTokens = (
+  tokens: TokenWith<Token, { pos: Pick<Pos, "column"> }>[],
+  line?: number,
+  linePadStart = 0,
 ) => {
-  console.log(line);
+  const linePart = line ? ` ${line.toString().padStart(linePadStart)} │ ` : "";
+  const offset = line ? `${" ".repeat(linePart.length - 2)}│ ` : "";
+
+  print(linePart);
+  for (const { token } of tokens) {
+    printToken(token);
+  }
+  print("\n");
+
+  let tokenNum = 0;
+  let lastTokenPos: Pick<Pos, "column"> = { column: 0 };
+
+  print(offset);
+  printLine(tokens, ({ pos }) => {
+    print(".");
+
+    tokenNum++;
+    lastTokenPos = pos;
+  });
+  print("\n");
+
+  for (let i = 0; i < tokenNum; i++) {
+    let j = 0;
+
+    print(offset);
+    printLine(tokens, ({ token, pos }) => {
+      j++;
+
+      if (j < tokenNum - i) {
+        print("│");
+      } else if (j === tokenNum - i) {
+        print("└───");
+        for (let k = pos.column; k < lastTokenPos.column; k++) {
+          print("─");
+        }
+
+        print(" ");
+        print(token.type);
+      }
+    });
+    print("\n");
+  }
+  print(offset);
+  print("\n");
 };

@@ -1,6 +1,7 @@
 import { Lexer } from "./lexer";
-import type { Pos } from "./lexer/input";
-import { debugPrinter, pritty, prittyPrint } from "./lexer/printer";
+import type { Pos } from "./lexer";
+import { toReadable } from "./lexer/input";
+import { prettyPrintTokens } from "./lexer/printer";
 import type { Token } from "./lexer/token";
 
 const input = {
@@ -8,18 +9,17 @@ const input = {
   path: "./samples/peg.peg",
 } as const;
 
-let line: { token: Token; pos: Pos }[] = [];
+let lineTokens: { token: Token; pos: Pos }[] = [];
+let line = 1;
 
-for await (const token of new Lexer(input)) {
-  // prittyPrint(token.token);
-  // debugPrinter(token);
+const readable = await toReadable(input);
+
+for await (const token of new Lexer(readable)) {
   if (token.token.type === "EndOfLine") {
-    console.log("======");
-    console.log(line);
-    console.log("======");
+    prettyPrintTokens(lineTokens, line++, 3);
 
-    line = [];
+    lineTokens = [];
   } else {
-    line.push(token);
+    lineTokens.push(token);
   }
 }

@@ -1,7 +1,3 @@
-import fs from "node:fs";
-import { Readable } from "node:stream";
-import { graphemesGenerator } from "@/libs/unicode";
-
 export type Input =
   | {
       type: "string";
@@ -12,16 +8,16 @@ export type Input =
       path: string;
     };
 
-export type Pos = {
-  column: number;
-  line: number;
-};
-
-export const toReadable = (input: Input): Readable => {
+export const toReadable = async (input: Input): Promise<ReadableStream> => {
   switch (input.type) {
     case "string":
-      return Readable.from(input.content);
+      return new ReadableStream({
+        start(controller) {
+          controller.enqueue(input.content);
+          controller.close();
+        },
+      });
     case "file":
-      return fs.createReadStream(input.path);
+      return Bun.file(input.path).stream();
   }
 };
