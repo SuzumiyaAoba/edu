@@ -183,3 +183,13 @@ describe("toString", () => {
     expect(actual).toEqual(expected);
   });
 });
+
+describe("exprToString", () => {
+  it("Identifier", () => {
+    const expr: Expression = g.id("id");
+
+    const actual = g.exprToString(expr);
+
+    expect(actual).toEqual("id");
+  });
+});
