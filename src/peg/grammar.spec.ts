@@ -65,7 +65,7 @@ describe("printExpr", async () => {
 
     printExpr(expr);
 
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["id"], ["*"]]);
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["id*"]]);
   });
 
   it("OneOrMore", async () => {
@@ -77,7 +77,7 @@ describe("printExpr", async () => {
 
     printExpr(expr);
 
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["id"], ["+"]]);
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["id+"]]);
   });
 
   it("Optional", async () => {
@@ -89,7 +89,7 @@ describe("printExpr", async () => {
 
     printExpr(expr);
 
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["id"], ["?"]]);
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["id?"]]);
   });
 
   it("AndPredicate", async () => {
@@ -101,7 +101,7 @@ describe("printExpr", async () => {
 
     printExpr(expr);
 
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["&"], ["id"]]);
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["&id"]]);
   });
 
   it("NotPredicate", async () => {
@@ -113,7 +113,7 @@ describe("printExpr", async () => {
 
     printExpr(expr);
 
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["!"], ["id"]]);
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([["!id"]]);
   });
 
   it("PrioritizedChoice", async () => {
@@ -125,11 +125,7 @@ describe("printExpr", async () => {
 
     printExpr(expr);
 
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([
-      ["id"],
-      [" / "],
-      ['"+"'],
-    ]);
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([['id / "+"']]);
   });
 
   it("Sequence", async () => {
@@ -141,11 +137,16 @@ describe("printExpr", async () => {
 
     printExpr(expr);
 
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([
-      ["("],
-      ["id"],
-      ['"+"'],
-      [")"],
-    ]);
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([['id "+"']]);
+  });
+});
+
+describe("exprToString", () => {
+  it("Identifier", () => {
+    const expr: Expression = g.id("id");
+
+    const actual = g.exprToString(expr);
+
+    expect(actual).toEqual("id");
   });
 });
