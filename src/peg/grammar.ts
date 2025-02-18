@@ -190,6 +190,8 @@ export const definition = <Meta>(
   };
 };
 
+export const def = definition;
+
 export const identifier = <Meta>(
   name: string,
   meta?: Meta,
@@ -239,7 +241,7 @@ export const anyCharacter = <Meta = unknown>(
 };
 
 /** Alias for `anyCharacter`. */
-export const anyChar = anyCharacter;
+export const any = anyCharacter;
 
 export const zeroOrMore = <Meta>(
   expression: Expression<Meta>,
