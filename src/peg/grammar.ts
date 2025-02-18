@@ -180,6 +180,16 @@ export type PrioritizedChoice<Meta = unknown> = WithMeta<
   Meta
 >;
 
+export const definition = <Meta>(
+  identifier: Identifier<Meta>,
+  expression: Expression<Meta>,
+): Definition<Meta> => {
+  return {
+    identifier,
+    expression,
+  };
+};
+
 export const identifier = <Meta>(
   name: string,
   meta?: Meta,
@@ -259,6 +269,19 @@ export const oneOrMore = <Meta>(
 /** Alias for `oneOrMore`. */
 export const plus = oneOrMore;
 
+export const grouping = <Meta>(
+  expression: Expression<Meta>,
+  meta?: Meta,
+): Grouping<Meta> => {
+  return {
+    type: "Grouping",
+    expression,
+    meta,
+  };
+};
+
+export const group = grouping;
+
 export const optional = <Meta>(
   expression: Expression<Meta>,
   meta?: Meta,
@@ -331,55 +354,65 @@ export const sequence = <Meta>(
 /** Alias for `sequence`. */
 export const seq = sequence;
 
+export const printGrammar = <Meta>(grammar: Grammar<Meta>) => {
+  print(grammerToString(grammar));
+};
+
+export const printDefinition = <Meta>({
+  identifier,
+  expression,
+}: Definition<Meta>) => {
+  print(definitionToString({ identifier, expression }));
+};
+
 export const printExpr = <Meta>(expr: Expression<Meta>) => {
+  print(exprToString(expr));
+};
+
+export const grammerToString = <Meta>(grammar: Grammar<Meta>): string => {
+  return grammar.map(definitionToString).join("\n");
+};
+
+export const definitionToString = <Meta>({
+  identifier,
+  expression,
+}: Definition<Meta>): string => {
+  return `${exprToString(identifier)} <- ${exprToString(expression)};`;
+};
+
+export const exprToString = (expr: Expression<unknown>): string => {
   switch (expr.type) {
     case "Identifier":
-      print(expr.name);
-      break;
+      return expr.name;
     case "Literal":
-      print(`"${expr.value}"`);
-      break;
+      return JSON.stringify(expr.value);
     case "CharacterClass":
-      print(`[${expr.value}]`);
-      break;
+      return `[${expr.value}]`;
     case "AnyCharacter":
-      print(".");
-      break;
+      return ".";
+    case "Grouping":
+      return `(${exprToString(expr.expression)})`;
     case "PrioritizedChoice":
-      printExpr(expr.firstChoice);
-      print(" / ");
-      printExpr(expr.secondChoice);
-      break;
+      return `${exprToString(expr.firstChoice)} / ${exprToString(expr.secondChoice)}`;
     case "ZeroOrMore":
-      printExpr(expr.expression);
-      print("*");
-      break;
+      return `${exprToString(expr.expression)}*`;
     case "OneOrMore":
-      printExpr(expr.expression);
-      print("+");
-      break;
+      return `${exprToString(expr.expression)}+`;
     case "Optional":
-      printExpr(expr.expression);
-      print("?");
-      break;
+      return `${exprToString(expr.expression)}?`;
     case "AndPredicate":
-      print("&");
-      printExpr(expr.expression);
-      break;
+      return `&${exprToString(expr.expression)}`;
     case "NotPredicate":
-      print("!");
-      printExpr(expr.expression);
-      break;
+      return `!${exprToString(expr.expression)}`;
     case "Sequence":
       if (expr.expressions.length === 1) {
-        printExpr(expr.expressions[0]);
-        return;
+        return exprToString(expr.expressions[0]);
       }
 
-      print("(");
-      expr.expressions.forEach(printExpr);
-      print(")");
-
-      break;
+      return `${expr.expressions.map(exprToString).join(" ")}`;
+    default: {
+      const _exhaustiveCheck: never = expr;
+      throw new Error(`Unreachable: ${_exhaustiveCheck}`);
+    }
   }
 };

@@ -142,11 +142,21 @@ describe("printExpr", async () => {
 });
 
 describe("exprToString", () => {
-  it("Identifier", () => {
-    const expr: Expression = g.id("id");
-
+  it.each([
+    [g.id("id"), "id"],
+    [g.lit("+"), '"+"'],
+    [g.charClass("a-z"), "[a-z]"],
+    [g.anyChar(), "."],
+    [g.grouping(g.seq([g.id("x"), g.lit("+"), g.id("y")])), '(x "+" y)'],
+    [g.zeroOrMore(g.lit("0")), '"0"*'],
+    [g.oneOrMore(g.lit("0")), '"0"+'],
+    [g.opt(g.lit("0")), '"0"?'],
+    [g.and(g.id("id")), "&id"],
+    [g.not(g.id("id")), "!id"],
+    [g.seq([g.id("x"), g.lit("+"), g.id("y")]), 'x "+" y'],
+  ])("expr", (expr, expected) => {
     const actual = g.exprToString(expr);
 
-    expect(actual).toEqual("id");
+    expect(actual).toEqual(expected);
   });
 });
