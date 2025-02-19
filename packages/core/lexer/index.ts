@@ -278,7 +278,7 @@ export class Lexer
   #charGenerator: CharAsyncGenerator;
   #iterator: CharIterator;
 
-  constructor(readableStream: ReadableStream) {
+  constructor(readableStream: ReadableStream | string) {
     this.#charGenerator = CharAsyncGenerator.from(readableStream);
     this.#iterator = BufferedAsyncIterator.from(this.#charGenerator);
   }

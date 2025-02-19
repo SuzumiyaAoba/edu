@@ -35,7 +35,7 @@ describe("printExpr", async () => {
       print: jest.fn(),
     }));
 
-    const expr: Expression = g.charClass("a-z");
+    const expr: Expression = g.charClass([g.range("a", "z")]);
 
     printExpr(expr);
 
@@ -145,7 +145,7 @@ describe("toString", () => {
   it.each([
     [g.id("id"), "id"],
     [g.lit("+"), '"+"'],
-    [g.charClass("a-z"), "[a-z]"],
+    [g.charClass([g.range("a", "z")]), "[a-z]"],
     [g.any(), "."],
     [g.group(g.seq([g.id("x"), g.lit("+"), g.id("y")])), '(x "+" y)'],
     [g.star(g.lit("0")), '"0"*'],

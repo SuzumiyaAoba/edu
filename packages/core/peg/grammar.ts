@@ -58,10 +58,23 @@ export type Literal<Meta = unknown> = WithMeta<
 export type CharacterClass<Meta = unknown> = WithMeta<
   {
     type: "CharacterClass";
-    value: string;
+    value: CharacterClassValue[];
   },
   Meta
 >;
+
+export type CharacterClassValue = Char | Range;
+
+export type Char = {
+  type: "char";
+  value: string;
+};
+
+export type Range = {
+  type: "range";
+  start: string;
+  stop: string;
+};
 
 /**
  * Any character.
@@ -218,7 +231,7 @@ export const literal = <Meta>(value: string, meta?: Meta): Literal<Meta> => {
 export const lit = literal;
 
 export const characterClass = <Meta>(
-  value: string,
+  value: CharacterClassValue[],
   meta?: Meta,
 ): CharacterClass<Meta> => {
   return {
@@ -230,6 +243,23 @@ export const characterClass = <Meta>(
 
 /** Alias for `characterClass`. */
 export const charClass = characterClass;
+
+export const char = (value: string): Char => {
+  return {
+    type: "char",
+    value,
+  };
+};
+
+export const charClassRange = (start: string, stop: string): Range => {
+  return {
+    type: "range",
+    start,
+    stop,
+  };
+};
+
+export const range = charClassRange;
 
 export const anyCharacter = <Meta = unknown>(
   meta?: Meta,
@@ -389,7 +419,14 @@ export const exprToString = (expr: Expression<unknown>): string => {
     case "Literal":
       return JSON.stringify(expr.value);
     case "CharacterClass":
-      return `[${expr.value}]`;
+      return `[${expr.value.reduce((acc, elm) => {
+        switch (elm.type) {
+          case "char":
+            return acc + elm.value;
+          case "range":
+            return `${acc}${elm.start}-${elm.stop}`;
+        }
+      }, "")}]`;
     case "AnyCharacter":
       return ".";
     case "Grouping":
