@@ -1,7 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
 import { CharAsyncGenerator } from "@/libs/char-async-generator";
-import * as sut from "./index";
+import { Lexer } from "./index";
+import type { CharIterator } from "./index";
 
 const iteratorFromString = (str: string) => {
   const gen = CharAsyncGenerator.from(str);
@@ -9,11 +10,11 @@ const iteratorFromString = (str: string) => {
   return BufferedAsyncIterator.from(gen);
 };
 
-const consumeCharN = async (iter: sut.CharIterator, n: number) => {
-  const results: Awaited<ReturnType<(typeof sut)["consumeChar"]>>[] = [];
+const consumeCharN = async (lexer: Lexer, n: number) => {
+  const results: Awaited<ReturnType<(typeof lexer)["consumeChar"]>>[] = [];
 
   for (let i = 0; i < n; i++) {
-    results.push(await sut.consumeChar(iter));
+    results.push(await lexer.consumeChar());
   }
 
   return results;
@@ -21,9 +22,9 @@ const consumeCharN = async (iter: sut.CharIterator, n: number) => {
 
 describe("consumeChar", () => {
   it("should consume a single character correctly", async () => {
-    const iter = iteratorFromString("abc\n");
+    const sut = new Lexer("abc\n");
 
-    const actual = await consumeCharN(iter, 3);
+    const actual = await consumeCharN(sut, 3);
 
     expect(actual).toEqual([
       { value: { char: "a", escaped: false }, done: false },
@@ -33,17 +34,17 @@ describe("consumeChar", () => {
   });
 
   it("should consume a single character correctly", async () => {
-    const iter = iteratorFromString("");
+    const sut = new Lexer("");
 
-    const actual = await sut.consumeChar(iter);
+    const actual = await sut.consumeChar();
 
     expect(actual).toEqual({ value: undefined, done: true });
   });
 
   it("should handle escaped characters correctly", async () => {
-    const iter = iteratorFromString("\\n\\t\\r\\176\\77\\0");
+    const sut = new Lexer("\\n\\t\\r\\176\\77\\0");
 
-    const actual = await consumeCharN(iter, 6);
+    const actual = await consumeCharN(sut, 6);
 
     expect(actual).toEqual([
       { value: { char: "\n", escaped: true }, done: false },
@@ -56,9 +57,9 @@ describe("consumeChar", () => {
   });
 
   it("", async () => {
-    const iter = iteratorFromString("a");
+    const sut = new Lexer("a");
 
-    const actual = await consumeCharN(iter, 2);
+    const actual = await consumeCharN(sut, 2);
 
     expect(actual).toEqual([
       { value: { char: "a", escaped: false }, done: false },
@@ -69,9 +70,9 @@ describe("consumeChar", () => {
 
 describe("consumeLiteral", () => {
   it("should consume a literal string correctly", async () => {
-    const iter = iteratorFromString("'hello' world\n");
+    const sut = new Lexer("'hello' world\n");
 
-    const actual = await sut.consumeLiteral(iter);
+    const actual = await sut.consumeLiteral();
 
     expect(actual).toEqual({
       token: {
@@ -88,9 +89,9 @@ describe("consumeLiteral", () => {
   });
 
   it("should throw an error if the literal does not match", async () => {
-    const iter = iteratorFromString('"hello" world');
+    const sut = new Lexer('"hello" world');
 
-    const actual = await sut.consumeLiteral(iter);
+    const actual = await sut.consumeLiteral();
 
     expect(actual).toEqual({
       token: {
@@ -107,9 +108,9 @@ describe("consumeLiteral", () => {
   });
 
   it("should consume a literal with whitespace correctly", async () => {
-    const iter = iteratorFromString("'hello world'\n");
+    const sut = new Lexer("'hello world'\n");
 
-    const actual = await sut.consumeLiteral(iter);
+    const actual = await sut.consumeLiteral();
 
     expect(actual).toEqual({
       token: {
@@ -126,9 +127,9 @@ describe("consumeLiteral", () => {
   });
 
   it("should consume a literal with escaped character correctly", async () => {
-    const iter = iteratorFromString('"hello \\"world\\""');
+    const sut = new Lexer('"hello \\"world\\""');
 
-    const actual = await sut.consumeLiteral(iter);
+    const actual = await sut.consumeLiteral();
 
     expect(actual).toEqual({
       token: {

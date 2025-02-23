@@ -193,198 +193,166 @@ export type PrioritizedChoice<Meta = unknown> = WithMeta<
   Meta
 >;
 
-export const definition = <Meta>(
-  identifier: Identifier<Meta>,
-  expression: Expression<Meta>,
-): Definition<Meta> => {
-  return {
-    identifier,
-    expression,
-  };
-};
+export class PegGrammar<Meta> {
+  definition(
+    identifier: Identifier<Meta>,
+    expression: Expression<Meta>,
+  ): Definition<Meta> {
+    return {
+      identifier,
+      expression,
+    };
+  }
 
-export const def = definition;
+  def = this.definition;
 
-export const identifier = <Meta>(
-  name: string,
-  meta?: Meta,
-): Identifier<Meta> => {
-  return {
-    type: "Identifier",
-    name: name,
-    meta,
-  };
-};
+  identifier(name: string, meta?: Meta): Identifier<Meta> {
+    return {
+      type: "Identifier",
+      name: name,
+      meta,
+    };
+  }
 
-/** Alias for `identifier`. */
-export const id = identifier;
+  id = this.identifier;
 
-export const literal = <Meta>(value: string, meta?: Meta): Literal<Meta> => {
-  return {
-    type: "Literal",
-    value,
-    meta,
-  };
-};
+  literal(value: string, meta?: Meta): Literal<Meta> {
+    return {
+      type: "Literal",
+      value,
+      meta,
+    };
+  }
 
-/** Alias for `literal`. */
-export const lit = literal;
+  lit = this.literal;
 
-export const characterClass = <Meta>(
-  value: CharacterClassValue[],
-  meta?: Meta,
-): CharacterClass<Meta> => {
-  return {
-    type: "CharacterClass",
-    value,
-    meta,
-  };
-};
+  characterClass(
+    value: CharacterClassValue[],
+    meta?: Meta,
+  ): CharacterClass<Meta> {
+    return {
+      type: "CharacterClass",
+      value,
+      meta,
+    };
+  }
 
-/** Alias for `characterClass`. */
-export const charClass = characterClass;
+  charClass = this.characterClass;
 
-export const char = (value: string): Char => {
-  return {
-    type: "char",
-    value,
-  };
-};
+  char(value: string): Char {
+    return {
+      type: "char",
+      value,
+    };
+  }
 
-export const charClassRange = (start: string, stop: string): Range => {
-  return {
-    type: "range",
-    start,
-    stop,
-  };
-};
+  charClassRange(start: string, stop: string): Range {
+    return {
+      type: "range",
+      start,
+      stop,
+    };
+  }
 
-export const range = charClassRange;
+  range = this.charClassRange;
 
-export const anyCharacter = <Meta = unknown>(
-  meta?: Meta,
-): AnyCharacter<Meta> => {
-  return {
-    type: "AnyCharacter",
-    meta,
-  };
-};
+  anyCharacter(meta?: Meta): AnyCharacter<Meta> {
+    return {
+      type: "AnyCharacter",
+      meta,
+    };
+  }
 
-/** Alias for `anyCharacter`. */
-export const any = anyCharacter;
+  any = this.anyCharacter;
 
-export const zeroOrMore = <Meta>(
-  expression: Expression<Meta>,
-  meta?: Meta,
-): ZeroOrMore<Meta> => {
-  return {
-    type: "ZeroOrMore",
-    expression,
-    meta,
-  };
-};
+  zeroOrMore(expression: Expression<Meta>, meta?: Meta): ZeroOrMore<Meta> {
+    return {
+      type: "ZeroOrMore",
+      expression,
+      meta,
+    };
+  }
 
-/** Alias for `zeroOrMore`. */
-export const star = zeroOrMore;
+  star = this.zeroOrMore;
 
-export const oneOrMore = <Meta>(
-  expression: Expression<Meta>,
-  meta?: Meta,
-): OneOrMore<Meta> => {
-  return {
-    type: "OneOrMore",
-    expression,
-    meta,
-  };
-};
+  oneOrMore(expression: Expression<Meta>, meta?: Meta): OneOrMore<Meta> {
+    return {
+      type: "OneOrMore",
+      expression,
+      meta,
+    };
+  }
 
-/** Alias for `oneOrMore`. */
-export const plus = oneOrMore;
+  plus = this.oneOrMore;
 
-export const grouping = <Meta>(
-  expression: Expression<Meta>,
-  meta?: Meta,
-): Grouping<Meta> => {
-  return {
-    type: "Grouping",
-    expression,
-    meta,
-  };
-};
+  grouping(expression: Expression<Meta>, meta?: Meta): Grouping<Meta> {
+    return {
+      type: "Grouping",
+      expression,
+      meta,
+    };
+  }
 
-export const group = grouping;
+  group = this.grouping;
 
-export const optional = <Meta>(
-  expression: Expression<Meta>,
-  meta?: Meta,
-): Optional<Meta> => {
-  return {
-    type: "Optional",
-    expression,
-    meta,
-  };
-};
+  optional(expression: Expression<Meta>, meta?: Meta): Optional<Meta> {
+    return {
+      type: "Optional",
+      expression,
+      meta,
+    };
+  }
 
-/** Alias for `optional`. */
-export const opt = optional;
+  opt = this.optional;
 
-export const andPredicate = <Meta>(
-  expression: Expression<Meta>,
-  meta?: Meta,
-): AndPredicate<Meta> => {
-  return {
-    type: "AndPredicate",
-    expression,
-    meta,
-  };
-};
+  andPredicate(expression: Expression<Meta>, meta?: Meta): AndPredicate<Meta> {
+    return {
+      type: "AndPredicate",
+      expression,
+      meta,
+    };
+  }
 
-/** Alias for `andPredicate`. */
-export const and = andPredicate;
+  and = this.andPredicate;
 
-export const notPredicate = <Meta>(
-  expression: Expression<Meta>,
-  meta?: Meta,
-): NotPredicate<Meta> => {
-  return {
-    type: "NotPredicate",
-    expression,
-    meta,
-  };
-};
+  notPredicate(expression: Expression<Meta>, meta?: Meta): NotPredicate<Meta> {
+    return {
+      type: "NotPredicate",
+      expression,
+      meta,
+    };
+  }
 
-/** Alias for `notPredicate`. */
-export const not = notPredicate;
+  not = this.notPredicate;
 
-export const prioritizedChoice = <Meta>(
-  firstChoice: Expression<Meta>,
-  secondChoice: Expression<Meta>,
-  meta?: Meta,
-): PrioritizedChoice<Meta> => {
-  return {
-    type: "PrioritizedChoice",
-    firstChoice,
-    secondChoice,
-    meta,
-  };
-};
+  prioritizedChoice(
+    firstChoice: Expression<Meta>,
+    secondChoice: Expression<Meta>,
+    meta?: Meta,
+  ): PrioritizedChoice<Meta> {
+    return {
+      type: "PrioritizedChoice",
+      firstChoice,
+      secondChoice,
+      meta,
+    };
+  }
 
-/** Alias for `prioritizedChoice`. */
-export const choice = prioritizedChoice;
+  choice = this.prioritizedChoice;
 
-export const sequence = <Meta>(
-  expressions: NonEmptyTuple<Expression<Meta>>,
-  meta?: Meta,
-): Sequence<Meta> => {
-  return {
-    type: "Sequence",
-    expressions,
-    meta,
-  };
-};
+  sequence(
+    expressions: NonEmptyTuple<Expression<Meta>>,
+    meta?: Meta,
+  ): Sequence<Meta> {
+    return {
+      type: "Sequence",
+      expressions,
+      meta,
+    };
+  }
 
-/** Alias for `sequence`. */
-export const seq = sequence;
+  seq = this.sequence;
+}
 
 export const printGrammar = <Meta>(grammar: Grammar<Meta>) => {
   print(grammerToString(grammar));

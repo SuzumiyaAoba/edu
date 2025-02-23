@@ -1,9 +1,11 @@
 import { describe, expect, it, jest } from "bun:test";
 import { mockModule } from "../test/mockModule";
 import { type Expression, printExpr } from "./grammar";
-import * as g from "./grammar";
+import { PegGrammar, definitionToString, exprToString } from "./grammar";
 
 import * as ioModule from "../utils/io";
+
+const g = new PegGrammar();
 
 describe("printExpr", async () => {
   it("Identifier", async () => {
@@ -155,7 +157,7 @@ describe("toString", () => {
     [g.not(g.id("id")), "!id"],
     [g.seq([g.id("x"), g.lit("+"), g.id("y")]), 'x "+" y'],
   ])("expression", (expr, expected) => {
-    const actual = g.exprToString(expr);
+    const actual = exprToString(expr);
 
     expect(actual).toEqual(expected);
   });
@@ -178,7 +180,7 @@ describe("toString", () => {
       'expr <- term ("+" term / "-" term);',
     ],
   ])("definition", (definition, expected) => {
-    const actual = g.definitionToString(definition);
+    const actual = definitionToString(definition);
 
     expect(actual).toEqual(expected);
   });
@@ -198,7 +200,7 @@ describe("exprToString", () => {
     [g.not(g.id("id")), "!id"],
     [g.seq([g.id("x"), g.lit("+"), g.id("y")]), 'x "+" y'],
   ])("expression", (expr, expected) => {
-    const actual = g.exprToString(expr);
+    const actual = exprToString(expr);
 
     expect(actual).toEqual(expected);
   });
@@ -221,7 +223,7 @@ describe("exprToString", () => {
       'expr <- term ("+" term / "-" term);',
     ],
   ])("definition", (definition, expected) => {
-    const actual = g.definitionToString(definition);
+    const actual = definitionToString(definition);
 
     expect(actual).toEqual(expected);
   });
