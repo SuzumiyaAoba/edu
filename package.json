@@ -2,6 +2,7 @@
   "name": "edu",
   "module": "src/index.ts",
   "type": "module",
+  "workspaces": ["packages/*"],
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@tsconfig/strictest": "^2.0.5",
@@ -15,16 +16,17 @@
   },
   "scripts": {
     "prepare": "husky",
-    "dev": "bun run src/index.ts",
+    "dev": "bun run packages/core/index.ts",
     "typecheck": "tsc --noEmit",
-    "build": "bun run typecheck && bun build ./src/index.ts --outdir ./build",
-    "format": "bunx biome format --write ./src",
-    "lint": "bunx biome lint --write ./src",
-    "check": "bunx biome check --write ./src",
-    "fix": "bunx biome check --fix --unsafe ./src"
+    "build": "bun run typecheck && bun build ./packages/core/index.ts --outdir ./build",
+    "format": "bunx biome format --write ./packages",
+    "lint": "bunx biome lint --write ./packages",
+    "check": "bunx biome check --write ./packages",
+    "fix": "bunx biome check --fix --unsafe ./packages"
   },
   "dependencies": {
     "type-fest": "^4.34.1",
-    "unicode-segmenter": "^0.11.3"
+    "unicode-segmenter": "^0.11.3",
+    "edu": "workspace:*"
   }
 }

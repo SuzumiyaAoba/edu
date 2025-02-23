@@ -58,10 +58,23 @@ export type Literal<Meta = unknown> = WithMeta<
 export type CharacterClass<Meta = unknown> = WithMeta<
   {
     type: "CharacterClass";
-    value: string;
+    value: CharacterClassValue[];
   },
   Meta
 >;
+
+export type CharacterClassValue = Char | Range;
+
+export type Char = {
+  type: "char";
+  value: string;
+};
+
+export type Range = {
+  type: "range";
+  start: string;
+  stop: string;
+};
 
 /**
  * Any character.
@@ -180,6 +193,18 @@ export type PrioritizedChoice<Meta = unknown> = WithMeta<
   Meta
 >;
 
+export const definition = <Meta>(
+  identifier: Identifier<Meta>,
+  expression: Expression<Meta>,
+): Definition<Meta> => {
+  return {
+    identifier,
+    expression,
+  };
+};
+
+export const def = definition;
+
 export const identifier = <Meta>(
   name: string,
   meta?: Meta,
@@ -206,7 +231,7 @@ export const literal = <Meta>(value: string, meta?: Meta): Literal<Meta> => {
 export const lit = literal;
 
 export const characterClass = <Meta>(
-  value: string,
+  value: CharacterClassValue[],
   meta?: Meta,
 ): CharacterClass<Meta> => {
   return {
@@ -219,6 +244,23 @@ export const characterClass = <Meta>(
 /** Alias for `characterClass`. */
 export const charClass = characterClass;
 
+export const char = (value: string): Char => {
+  return {
+    type: "char",
+    value,
+  };
+};
+
+export const charClassRange = (start: string, stop: string): Range => {
+  return {
+    type: "range",
+    start,
+    stop,
+  };
+};
+
+export const range = charClassRange;
+
 export const anyCharacter = <Meta = unknown>(
   meta?: Meta,
 ): AnyCharacter<Meta> => {
@@ -229,7 +271,7 @@ export const anyCharacter = <Meta = unknown>(
 };
 
 /** Alias for `anyCharacter`. */
-export const anyChar = anyCharacter;
+export const any = anyCharacter;
 
 export const zeroOrMore = <Meta>(
   expression: Expression<Meta>,
@@ -258,6 +300,19 @@ export const oneOrMore = <Meta>(
 
 /** Alias for `oneOrMore`. */
 export const plus = oneOrMore;
+
+export const grouping = <Meta>(
+  expression: Expression<Meta>,
+  meta?: Meta,
+): Grouping<Meta> => {
+  return {
+    type: "Grouping",
+    expression,
+    meta,
+  };
+};
+
+export const group = grouping;
 
 export const optional = <Meta>(
   expression: Expression<Meta>,
@@ -331,55 +386,72 @@ export const sequence = <Meta>(
 /** Alias for `sequence`. */
 export const seq = sequence;
 
+export const printGrammar = <Meta>(grammar: Grammar<Meta>) => {
+  print(grammerToString(grammar));
+};
+
+export const printDefinition = <Meta>({
+  identifier,
+  expression,
+}: Definition<Meta>) => {
+  print(definitionToString({ identifier, expression }));
+};
+
 export const printExpr = <Meta>(expr: Expression<Meta>) => {
+  print(exprToString(expr));
+};
+
+export const grammerToString = <Meta>(grammar: Grammar<Meta>): string => {
+  return grammar.map(definitionToString).join("\n");
+};
+
+export const definitionToString = <Meta>({
+  identifier,
+  expression,
+}: Definition<Meta>): string => {
+  return `${exprToString(identifier)} <- ${exprToString(expression)};`;
+};
+
+export const exprToString = (expr: Expression<unknown>): string => {
   switch (expr.type) {
     case "Identifier":
-      print(expr.name);
-      break;
+      return expr.name;
     case "Literal":
-      print(`"${expr.value}"`);
-      break;
+      return JSON.stringify(expr.value);
     case "CharacterClass":
-      print(`[${expr.value}]`);
-      break;
+      return `[${expr.value.reduce((acc, elm) => {
+        switch (elm.type) {
+          case "char":
+            return acc + elm.value;
+          case "range":
+            return `${acc}${elm.start}-${elm.stop}`;
+        }
+      }, "")}]`;
     case "AnyCharacter":
-      print(".");
-      break;
+      return ".";
+    case "Grouping":
+      return `(${exprToString(expr.expression)})`;
     case "PrioritizedChoice":
-      printExpr(expr.firstChoice);
-      print(" / ");
-      printExpr(expr.secondChoice);
-      break;
+      return `${exprToString(expr.firstChoice)} / ${exprToString(expr.secondChoice)}`;
     case "ZeroOrMore":
-      printExpr(expr.expression);
-      print("*");
-      break;
+      return `${exprToString(expr.expression)}*`;
     case "OneOrMore":
-      printExpr(expr.expression);
-      print("+");
-      break;
+      return `${exprToString(expr.expression)}+`;
     case "Optional":
-      printExpr(expr.expression);
-      print("?");
-      break;
+      return `${exprToString(expr.expression)}?`;
     case "AndPredicate":
-      print("&");
-      printExpr(expr.expression);
-      break;
+      return `&${exprToString(expr.expression)}`;
     case "NotPredicate":
-      print("!");
-      printExpr(expr.expression);
-      break;
+      return `!${exprToString(expr.expression)}`;
     case "Sequence":
       if (expr.expressions.length === 1) {
-        printExpr(expr.expressions[0]);
-        return;
+        return exprToString(expr.expressions[0]);
       }
 
-      print("(");
-      expr.expressions.forEach(printExpr);
-      print(")");
-
-      break;
+      return `${expr.expressions.map(exprToString).join(" ")}`;
+    default: {
+      const _exhaustiveCheck: never = expr;
+      throw new Error(`Unreachable: ${_exhaustiveCheck}`);
+    }
   }
 };

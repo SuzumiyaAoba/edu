@@ -24,7 +24,7 @@ export class CharAsyncGenerator
     if (typeof source === "string") {
       const readableStream = new ReadableStream({
         start(controller) {
-          controller.enqueue(source);
+          controller.enqueue(new TextEncoder().encode(source));
           controller.close();
         },
       });
