@@ -5,7 +5,7 @@
  * @returns 0 から 7 の文字のときは `true`、それ以外は `false`
  */
 export const isOctalDigit = (char: string): boolean => {
-  return "0" <= char && char <= "7";
+  return char.length === 1 && "0" <= char && char <= "7";
 };
 
 /**
@@ -39,9 +39,12 @@ export const isOctalAscii = (str: string): boolean => {
 /**
  * ASCII 文字を表現する 8 進数を文字に変換して返す。
  *
- * @param char ASCII 文字を表現する 8 進数
+ * @param str ASCII 文字を表現する 8 進数
  * @returns ASCII 文字
  */
-export const octalDigitToChar = (char: string): string => {
-  return String.fromCharCode(Number.parseInt(char, 8));
+export const octalDigitToChar = (str: string): string => {
+  if (!isOctalAscii(str)) {
+    throw new Error("Invalid octal ASCII");
+  }
+  return String.fromCharCode(Number.parseInt(str, 8));
 };
