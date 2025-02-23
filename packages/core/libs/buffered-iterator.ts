@@ -1,29 +1,56 @@
 import type { PrivateConstructorParameters } from "@/libs/types";
 
+/**
+ * `BufferedAsyncIterator` のオプション。
+ *
+ * - `size`: バッファーサイズ
+ * - `multiplier`: バッファーを拡張するときの係数
+ */
 export type Options = {
   size: number;
   multiplier: number;
 };
 
+/**
+ * `BufferedAsyncIterator` のデフォルトオプション。
+ *
+ * - `size`: 1024
+ * - `multiplier`: 2
+ */
 export const DEFAULT_OPTIONS = {
   size: 1024,
   multiplier: 2,
 } as const satisfies Options;
 
 /**
- * Buffered async iterator.
+ * バッファー有り非同期イテレータ。
+ *
+ * @remarks
+ * 非同期ジェネレータから値を取得し、バッファーにデータを格納しながら走査する。
  */
 export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
   implements AsyncIterator<T, TReturn, TNext>
 {
   #generator: AsyncGenerator<T, TReturn, TNext>;
-  #buffer: IteratorResult<T, TReturn>[];
   #options: Options;
 
+  // それぞれの変数には次のデータを保存する。
+  //
+  // - `buffer` には非同期ジェネレータから取得した結果をそのまま保存
+  // - `left` にはバッファされたデータの先頭インデックス
+  // - `right` にはバッファされたデータの末尾インデックス
+  // - `current` には現在のインデックス
+  #buffer: IteratorResult<T, TReturn>[];
   #left: number;
   #right: number;
   #current: number;
 
+  /**
+   * コンストラクタ。
+   *
+   * @param generator - 非同期ジェネレータ
+   * @param options - オプション
+   */
   private constructor(
     generator: AsyncGenerator<T, TReturn, TNext>,
     options: Options = DEFAULT_OPTIONS,
@@ -39,10 +66,10 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
   }
 
   /**
-   * Create a buffered async iterator from a string.
+   * 非同期ジェネレータから非同期イテレータを生成して返す。
    *
-   * @param str - The string to create the iterator from.
-   * @returns BufferedAsyncIterator<string, void> - The buffered async iterator.
+   * @param args - 非同期ジェネレータとオプション
+   * @returns 非同期イテレータ.
    */
   static from<T, TReturn = unknown, TNext = unknown>(
     ...args: PrivateConstructorParameters<
@@ -53,19 +80,22 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
   }
 
   /**
-   * Get the async iterator.
+   * 非同期イテレータを返す。
    *
-   * @returns AsyncIterator<T, TReturn, TNext> - The async iterator.
+   * @remarks
+   * [反復処理プロトコル - JavaScript | MDN](https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Iteration_protocols#%E9%9D%9E%E5%90%8C%E6%9C%9F%E3%82%A4%E3%83%86%E3%83%AC%E3%83%BC%E3%82%BF%E3%83%BC%E3%81%A8%E9%9D%9E%E5%90%8C%E6%9C%9F%E5%8F%8D%E5%BE%A9%E5%8F%AF%E8%83%BD%E3%83%97%E3%83%AD%E3%83%88%E3%82%B3%E3%83%AB) に準拠するための実装。
+   *
+   * @returns 非同期イテレータ.
    */
   [Symbol.asyncIterator]() {
     return this;
   }
 
   /**
-   * Get the next element.
+   * 現在の位置の次の要素を返す。
    *
-   * @param _value - The value to pass to the generator.
-   * @returns Promise<IteratorResult<T, TReturn>> - The result of the next element.
+   * @param _value - 未使用
+   * @returns 次の要素
    */
   async next(...[_value]: [] | [TNext]): Promise<IteratorResult<T, TReturn>> {
     const result = await this.peek();
@@ -75,18 +105,23 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
   }
 
   /**
-   * Lookahead n elements.
+   * 現在の位置から `n` 要素先を返す。
    *
-   * @param n - Number of elements to lookahead.
-   * @returns Promise<IteratorResult<T, TReturn>> - The result of the lookahead.
+   * @remarks
+   * 引数に `0` を指定すると現在の位置の要素を返す。
+   *
+   * @param n - 先読みする要素数
+   * @returns 現在の位置から `n` 要素先の要素
    */
   async peek(n = 1): Promise<IteratorResult<T, TReturn>> {
     const lookahead = this.#current + n;
     if (lookahead >= this.#right) {
+      // 先読みする要素がバッファーの範囲外の場合はバッファーを調整
       if (lookahead >= this.#buffer.length) {
         this.#adjustBuffer();
       }
 
+      // バッファーにデータを追加
       const overflow = lookahead - this.#right + 1;
       for (let i = 0; i < overflow; i++) {
         const result = await this.#generator.next();
@@ -98,10 +133,13 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
   }
 
   /**
-   * Skip n elements.
+   * `n` 要素をスキップする。
    *
-   * @param n - Number of elements to skip.
-   * @returns Promise<void> - The result of the skip.
+   * @remarks
+   * 要素のスキップ処理に同期して次の操作を行うときは `await` を使ってこのメソッドの戻り値を待つ必要がある。
+   *
+   * @param n - スキップする要素数
+   * @returns なし
    */
   async skip(n = 1): Promise<void> {
     for (let i = 0; i < n; i++) {
@@ -110,9 +148,9 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
   }
 
   /**
-   * Backtrack n elements.
+   * 現在の位置を `n` 要素戻す。
    *
-   * @param n - Number of elements to backtrack.
+   * @param n - 戻す要素数
    */
   backtrack(n = 1): void {
     const index = this.#current - n;
@@ -124,9 +162,12 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
   }
 
   /**
-   * Reset the iterator.
+   * バッファーをリセットする。
    *
-   * @param resetBuffer - Whether to reset the buffer.
+   * @remarks
+   * `resetBuffer` に `true` を指定しなかった場合は、カーソルの位置だけをリセットし、バッファーのデータはそのまま残る。
+   *
+   * @param resetBuffer - バッファーをリセットするかどうか
    */
   reset(resetBuffer = false): void {
     this.#current = -1;
@@ -139,16 +180,16 @@ export class BufferedAsyncIterator<T, TReturn = unknown, TNext = unknown>
   }
 
   /**
-   * Get the buffer size.
+   * バッファーのサイズを返す。
    *
-   * @returns number - The buffer size.
+   * @returns バッファーのサイズ
    */
   bufferSize() {
     return this.#buffer.length;
   }
 
   /**
-   * Adjust the buffer.
+   * バッファーのサイズ、データの位置を調整する。
    */
   #adjustBuffer() {
     const size = this.#right - this.#left;
