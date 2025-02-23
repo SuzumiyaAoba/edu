@@ -1,20 +1,20 @@
 import { describe, expect, it } from "bun:test";
-import { type Environment } from "./eval";
+import type { Environment } from "./eval";
 import * as sut from "./eval";
 import * as g from "./grammar";
 
 describe("acceptedByExpression", () => {
   it.each([
     [g.id("literal"), "literal", "literal".length],
-    [g.lit("literal"), "literal", "literal".length ],
+    [g.lit("literal"), "literal", "literal".length],
     [g.lit("prefix"), "prefix-", "prefix".length],
-    [g.lit("no-match"), "literal", undefined ],
+    [g.lit("no-match"), "literal", undefined],
     [g.any(), "a", "a".length],
-    [g.charClass([g.char("a")]), "a", "a".length ],
-    [g.charClass([g.char("a")]), "ab", "a".length ],
-    [g.charClass([g.range("a", "z")]), "e", "e".length ],
-    [g.opt(g.lit("a")), "b", 0 ],
-    [g.opt(g.lit("a")), "a", "a".length ],
+    [g.charClass([g.char("a")]), "a", "a".length],
+    [g.charClass([g.char("a")]), "ab", "a".length],
+    [g.charClass([g.range("a", "z")]), "e", "e".length],
+    [g.opt(g.lit("a")), "b", 0],
+    [g.opt(g.lit("a")), "a", "a".length],
     [g.and(g.lit("a")), "ab", 0],
     [g.and(g.lit("b")), "ab", undefined],
     [g.not(g.lit("a")), "ab", undefined],

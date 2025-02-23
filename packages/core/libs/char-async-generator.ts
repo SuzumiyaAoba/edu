@@ -48,6 +48,10 @@ export class CharAsyncGenerator
       return { done: true, value: undefined };
     }
 
+    const pos: Pos = {
+      line: this.#pos.line,
+      column: this.#pos.column,
+    };
     if (char.value === "\n") {
       this.#pos.line++;
       this.#pos.column = 0;
@@ -59,10 +63,7 @@ export class CharAsyncGenerator
       done: false,
       value: {
         char: char.value,
-        pos: {
-          line: this.#pos.line,
-          column: this.#pos.column,
-        },
+        pos,
       },
     };
   }

@@ -78,6 +78,12 @@ describe("consumeLiteral", () => {
         type: "Literal",
         value: "hello",
       },
+      meta: {
+        pos: {
+          line: 1,
+          column: 0,
+        },
+      },
     });
   });
 
@@ -90,6 +96,12 @@ describe("consumeLiteral", () => {
       token: {
         type: "Literal",
         value: "hello",
+      },
+      meta: {
+        pos: {
+          line: 1,
+          column: 0,
+        },
       },
     });
   });
@@ -104,6 +116,12 @@ describe("consumeLiteral", () => {
         type: "Literal",
         value: "hello world",
       },
+      meta: {
+        pos: {
+          line: 1,
+          column: 0,
+        },
+      },
     });
   });
 
@@ -116,6 +134,12 @@ describe("consumeLiteral", () => {
       token: {
         type: "Literal",
         value: 'hello "world"',
+      },
+      meta: {
+        pos: {
+          line: 1,
+          column: 0,
+        },
       },
     });
   });

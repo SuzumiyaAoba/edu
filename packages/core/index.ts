@@ -9,7 +9,7 @@ const input = {
   path: "./samples/peg.peg",
 } as const;
 
-let lineTokens: { token: Token; pos: Pos }[] = [];
+let lineTokens: { token: Token; meta: { pos: Pos } }[] = [];
 let line = 1;
 
 const readable = await toReadable(input);

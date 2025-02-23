@@ -76,11 +76,14 @@ export const printToken = (token: Token) => {
 };
 
 const printLine = (
-  tokens: TokenWith<Token, { pos: Pick<Pos, "column"> }>[],
-  callback: (_arg: TokenWith<Token, { pos: Pick<Pos, "column"> }>) => void,
+  tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
+  callback: (_arg: TokenWith<{ pos: Pick<Pos, "column"> }>) => void,
 ) => {
   let column = 0;
-  for (const { token, pos } of tokens) {
+  for (const {
+    token,
+    meta: { pos },
+  } of tokens) {
     if (token.type === "EndOfLine") {
       break;
     }
@@ -95,12 +98,12 @@ const printLine = (
       print(" ");
     }
 
-    callback({ token, pos });
+    callback({ token, meta: { pos } });
   }
 };
 
 export const prettyPrintTokens = (
-  tokens: TokenWith<Token, { pos: Pick<Pos, "column"> }>[],
+  tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
   line?: number,
   linePadStart = 0,
 ) => {
@@ -117,7 +120,7 @@ export const prettyPrintTokens = (
   let lastTokenPos: Pick<Pos, "column"> = { column: 0 };
 
   print(offset);
-  printLine(tokens, ({ pos }) => {
+  printLine(tokens, ({ meta: { pos } }) => {
     print(".");
 
     tokenNum++;
@@ -129,7 +132,7 @@ export const prettyPrintTokens = (
     let j = 0;
 
     print(offset);
-    printLine(tokens, ({ token, pos }) => {
+    printLine(tokens, ({ token, meta: { pos } }) => {
       j++;
 
       if (j < tokenNum - i) {

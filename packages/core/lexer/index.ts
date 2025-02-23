@@ -36,9 +36,7 @@ export type CharIterator = {
   backtrack(n?: number): void;
 };
 
-type ConsumeResult<T extends Token> = {
-  token: T;
-};
+type ConsumeResult<T extends Token> = TokenWith<{ pos: Pos }, T>;
 
 const EofPos: Pos = {
   column: -1,
@@ -48,8 +46,8 @@ const EofPos: Pos = {
 const consumeLeftArrow = async (
   iter: CharIterator,
 ): Promise<ConsumeResult<LeftArrow>> => {
-  let p = await iter.next();
-  if (p.done) {
+  const leftArrow = await iter.next();
+  if (leftArrow.done || leftArrow.value.char !== "<") {
     throw new PegSyntaxError(
       `'<' is expected, but EOF found`,
       ["LEFTARROW"],
@@ -57,7 +55,7 @@ const consumeLeftArrow = async (
     );
   }
 
-  p = await iter.next();
+  const p = await iter.next();
   if (!p.done) {
     const { char } = p.value;
     if (char === "-") {
@@ -66,6 +64,9 @@ const consumeLeftArrow = async (
       return {
         token: {
           type: "LEFTARROW",
+        },
+        meta: {
+          pos: leftArrow.value.pos,
         },
       };
     }
@@ -104,7 +105,7 @@ const consumeIdentifier = async (
     iter.reset();
   }
 
-  return token.identifier(buf, {});
+  return token.identifier(buf, { pos: value.pos });
 };
 
 export const consumeLiteral = async (
@@ -131,7 +132,7 @@ export const consumeLiteral = async (
 
   iter.reset();
 
-  return token.literal(buf, {});
+  return token.literal(buf, { pos: open.value.pos });
 };
 
 export const consumeChar = async (
@@ -229,7 +230,7 @@ const consumeCharClass = async (
     buf.push(end ? token.range([char, end], {}).token : char);
   }
 
-  return token.charClass(buf, {});
+  return token.charClass(buf, { pos: value.pos });
 };
 
 const consumeRange = async (
@@ -253,6 +254,15 @@ const consumeRange = async (
 const consumeComment = async (
   iter: CharIterator,
 ): Promise<ConsumeResult<Comment>> => {
+  const { value, done } = await iter.next();
+  if (done) {
+    throw new PegSyntaxError("Unexpected EOF", [], EofPos);
+  }
+
+  if (value.char !== "#") {
+    throw new Error("Unexpected char");
+  }
+
   iter.reset();
 
   let buf = "";
@@ -267,13 +277,13 @@ const consumeComment = async (
     iter.reset();
   }
 
-  return token.comment(buf, {});
+  return token.comment(buf, { pos: value.pos });
 };
 
 const spaceRegex = /\s/;
 
 export class Lexer
-  implements AsyncGenerator<{ token: Token; pos: Pos }, void, unknown>
+  implements AsyncGenerator<TokenWith<{ pos: Pos }>, void, unknown>
 {
   #charGenerator: CharAsyncGenerator;
   #iterator: CharIterator;
@@ -291,7 +301,7 @@ export class Lexer
 
   async next(
     ...[_value]: [] | [unknown]
-  ): Promise<IteratorResult<{ token: Token; pos: Pos }, void>> {
+  ): Promise<IteratorResult<TokenWith<{ pos: Pos }>, void>> {
     const p = await this.#iterator.peek();
     if (p.done) {
       return { done: true, value: undefined };
@@ -299,7 +309,7 @@ export class Lexer
 
     const { char, pos } = p.value;
 
-    let value: TokenWith<Token, { pos: Pos }> = token.endOfFile({ pos });
+    let value: TokenWith<{ pos: Pos }> = token.endOfFile({ pos });
     if (char === "\n") {
       value = token.endOfLine({ pos });
       this.#iterator.reset();
@@ -360,18 +370,16 @@ export class Lexer
 
   return(
     _value: void | PromiseLike<void>,
-  ): Promise<IteratorResult<{ token: Token; pos: Pos }, void>> {
+  ): Promise<IteratorResult<TokenWith<{ pos: Pos }>, void>> {
     throw new Error("Method not implemented.");
   }
 
-  throw(
-    _e: unknown,
-  ): Promise<IteratorResult<{ token: Token; pos: Pos }, void>> {
+  throw(_e: unknown): Promise<IteratorResult<TokenWith<{ pos: Pos }>, void>> {
     throw new Error("Method not implemented.");
   }
 
   [Symbol.asyncIterator](): AsyncGenerator<
-    { token: Token; pos: Pos },
+    TokenWith<{ pos: Pos }>,
     void,
     unknown
   > {
