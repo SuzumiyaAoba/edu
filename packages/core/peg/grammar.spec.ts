@@ -183,3 +183,46 @@ describe("toString", () => {
     expect(actual).toEqual(expected);
   });
 });
+
+describe("exprToString", () => {
+  it.each([
+    [g.id("id"), "id"],
+    [g.lit("+"), '"+"'],
+    [g.charClass([g.range("a", "z")]), "[a-z]"],
+    [g.any(), "."],
+    [g.grouping(g.seq([g.id("x"), g.lit("+"), g.id("y")])), '(x "+" y)'],
+    [g.zeroOrMore(g.lit("0")), '"0"*'],
+    [g.oneOrMore(g.lit("0")), '"0"+'],
+    [g.opt(g.lit("0")), '"0"?'],
+    [g.and(g.id("id")), "&id"],
+    [g.not(g.id("id")), "!id"],
+    [g.seq([g.id("x"), g.lit("+"), g.id("y")]), 'x "+" y'],
+  ])("expression", (expr, expected) => {
+    const actual = g.exprToString(expr);
+
+    expect(actual).toEqual(expected);
+  });
+
+  it.each([
+    [g.def(g.id("definition"), g.id("x")), "definition <- x;"],
+    [
+      g.def(
+        g.id("expr"),
+        g.seq([
+          g.id("term"),
+          g.group(
+            g.choice(
+              g.seq([g.lit("+"), g.id("term")]),
+              g.seq([g.lit("-"), g.id("term")]),
+            ),
+          ),
+        ]),
+      ),
+      'expr <- term ("+" term / "-" term);',
+    ],
+  ])("definition", (definition, expected) => {
+    const actual = g.definitionToString(definition);
+
+    expect(actual).toEqual(expected);
+  });
+});

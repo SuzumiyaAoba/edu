@@ -121,171 +121,180 @@ export type EndOfFile = {
   type: "EndOfFile";
 };
 
-export type TokenWith<T extends Token, Meta> = { token: T } & Meta;
+export type TokenWith<Meta, T extends Token = Token> = { token: T; meta: Meta };
 
-export const identifier = <T>(
+export const identifier = <Meta>(
   value: string,
-  meta: T,
-): TokenWith<Identifier, T> =>
+  meta: Meta,
+): TokenWith<Meta, Identifier> =>
   ({
     token: {
       type: "Identifier",
       value,
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const leftArrow = <T>(meta: T): TokenWith<LeftArrow, T> =>
+export const leftArrow = <Meta>(meta: Meta): TokenWith<Meta, LeftArrow> =>
   ({
     token: {
       type: "LEFTARROW",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const open = <T>(meta: T): TokenWith<Open, T> =>
+export const open = <Meta>(meta: Meta): TokenWith<Meta, Open> =>
   ({
     token: {
       type: "OPEN",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const close = <T>(meta: T): TokenWith<Close, T> =>
+export const close = <Meta>(meta: Meta): TokenWith<Meta, Close> =>
   ({
     token: {
       type: "CLOSE",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const charClass = <T>(
+export const charClass = <Meta>(
   value: (string | Range)[],
-  meta: T,
-): TokenWith<CharClass, T> =>
+  meta: Meta,
+): TokenWith<Meta, CharClass> =>
   ({
     token: {
       type: "CharClass",
       value,
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const range = <T>(
+export const range = <Meta>(
   value: [string, string],
-  meta: T,
-): TokenWith<Range, T> =>
+  meta: Meta,
+): TokenWith<Meta, Range> =>
   ({
     token: {
       type: "Range",
       value,
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const slash = <T>(meta: T): TokenWith<Slash, T> =>
+export const slash = <Meta>(meta: Meta): TokenWith<Meta, Slash> =>
   ({
     token: {
       type: "SLASH",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const dot = <T>(meta: T): TokenWith<Dot, T> =>
+export const dot = <Meta>(meta: Meta): TokenWith<Meta, Dot> =>
   ({
     token: {
       type: "DOT",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const star = <T>(meta: T): TokenWith<Star, T> =>
+export const star = <Meta>(meta: Meta): TokenWith<Meta, Star> =>
   ({
     token: {
       type: "STAR",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const plus = <T>(meta: T): TokenWith<Plus, T> =>
+export const plus = <Meta>(meta: Meta): TokenWith<Meta, Plus> =>
   ({
     token: {
       type: "PLUS",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const question = <T>(meta: T): TokenWith<Question, T> =>
+export const question = <Meta>(meta: Meta): TokenWith<Meta, Question> =>
   ({
     token: {
       type: "QUESTION",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const and = <T>(meta: T): TokenWith<And, T> =>
+export const and = <Meta>(meta: Meta): TokenWith<Meta, And> =>
   ({
     token: {
       type: "AND",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const not = <T>(meta: T): TokenWith<Not, T> =>
+export const not = <Meta>(meta: Meta): TokenWith<Meta, Not> =>
   ({
     token: {
       type: "NOT",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const literal = <T>(value: string, meta: T): TokenWith<Literal, T> =>
+export const literal = <Meta>(
+  value: string,
+  meta: Meta,
+): TokenWith<Meta, Literal> =>
   ({
     token: {
       type: "Literal",
       value,
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const semicolon = <T>(meta: T): TokenWith<Semicolon, T> =>
+export const semicolon = <Meta>(meta: Meta): TokenWith<Meta, Semicolon> =>
   ({
     token: {
       type: "SEMICOLON",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const comment = <T>(value: string, meta: T): TokenWith<Comment, T> =>
+export const comment = <Meta>(
+  value: string,
+  meta: Meta,
+): TokenWith<Meta, Comment> =>
   ({
     token: {
       type: "Comment",
       value,
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const space = <T>(value: string, meta: T): TokenWith<Space, T> =>
+export const space = <Meta>(
+  value: string,
+  meta: Meta,
+): TokenWith<Meta, Space> =>
   ({
     token: {
       type: "Space",
       value,
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const endOfLine = <T>(meta: T): TokenWith<EndOfLine, T> =>
+export const endOfLine = <Meta>(meta: Meta): TokenWith<Meta, EndOfLine> =>
   ({
     token: {
       type: "EndOfLine",
     },
-    ...meta,
+    meta,
   }) as const;
 
-export const endOfFile = <T>(meta: T): TokenWith<EndOfFile, T> =>
+export const endOfFile = <Meta>(meta: Meta): TokenWith<Meta, EndOfFile> =>
   ({
     token: {
       type: "EndOfFile",
     },
-    ...meta,
+    meta,
   }) as const;

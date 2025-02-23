@@ -1,4 +1,4 @@
-import { type Expression, type Grammar } from "./grammar";
+import type { Expression, Grammar } from "./grammar";
 import * as g from "./grammar";
 
 type DefinitionMap<Meta = unknown> = Record<string, Expression<Meta>>;
@@ -92,7 +92,7 @@ export const acceptedByExpression = <Meta>(
 
       let eager = acceptedByExpression(env, oneOrMore, input, current);
       while (eager) {
-        let tryResult = acceptedByExpression(env, oneOrMore, input, eager);
+        const tryResult = acceptedByExpression(env, oneOrMore, input, eager);
         if (!tryResult) {
           break;
         }
@@ -105,14 +105,14 @@ export const acceptedByExpression = <Meta>(
     case "AndPredicate": {
       const andPredicate = expr.expression;
 
-      let tryResult = acceptedByExpression(env, andPredicate, input, current);
+      const tryResult = acceptedByExpression(env, andPredicate, input, current);
 
       return tryResult ? current : undefined;
     }
     case "NotPredicate": {
       const notPredicate = expr.expression;
 
-      let tryResult = acceptedByExpression(env, notPredicate, input, current);
+      const tryResult = acceptedByExpression(env, notPredicate, input, current);
 
       return tryResult ? undefined : current;
     }
@@ -120,7 +120,7 @@ export const acceptedByExpression = <Meta>(
       const sequence = expr.expressions;
 
       let retval: number | undefined = current;
-      for (let expr of sequence) {
+      for (const expr of sequence) {
         if (retval === undefined) {
           return undefined;
         }
