@@ -4,14 +4,14 @@ import * as sut from "./octal";
 
 describe("isOctalDigit", () => {
   it.each(["0", "1", "2", "3", "4", "5", "6", "7"])(
-    "は 8 進数 '%s' を受け取ったとき true を返す",
+    "8 進数 '%s' を受け取ったとき true を返す",
     (char) => {
       expect(sut.isOctalDigit(char)).toBe(true);
     },
   );
 
   it.each(["8", "9", "10"])(
-    "は非 8 進数 '%s' を受け取ったとき false を返す",
+    "非 8 進数 '%s' を受け取ったとき false を返す",
     (char) => {
       expect(sut.isOctalDigit(char)).toBe(false);
     },
@@ -35,7 +35,7 @@ describe("isOcalAscii", () => {
     ["207"],
     ["270"],
     ["277"],
-  ])("は 8 進数 '%s' を受け取ったとき true を返す", (str) => {
+  ])("8 進数 '%s' を受け取ったとき true を返す", (str) => {
     expect(sut.isOctalAscii(str)).toBe(true);
   });
 
@@ -66,7 +66,7 @@ describe("octalDigitToChar", () => {
     ["67", "7"],
     ["70", "8"],
     ["71", "9"],
-  ])("は 8 進数 '%s' を文字 '%s' に変換する", (octal, char) => {
+  ])("8 進数 '%s' を文字 '%s' に変換する", (octal, char) => {
     expect(sut.octalDigitToChar(octal)).toBe(char);
   });
 });
