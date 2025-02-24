@@ -1,4 +1,5 @@
 import { print } from "@/utils/io";
+import { escapeString } from "./escape";
 import type { Pos } from "./index";
 import type { Token, TokenWith } from "./token";
 
@@ -20,7 +21,7 @@ export const printToken = (token: Token) => {
       print("[");
       for (const v of token.value) {
         if (typeof v === "string") {
-          print(v);
+          print(escapeString(v, true));
         } else {
           printToken(v);
         }
@@ -52,7 +53,7 @@ export const printToken = (token: Token) => {
       print("!");
       break;
     case "Literal":
-      print(`${JSON.stringify(token.value)}`);
+      print(`"${escapeString(token.value)}"`);
       break;
     case "SEMICOLON":
       print(";");
@@ -94,7 +95,7 @@ const printLine = (
       continue;
     }
 
-    while (++column < pos.column) {
+    while (column++ < pos.column) {
       print(" ");
     }
 

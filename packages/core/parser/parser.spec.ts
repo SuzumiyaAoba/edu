@@ -1,9 +1,16 @@
 import { describe, expect, it } from "bun:test";
-import * as t from "@/lexer/token";
+import { Tokens } from "@/lexer/token";
 import type { TokenWith } from "@/lexer/token";
-import * as g from "@/peg/grammar";
+import { PegGrammar } from "@/peg/grammar";
 import type { Expression } from "@/peg/grammar";
-import * as sut from "./parser";
+import { Parser } from "./parser";
+
+type Meta = unknown;
+
+const t = new Tokens<Meta>();
+const g = new PegGrammar<Meta>();
+
+const sut = new Parser<Meta>();
 
 describe("parseExpression", () => {
   it.each([

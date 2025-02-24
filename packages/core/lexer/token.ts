@@ -123,178 +123,165 @@ export type EndOfFile = {
 
 export type TokenWith<Meta, T extends Token = Token> = { token: T; meta: Meta };
 
-export const identifier = <Meta>(
-  value: string,
-  meta: Meta,
-): TokenWith<Meta, Identifier> =>
-  ({
-    token: {
-      type: "Identifier",
-      value,
-    },
-    meta,
-  }) as const;
+export class Tokens<Meta> {
+  identifier = (value: string, meta: Meta): TokenWith<Meta, Identifier> =>
+    ({
+      token: {
+        type: "Identifier",
+        value,
+      },
+      meta,
+    }) as const;
 
-export const leftArrow = <Meta>(meta: Meta): TokenWith<Meta, LeftArrow> =>
-  ({
-    token: {
-      type: "LEFTARROW",
-    },
-    meta,
-  }) as const;
+  leftArrow = (meta: Meta): TokenWith<Meta, LeftArrow> =>
+    ({
+      token: {
+        type: "LEFTARROW",
+      },
+      meta,
+    }) as const;
 
-export const open = <Meta>(meta: Meta): TokenWith<Meta, Open> =>
-  ({
-    token: {
-      type: "OPEN",
-    },
-    meta,
-  }) as const;
+  open = (meta: Meta): TokenWith<Meta, Open> =>
+    ({
+      token: {
+        type: "OPEN",
+      },
+      meta,
+    }) as const;
 
-export const close = <Meta>(meta: Meta): TokenWith<Meta, Close> =>
-  ({
-    token: {
-      type: "CLOSE",
-    },
-    meta,
-  }) as const;
+  close = (meta: Meta): TokenWith<Meta, Close> =>
+    ({
+      token: {
+        type: "CLOSE",
+      },
+      meta,
+    }) as const;
 
-export const charClass = <Meta>(
-  value: (string | Range)[],
-  meta: Meta,
-): TokenWith<Meta, CharClass> =>
-  ({
-    token: {
-      type: "CharClass",
-      value,
-    },
-    meta,
-  }) as const;
+  charClass = (
+    value: (string | Range)[],
+    meta: Meta,
+  ): TokenWith<Meta, CharClass> =>
+    ({
+      token: {
+        type: "CharClass",
+        value,
+      },
+      meta,
+    }) as const;
 
-export const range = <Meta>(
-  value: [string, string],
-  meta: Meta,
-): TokenWith<Meta, Range> =>
-  ({
-    token: {
-      type: "Range",
-      value,
-    },
-    meta,
-  }) as const;
+  range = (value: [string, string], meta: Meta): TokenWith<Meta, Range> =>
+    ({
+      token: {
+        type: "Range",
+        value,
+      },
+      meta,
+    }) as const;
 
-export const slash = <Meta>(meta: Meta): TokenWith<Meta, Slash> =>
-  ({
-    token: {
-      type: "SLASH",
-    },
-    meta,
-  }) as const;
+  slash = (meta: Meta): TokenWith<Meta, Slash> =>
+    ({
+      token: {
+        type: "SLASH",
+      },
+      meta,
+    }) as const;
 
-export const dot = <Meta>(meta: Meta): TokenWith<Meta, Dot> =>
-  ({
-    token: {
-      type: "DOT",
-    },
-    meta,
-  }) as const;
+  dot = (meta: Meta): TokenWith<Meta, Dot> =>
+    ({
+      token: {
+        type: "DOT",
+      },
+      meta,
+    }) as const;
 
-export const star = <Meta>(meta: Meta): TokenWith<Meta, Star> =>
-  ({
-    token: {
-      type: "STAR",
-    },
-    meta,
-  }) as const;
+  star = (meta: Meta): TokenWith<Meta, Star> =>
+    ({
+      token: {
+        type: "STAR",
+      },
+      meta,
+    }) as const;
 
-export const plus = <Meta>(meta: Meta): TokenWith<Meta, Plus> =>
-  ({
-    token: {
-      type: "PLUS",
-    },
-    meta,
-  }) as const;
+  plus = (meta: Meta): TokenWith<Meta, Plus> =>
+    ({
+      token: {
+        type: "PLUS",
+      },
+      meta,
+    }) as const;
 
-export const question = <Meta>(meta: Meta): TokenWith<Meta, Question> =>
-  ({
-    token: {
-      type: "QUESTION",
-    },
-    meta,
-  }) as const;
+  question = (meta: Meta): TokenWith<Meta, Question> =>
+    ({
+      token: {
+        type: "QUESTION",
+      },
+      meta,
+    }) as const;
 
-export const and = <Meta>(meta: Meta): TokenWith<Meta, And> =>
-  ({
-    token: {
-      type: "AND",
-    },
-    meta,
-  }) as const;
+  and = (meta: Meta): TokenWith<Meta, And> =>
+    ({
+      token: {
+        type: "AND",
+      },
+      meta,
+    }) as const;
 
-export const not = <Meta>(meta: Meta): TokenWith<Meta, Not> =>
-  ({
-    token: {
-      type: "NOT",
-    },
-    meta,
-  }) as const;
+  not = (meta: Meta): TokenWith<Meta, Not> =>
+    ({
+      token: {
+        type: "NOT",
+      },
+      meta,
+    }) as const;
 
-export const literal = <Meta>(
-  value: string,
-  meta: Meta,
-): TokenWith<Meta, Literal> =>
-  ({
-    token: {
-      type: "Literal",
-      value,
-    },
-    meta,
-  }) as const;
+  literal = (value: string, meta: Meta): TokenWith<Meta, Literal> =>
+    ({
+      token: {
+        type: "Literal",
+        value,
+      },
+      meta,
+    }) as const;
 
-export const semicolon = <Meta>(meta: Meta): TokenWith<Meta, Semicolon> =>
-  ({
-    token: {
-      type: "SEMICOLON",
-    },
-    meta,
-  }) as const;
+  semicolon = (meta: Meta): TokenWith<Meta, Semicolon> =>
+    ({
+      token: {
+        type: "SEMICOLON",
+      },
+      meta,
+    }) as const;
 
-export const comment = <Meta>(
-  value: string,
-  meta: Meta,
-): TokenWith<Meta, Comment> =>
-  ({
-    token: {
-      type: "Comment",
-      value,
-    },
-    meta,
-  }) as const;
+  comment = (value: string, meta: Meta): TokenWith<Meta, Comment> =>
+    ({
+      token: {
+        type: "Comment",
+        value,
+      },
+      meta,
+    }) as const;
 
-export const space = <Meta>(
-  value: string,
-  meta: Meta,
-): TokenWith<Meta, Space> =>
-  ({
-    token: {
-      type: "Space",
-      value,
-    },
-    meta,
-  }) as const;
+  space = (value: string, meta: Meta): TokenWith<Meta, Space> =>
+    ({
+      token: {
+        type: "Space",
+        value,
+      },
+      meta,
+    }) as const;
 
-export const endOfLine = <Meta>(meta: Meta): TokenWith<Meta, EndOfLine> =>
-  ({
-    token: {
-      type: "EndOfLine",
-    },
-    meta,
-  }) as const;
+  endOfLine = (meta: Meta): TokenWith<Meta, EndOfLine> =>
+    ({
+      token: {
+        type: "EndOfLine",
+      },
+      meta,
+    }) as const;
 
-export const endOfFile = <Meta>(meta: Meta): TokenWith<Meta, EndOfFile> =>
-  ({
-    token: {
-      type: "EndOfFile",
-    },
-    meta,
-  }) as const;
+  endOfFile = (meta: Meta): TokenWith<Meta, EndOfFile> =>
+    ({
+      token: {
+        type: "EndOfFile",
+      },
+      meta,
+    }) as const;
+}

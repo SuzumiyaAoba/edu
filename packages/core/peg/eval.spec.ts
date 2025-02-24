@@ -1,7 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import type { Environment } from "./eval";
 import * as sut from "./eval";
-import * as g from "./grammar";
+import { PegGrammar } from "./grammar";
+
+const g = new PegGrammar();
 
 describe("acceptedByExpression", () => {
   it.each([

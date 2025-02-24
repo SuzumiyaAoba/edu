@@ -1,5 +1,7 @@
 import type { Expression, Grammar } from "./grammar";
-import * as g from "./grammar";
+import { PegGrammar } from "./grammar";
+
+const g = new PegGrammar();
 
 type DefinitionMap<Meta = unknown> = Record<string, Expression<Meta>>;
 export type Environment<Meta = unknown> = DefinitionMap<Meta>;
@@ -172,33 +174,4 @@ export const accept = <Meta>(
   const definitionMap = toDefinitionMap(grammar);
 
   return acceptedBy(definitionMap, entryPointId, input);
-
-  /*
-  switch (expr.type) {
-    case "Identifier":
-      break;
-    case "Literal":
-      break;
-    case "CharacterClass":
-      break;
-    case "AnyCharacter":
-      break;
-    case "Grouping":
-      break;
-    case "Optional":
-      break;
-    case "ZeroOrMore":
-      break;
-    case "OneOrMore":
-      break;
-    case "AndPredicate":
-      break;
-    case "NotPredicate":
-      break;
-    case "Sequence":
-      break;
-    case "PrioritizedChoice":
-      break;
-  }
-   */
 };
