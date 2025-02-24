@@ -21,110 +21,108 @@ export type Token =
   | EndOfLine
   | EndOfFile;
 
-/** Identifier. */
 export type Identifier = {
   type: "Identifier";
   value: string;
 };
 
-/** Literal `"..."`/`'...'`. */
 export type Literal = {
   type: "Literal";
   value: string;
 };
 
-/** Class `[...]`. */
 export type CharClass = {
   type: "CharClass";
-  value: (string | Range)[];
+  value: readonly (string | Range)[];
 };
 
 export type Range = {
   type: "Range";
-  value: [string, string];
+  value: readonly [string, string];
 };
 
-/** LEFTARROW `<-`. */
 export type LeftArrow = {
   type: "LEFTARROW";
+  value: "<-";
 };
 
-/** SLASH `/`. */
 export type Slash = {
   type: "SLASH";
+  value: "/";
 };
 
-/** AND `&`. */
 export type And = {
   type: "AND";
+  value: "&";
 };
 
-/** NOT `!`. */
 export type Not = {
   type: "NOT";
+  value: "!";
 };
 
-/** QUESTION `?`. */
 export type Question = {
   type: "QUESTION";
+  value: "?";
 };
 
-/** STAR `*`. */
 export type Star = {
   type: "STAR";
+  value: "*";
 };
 
-/** PLUS `+`. */
 export type Plus = {
   type: "PLUS";
+  value: "+";
 };
 
-/** OPEN `(`. */
 export type Open = {
   type: "OPEN";
+  value: "(";
 };
 
-/** CLOSE `)`. */
 export type Close = {
   type: "CLOSE";
+  value: ")";
 };
 
-/** DOT `.`. */
 export type Dot = {
   type: "DOT";
+  value: ".";
 };
 
-/** セミコロン `;` */
 export type Semicolon = {
   type: "SEMICOLON";
+  value: ";";
 };
 
-/** コメント `# ...`. */
 export type Comment = {
   type: "Comment";
   value: string;
 };
 
-/** スペース. */
 export type Space = {
   type: "Space";
   value: string;
 };
 
-/** 行の終端. */
 export type EndOfLine = {
   type: "EndOfLine";
+  value: string;
 };
 
-/** ファイルの終端. */
 export type EndOfFile = {
   type: "EndOfFile";
+  value: "\0";
 };
 
-export type TokenWith<Meta, T extends Token = Token> = { token: T; meta: Meta };
+export type TokenWith<META, TOKEN extends Token = Token> = {
+  token: TOKEN;
+  meta: META;
+};
 
-export class Tokens<Meta> {
-  identifier = (value: string, meta: Meta): TokenWith<Meta, Identifier> =>
+export class Tokens<META> {
+  identifier = (value: string, meta: META): TokenWith<META, Identifier> =>
     ({
       token: {
         type: "Identifier",
@@ -133,34 +131,37 @@ export class Tokens<Meta> {
       meta,
     }) as const;
 
-  leftArrow = (meta: Meta): TokenWith<Meta, LeftArrow> =>
+  leftArrow = (meta: META): TokenWith<META, LeftArrow> =>
     ({
       token: {
         type: "LEFTARROW",
+        value: "<-",
       },
       meta,
     }) as const;
 
-  open = (meta: Meta): TokenWith<Meta, Open> =>
+  open = (meta: META): TokenWith<META, Open> =>
     ({
       token: {
         type: "OPEN",
+        value: "(",
       },
       meta,
     }) as const;
 
-  close = (meta: Meta): TokenWith<Meta, Close> =>
+  close = (meta: META): TokenWith<META, Close> =>
     ({
       token: {
         type: "CLOSE",
+        value: ")",
       },
       meta,
     }) as const;
 
   charClass = (
-    value: (string | Range)[],
-    meta: Meta,
-  ): TokenWith<Meta, CharClass> =>
+    value: readonly (string | Range)[],
+    meta: META,
+  ): TokenWith<META, CharClass> =>
     ({
       token: {
         type: "CharClass",
@@ -169,7 +170,7 @@ export class Tokens<Meta> {
       meta,
     }) as const;
 
-  range = (value: [string, string], meta: Meta): TokenWith<Meta, Range> =>
+  range = (value: [string, string], meta: META): TokenWith<META, Range> =>
     ({
       token: {
         type: "Range",
@@ -178,63 +179,70 @@ export class Tokens<Meta> {
       meta,
     }) as const;
 
-  slash = (meta: Meta): TokenWith<Meta, Slash> =>
+  slash = (meta: META): TokenWith<META, Slash> =>
     ({
       token: {
         type: "SLASH",
+        value: "/",
       },
       meta,
     }) as const;
 
-  dot = (meta: Meta): TokenWith<Meta, Dot> =>
+  dot = (meta: META): TokenWith<META, Dot> =>
     ({
       token: {
         type: "DOT",
+        value: ".",
       },
       meta,
     }) as const;
 
-  star = (meta: Meta): TokenWith<Meta, Star> =>
+  star = (meta: META): TokenWith<META, Star> =>
     ({
       token: {
         type: "STAR",
+        value: "*",
       },
       meta,
     }) as const;
 
-  plus = (meta: Meta): TokenWith<Meta, Plus> =>
+  plus = (meta: META): TokenWith<META, Plus> =>
     ({
       token: {
         type: "PLUS",
+        value: "+",
       },
       meta,
     }) as const;
 
-  question = (meta: Meta): TokenWith<Meta, Question> =>
+  question = (meta: META): TokenWith<META, Question> =>
     ({
       token: {
         type: "QUESTION",
+        value: "?",
       },
       meta,
     }) as const;
 
-  and = (meta: Meta): TokenWith<Meta, And> =>
+  and = (meta: META): TokenWith<META, And> =>
     ({
       token: {
         type: "AND",
+        value: "&",
       },
       meta,
     }) as const;
 
-  not = (meta: Meta): TokenWith<Meta, Not> =>
+  not = (meta: META): TokenWith<META, Not> =>
     ({
       token: {
         type: "NOT",
+        value: "!",
       },
       meta,
     }) as const;
 
-  literal = (value: string, meta: Meta): TokenWith<Meta, Literal> =>
+  literal = (value: string, meta: META): TokenWith<META, Literal> =>
     ({
       token: {
         type: "Literal",
@@ -243,15 +251,16 @@ export class Tokens<Meta> {
       meta,
     }) as const;
 
-  semicolon = (meta: Meta): TokenWith<Meta, Semicolon> =>
+  semicolon = (meta: META): TokenWith<META, Semicolon> =>
     ({
       token: {
         type: "SEMICOLON",
+        value: ";",
       },
       meta,
     }) as const;
 
-  comment = (value: string, meta: Meta): TokenWith<Meta, Comment> =>
+  comment = (value: string, meta: META): TokenWith<META, Comment> =>
     ({
       token: {
         type: "Comment",
@@ -260,7 +269,7 @@ export class Tokens<Meta> {
       meta,
     }) as const;
 
-  space = (value: string, meta: Meta): TokenWith<Meta, Space> =>
+  space = (value: string, meta: META): TokenWith<META, Space> =>
     ({
       token: {
         type: "Space",
@@ -269,18 +278,20 @@ export class Tokens<Meta> {
       meta,
     }) as const;
 
-  endOfLine = (meta: Meta): TokenWith<Meta, EndOfLine> =>
+  endOfLine = (value: string, meta: META): TokenWith<META, EndOfLine> =>
     ({
       token: {
         type: "EndOfLine",
+        value: value,
       },
       meta,
     }) as const;
 
-  endOfFile = (meta: Meta): TokenWith<Meta, EndOfFile> =>
+  endOfFile = (meta: META): TokenWith<META, EndOfFile> =>
     ({
       token: {
         type: "EndOfFile",
+        value: "\0",
       },
       meta,
     }) as const;

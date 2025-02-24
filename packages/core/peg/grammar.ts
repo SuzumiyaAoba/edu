@@ -1,6 +1,6 @@
 import { escapeString } from "@/lexer/escape";
-import type { NonEmptyTuple } from "type-fest";
 import { print } from "../utils/io";
+import type { NonEmptyArray, ReadOnlyNonEmptyArray } from "@/utils/array";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 
@@ -67,7 +67,7 @@ export type CharacterClass<META = unknown> = Ast<
   "CharacterClass",
   META,
   {
-    value: CharacterClassValue[];
+    value: readonly CharacterClassValue[];
   }
 >;
 
@@ -178,7 +178,7 @@ export type Sequence<META = unknown> = Ast<
   "Sequence",
   META,
   {
-    expressions: NonEmptyTuple<Expression<META>>;
+    expressions: ReadOnlyNonEmptyArray<Expression<META>>;
   }
 >;
 
@@ -345,7 +345,7 @@ export class PegGrammar<Meta> {
   choice = this.prioritizedChoice;
 
   sequence(
-    expressions: NonEmptyTuple<Expression<Meta>>,
+    expressions: ReadOnlyNonEmptyArray<Expression<Meta>>,
     meta?: Meta,
   ): Sequence<Meta> {
     return {

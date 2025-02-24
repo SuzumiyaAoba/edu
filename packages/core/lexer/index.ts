@@ -77,8 +77,8 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
     const { char, pos } = p.value;
 
     let value: TokenWith<{ pos: Pos }> = token.endOfFile({ pos });
-    if (char === "\n") {
-      value = token.endOfLine({ pos });
+    if (char === "\n" || char === "\r\n") {
+      value = token.endOfLine(char, { pos });
       this.#iterator.reset();
     } else if (char === '"' || char === "'") {
       const literal = await this.consumeLiteral();
@@ -175,14 +175,9 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
       if (char === "-") {
         iter.reset();
 
-        return {
-          token: {
-            type: "LEFTARROW",
-          },
-          meta: {
-            pos: leftArrow.value.pos,
-          },
-        };
+        return this.#token.leftArrow({
+          pos: leftArrow.value.pos,
+        });
       }
 
       throw new PegSyntaxError(
