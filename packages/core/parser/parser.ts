@@ -170,19 +170,13 @@ export class Parser<Meta> {
         return this.parseExpression(tokens, nextCursor - 1, [choice]);
       }
       case "AND": {
-        return this.parseExpression(
-          tokens,
-          cursor + 1,
-          [],
-          (expr) => g.and(expr, meta),
+        return this.parseExpression(tokens, cursor + 1, [], (expr) =>
+          g.and(expr, meta),
         );
       }
       case "NOT": {
-        return this.parseExpression(
-          tokens,
-          cursor + 1,
-          [],
-          (expr) => g.not(expr, meta),
+        return this.parseExpression(tokens, cursor + 1, [], (expr) =>
+          g.not(expr, meta),
         );
       }
       case "QUESTION":

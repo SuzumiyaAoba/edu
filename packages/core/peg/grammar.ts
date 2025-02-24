@@ -5,6 +5,7 @@ import { escapeString } from "@/lexer/escape";
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 
 export type Definition<Meta = unknown> = {
+  type: "definition",
   identifier: Identifier<Meta>;
   expression: Expression<Meta>;
 };
@@ -200,6 +201,7 @@ export class PegGrammar<Meta> {
     expression: Expression<Meta>,
   ): Definition<Meta> {
     return {
+      type: "definition",
       identifier,
       expression,
     };
@@ -359,11 +361,8 @@ export const printGrammar = <Meta>(grammar: Grammar<Meta>) => {
   print(grammerToString(grammar));
 };
 
-export const printDefinition = <Meta>({
-  identifier,
-  expression,
-}: Definition<Meta>) => {
-  print(definitionToString({ identifier, expression }));
+export const printDefinition = <Meta>(definition: Definition<Meta>) => {
+  print(definitionToString(definition));
 };
 
 export const printExpr = <Meta>(expr: Expression<Meta>) => {
