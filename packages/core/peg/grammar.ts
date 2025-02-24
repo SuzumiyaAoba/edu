@@ -1,42 +1,48 @@
+import { escapeString } from "@/lexer/escape";
 import type { NonEmptyTuple } from "type-fest";
 import { print } from "../utils/io";
-import { escapeString } from "@/lexer/escape";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 
-export type Definition<Meta = unknown> = {
-  type: "definition",
-  identifier: Identifier<Meta>;
-  expression: Expression<Meta>;
-};
+export type WithMeta<T, Meta> = T & {};
 
-export type Expression<Meta = unknown> =
-  | Identifier<Meta>
-  | Literal<Meta>
-  | CharacterClass<Meta>
-  | AnyCharacter<Meta>
-  | Grouping<Meta>
-  | Optional<Meta>
-  | ZeroOrMore<Meta>
-  | OneOrMore<Meta>
-  | AndPredicate<Meta>
-  | NotPredicate<Meta>
-  | Sequence<Meta>
-  | PrioritizedChoice<Meta>;
+type Ast<TYPE, META, P> = {
+  type: TYPE;
+  meta?: META | undefined;
+} & P;
 
-export type WithMeta<T, Meta> = T & {
-  meta?: Meta | undefined;
-};
+export type Definition<META = unknown> = Ast<
+  "definition",
+  META,
+  {
+    identifier: Identifier<META>;
+    expression: Expression<META>;
+  }
+>;
+
+export type Expression<META = unknown> =
+  | Identifier<META>
+  | Literal<META>
+  | CharacterClass<META>
+  | AnyCharacter<META>
+  | Grouping<META>
+  | Optional<META>
+  | ZeroOrMore<META>
+  | OneOrMore<META>
+  | AndPredicate<META>
+  | NotPredicate<META>
+  | Sequence<META>
+  | PrioritizedChoice<META>;
 
 /**
  * Identifier.
  */
-export type Identifier<Meta = unknown> = WithMeta<
+export type Identifier<META = unknown> = Ast<
+  "Identifier",
+  META,
   {
-    type: "Identifier";
     name: string;
-  },
-  Meta
+  }
 >;
 
 /**
@@ -44,12 +50,12 @@ export type Identifier<Meta = unknown> = WithMeta<
  *
  * Operator: `' '` or `" "`
  */
-export type Literal<Meta = unknown> = WithMeta<
+export type Literal<META = unknown> = Ast<
+  "Literal",
+  META,
   {
-    type: "Literal";
     value: string;
-  },
-  Meta
+  }
 >;
 
 /**
@@ -57,12 +63,12 @@ export type Literal<Meta = unknown> = WithMeta<
  *
  * Operator: `[ ]`
  */
-export type CharacterClass<Meta = unknown> = WithMeta<
+export type CharacterClass<META = unknown> = Ast<
+  "CharacterClass",
+  META,
   {
-    type: "CharacterClass";
     value: CharacterClassValue[];
-  },
-  Meta
+  }
 >;
 
 export type CharacterClassValue = Char | Range;
@@ -83,24 +89,19 @@ export type Range = {
  *
  * Operator: `.`
  */
-export type AnyCharacter<Meta = unknown> = WithMeta<
-  {
-    type: "AnyCharacter";
-  },
-  Meta
->;
+export type AnyCharacter<META = unknown> = Ast<"AnyCharacter", META, unknown>;
 
 /**
  * Grouping.
  *
  * Operator: `(e)`
  */
-export type Grouping<Meta = unknown> = WithMeta<
+export type Grouping<META = unknown> = Ast<
+  "Grouping",
+  META,
   {
-    type: "Grouping";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -108,12 +109,12 @@ export type Grouping<Meta = unknown> = WithMeta<
  *
  * Operator: `e?`
  */
-export type Optional<Meta = unknown> = WithMeta<
+export type Optional<META = unknown> = Ast<
+  "Optional",
+  META,
   {
-    type: "Optional";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -121,12 +122,12 @@ export type Optional<Meta = unknown> = WithMeta<
  *
  * Operator: `𝑒*`
  */
-export type ZeroOrMore<Meta = unknown> = WithMeta<
+export type ZeroOrMore<META = unknown> = Ast<
+  "ZeroOrMore",
+  META,
   {
-    type: "ZeroOrMore";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -134,12 +135,12 @@ export type ZeroOrMore<Meta = unknown> = WithMeta<
  *
  * Operator: `𝑒+`
  */
-export type OneOrMore<Meta = unknown> = WithMeta<
+export type OneOrMore<META = unknown> = Ast<
+  "OneOrMore",
+  META,
   {
-    type: "OneOrMore";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -147,12 +148,12 @@ export type OneOrMore<Meta = unknown> = WithMeta<
  *
  * Operator: `&𝑒`
  */
-export type AndPredicate<Meta = unknown> = WithMeta<
+export type AndPredicate<META = unknown> = Ast<
+  "AndPredicate",
+  META,
   {
-    type: "AndPredicate";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -160,12 +161,12 @@ export type AndPredicate<Meta = unknown> = WithMeta<
  *
  * Operator: `!𝑒`
  */
-export type NotPredicate<Meta = unknown> = WithMeta<
+export type NotPredicate<META = unknown> = Ast<
+  "NotPredicate",
+  META,
   {
-    type: "NotPredicate";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -173,12 +174,12 @@ export type NotPredicate<Meta = unknown> = WithMeta<
  *
  * Operator: `𝑒₁ 𝑒₂`
  */
-export type Sequence<Meta = unknown> = WithMeta<
+export type Sequence<META = unknown> = Ast<
+  "Sequence",
+  META,
   {
-    type: "Sequence";
-    expressions: NonEmptyTuple<Expression<Meta>>;
-  },
-  Meta
+    expressions: NonEmptyTuple<Expression<META>>;
+  }
 >;
 
 /**
@@ -186,13 +187,13 @@ export type Sequence<Meta = unknown> = WithMeta<
  *
  * Operator: `𝑒₁ / 𝑒₂`
  */
-export type PrioritizedChoice<Meta = unknown> = WithMeta<
+export type PrioritizedChoice<META = unknown> = Ast<
+  "PrioritizedChoice",
+  META,
   {
-    type: "PrioritizedChoice";
-    firstChoice: Expression<Meta>;
-    secondChoice: Expression<Meta>;
-  },
-  Meta
+    firstChoice: Expression<META>;
+    secondChoice: Expression<META>;
+  }
 >;
 
 export class PegGrammar<Meta> {
