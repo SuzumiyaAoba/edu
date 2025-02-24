@@ -1,5 +1,6 @@
 import type { NonEmptyTuple } from "type-fest";
 import { print } from "../utils/io";
+import { escapeString } from "@/lexer/escape";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 
@@ -385,14 +386,14 @@ export const exprToString = (expr: Expression<unknown>): string => {
     case "Identifier":
       return expr.name;
     case "Literal":
-      return JSON.stringify(expr.value);
+      return `"${escapeString(expr.value)}"`;
     case "CharacterClass":
       return `[${expr.value.reduce((acc, elm) => {
         switch (elm.type) {
           case "char":
-            return acc + elm.value;
+            return acc + escapeString(elm.value, true);
           case "range":
-            return `${acc}${elm.start}-${elm.stop}`;
+            return `${acc}${escapeString(elm.start, true)}-${escapeString(elm.stop, true)}`;
         }
       }, "")}]`;
     case "AnyCharacter":
@@ -400,7 +401,7 @@ export const exprToString = (expr: Expression<unknown>): string => {
     case "Grouping":
       return `(${exprToString(expr.expression)})`;
     case "PrioritizedChoice":
-      return `${exprToString(expr.firstChoice)} / ${exprToString(expr.secondChoice)}`;
+      return `(${exprToString(expr.firstChoice)} / ${exprToString(expr.secondChoice)})`;
     case "ZeroOrMore":
       return `${exprToString(expr.expression)}*`;
     case "OneOrMore":
@@ -416,7 +417,7 @@ export const exprToString = (expr: Expression<unknown>): string => {
         return exprToString(expr.expressions[0]);
       }
 
-      return `${expr.expressions.map(exprToString).join(" ")}`;
+      return `(${expr.expressions.map(exprToString).join(" ")})`;
     default: {
       const _exhaustiveCheck: never = expr;
       throw new Error(`Unreachable: ${_exhaustiveCheck}`);
