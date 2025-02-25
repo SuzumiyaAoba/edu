@@ -127,7 +127,7 @@ describe("printExpr", async () => {
 
     printExpr(expr);
 
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([['(id / "+")']]);
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([['id / "+"']]);
   });
 
   it("Sequence", async () => {
@@ -139,7 +139,7 @@ describe("printExpr", async () => {
 
     printExpr(expr);
 
-    expect((ioModule.print as jest.Mock).mock.calls).toEqual([['(id "+")']]);
+    expect((ioModule.print as jest.Mock).mock.calls).toEqual([['id "+"']]);
   });
 });
 
@@ -149,13 +149,13 @@ describe("toString", () => {
     [g.lit("+"), '"+"'],
     [g.charClass([g.range("a", "z")]), "[a-z]"],
     [g.any(), "."],
-    [g.group(g.seq([g.id("x"), g.lit("+"), g.id("y")])), '((x "+" y))'],
+    [g.group(g.seq([g.id("x"), g.lit("+"), g.id("y")])), '(x "+" y)'],
     [g.star(g.lit("0")), '"0"*'],
     [g.plus(g.lit("0")), '"0"+'],
     [g.opt(g.lit("0")), '"0"?'],
     [g.and(g.id("id")), "&id"],
     [g.not(g.id("id")), "!id"],
-    [g.seq([g.id("x"), g.lit("+"), g.id("y")]), '(x "+" y)'],
+    [g.seq([g.id("x"), g.lit("+"), g.id("y")]), 'x "+" y'],
   ])("expression", (expr, expected) => {
     const actual = exprToString(expr);
 
@@ -177,7 +177,7 @@ describe("toString", () => {
           ),
         ]),
       ),
-      'expr <- (term ((("+" term) / ("-" term))));',
+      'expr <- term ("+" term / "-" term);',
     ],
   ])("definition", (definition, expected) => {
     const actual = definitionToString(definition);
@@ -192,13 +192,13 @@ describe("exprToString", () => {
     [g.lit("+"), '"+"'],
     [g.charClass([g.range("a", "z")]), "[a-z]"],
     [g.any(), "."],
-    [g.grouping(g.seq([g.id("x"), g.lit("+"), g.id("y")])), '((x "+" y))'],
+    [g.grouping(g.seq([g.id("x"), g.lit("+"), g.id("y")])), '(x "+" y)'],
     [g.zeroOrMore(g.lit("0")), '"0"*'],
     [g.oneOrMore(g.lit("0")), '"0"+'],
     [g.opt(g.lit("0")), '"0"?'],
     [g.and(g.id("id")), "&id"],
     [g.not(g.id("id")), "!id"],
-    [g.seq([g.id("x"), g.lit("+"), g.id("y")]), '(x "+" y)'],
+    [g.seq([g.id("x"), g.lit("+"), g.id("y")]), 'x "+" y'],
   ])("expression: %o", (expr, expected) => {
     const actual = exprToString(expr);
 
@@ -220,7 +220,7 @@ describe("exprToString", () => {
           ),
         ]),
       ),
-      'expr <- (term ((("+" term) / ("-" term))));',
+      'expr <- term ("+" term / "-" term);',
     ],
   ])("definition", (definition, expected) => {
     const actual = definitionToString(definition);

@@ -1,7 +1,7 @@
 import { escapeString } from "@/lexer/escape";
 import type { NonEmptyArray, ReadOnlyNonEmptyArray } from "@/utils/array";
-import { print } from "../utils/io";
 import { logger } from "@/utils/logger";
+import { print } from "../utils/io";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 
@@ -382,7 +382,10 @@ export const definitionToString = <Meta>({
   return `${exprToString(identifier)} <- ${exprToString(expression)};`;
 };
 
-export const exprToString = (expr: Expression<unknown>, group: boolean = false): string => {
+export const exprToString = (
+  expr: Expression<unknown>,
+  group = false,
+): string => {
   logger.trace(expr);
 
   switch (expr.type) {
@@ -421,7 +424,9 @@ export const exprToString = (expr: Expression<unknown>, group: boolean = false):
         return exprToString(expr.expressions[0], true);
       }
 
-      const str = expr.expressions.map((expr) => exprToString(expr, true)).join(" ");
+      const str = expr.expressions
+        .map((expr) => exprToString(expr, true))
+        .join(" ");
 
       return group ? `(${str})` : str;
     }
