@@ -1,9 +1,9 @@
 import { describe, expect, it, jest } from "bun:test";
-import { mockModule } from "../test/mockModule";
+import { mockModule } from "@/core/test/mockModule";
 import { type Expression, printExpr } from "./grammar";
 import { PegGrammar, definitionToString, exprToString } from "./grammar";
 
-import * as ioModule from "../utils/io";
+import * as ioModule from "@/core/utils/io";
 
 const g = new PegGrammar();
 

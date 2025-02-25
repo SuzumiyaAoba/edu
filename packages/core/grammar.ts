@@ -1,11 +1,8 @@
-import { escapeString } from "@/lexer/escape";
-import type { NonEmptyArray, ReadOnlyNonEmptyArray } from "@/utils/array";
-import { logger } from "@/utils/logger";
-import { print } from "../utils/io";
+import { escapeString } from "@/compiler/lexer/escape";
+import { print } from "@/core/utils/io";
+import { logger } from "@/core/utils/logger";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
-
-export type WithMeta<T, Meta> = T & {};
 
 type Ast<TYPE, META, P> = {
   type: TYPE;
