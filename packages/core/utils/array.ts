@@ -25,13 +25,13 @@ export const replaceLast = <T>(
   arr: NonEmptyArray<T>,
   callback: (last: T) => T,
 ): void => {
-  const last = arr.pop();
+  const exsiting = arr.pop();
 
-  if (last === undefined) {
+  if (exsiting === undefined) {
     throw new Error("Illegal state");
   }
 
-  const newElm = callback(last);
+  const replacement = callback(exsiting);
 
-  arr.push(newElm);
+  arr.push(replacement);
 };

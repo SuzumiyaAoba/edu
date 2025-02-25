@@ -1,6 +1,6 @@
 import { escapeString } from "@/lexer/escape";
-import { print } from "../utils/io";
 import type { NonEmptyArray, ReadOnlyNonEmptyArray } from "@/utils/array";
+import { print } from "../utils/io";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 
