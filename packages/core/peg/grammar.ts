@@ -1,6 +1,7 @@
 import { escapeString } from "@/lexer/escape";
 import type { NonEmptyArray, ReadOnlyNonEmptyArray } from "@/utils/array";
 import { print } from "../utils/io";
+import { logger } from "@/utils/logger";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 
@@ -381,7 +382,9 @@ export const definitionToString = <Meta>({
   return `${exprToString(identifier)} <- ${exprToString(expression)};`;
 };
 
-export const exprToString = (expr: Expression<unknown>): string => {
+export const exprToString = (expr: Expression<unknown>, group: boolean = false): string => {
+  logger.trace(expr);
+
   switch (expr.type) {
     case "Identifier":
       return expr.name;
@@ -399,25 +402,29 @@ export const exprToString = (expr: Expression<unknown>): string => {
     case "AnyCharacter":
       return ".";
     case "Grouping":
-      return `(${exprToString(expr.expression)})`;
-    case "PrioritizedChoice":
-      return `(${exprToString(expr.firstChoice)} / ${exprToString(expr.secondChoice)})`;
+      return `(${exprToString(expr.expression, false)})`;
+    case "PrioritizedChoice": {
+      return `${exprToString(expr.firstChoice, false)} / ${exprToString(expr.secondChoice, false)}`;
+    }
     case "ZeroOrMore":
-      return `${exprToString(expr.expression)}*`;
+      return `${exprToString(expr.expression, true)}*`;
     case "OneOrMore":
-      return `${exprToString(expr.expression)}+`;
+      return `${exprToString(expr.expression, true)}+`;
     case "Optional":
-      return `${exprToString(expr.expression)}?`;
+      return `${exprToString(expr.expression, true)}?`;
     case "AndPredicate":
-      return `&${exprToString(expr.expression)}`;
+      return `&${exprToString(expr.expression, true)}`;
     case "NotPredicate":
-      return `!${exprToString(expr.expression)}`;
-    case "Sequence":
+      return `!${exprToString(expr.expression, true)}`;
+    case "Sequence": {
       if (expr.expressions.length === 1) {
-        return exprToString(expr.expressions[0]);
+        return exprToString(expr.expressions[0], true);
       }
 
-      return `(${expr.expressions.map(exprToString).join(" ")})`;
+      const str = expr.expressions.map((expr) => exprToString(expr, true)).join(" ");
+
+      return group ? `(${str})` : str;
+    }
     default: {
       const _exhaustiveCheck: never = expr;
       throw new Error(`Unreachable: ${_exhaustiveCheck}`);
