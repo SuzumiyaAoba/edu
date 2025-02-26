@@ -1,7 +1,7 @@
 import { describe, expect, it, jest } from "bun:test";
+import { type Expression, printExpr } from "@/core/grammar";
+import { PegGrammar, definitionToString, exprToString } from "@/core/grammar";
 import { mockModule } from "@/test/mockModule";
-import { type Expression, printExpr } from "./grammar";
-import { PegGrammar, definitionToString, exprToString } from "./grammar";
 
 import * as ioModule from "@/core/utils/io";
 

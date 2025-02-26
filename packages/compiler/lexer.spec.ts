@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { Lexer } from "./index";
+import { Lexer } from "./lexer";
 
 const consumeCharN = async (lexer: Lexer, n: number) => {
   const results: Awaited<ReturnType<(typeof lexer)["consumeChar"]>>[] = [];

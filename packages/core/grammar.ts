@@ -1,4 +1,4 @@
-import { escapeString } from "@/compiler/lexer/escape";
+import { escapeString } from "@/compiler/escape";
 import { print } from "@/core/utils/io";
 import { logger } from "@/core/utils/logger";
 

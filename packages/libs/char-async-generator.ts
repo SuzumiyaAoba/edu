@@ -1,5 +1,5 @@
-import type { PrivateConstructorParameters } from "@/core/libs/types";
-import { graphemesGenerator } from "@/core/libs/unicode";
+import type { PrivateConstructorParameters } from "@/libs/types";
+import { graphemesGenerator } from "@/libs/unicode";
 
 export type Pos = {
   column: number;

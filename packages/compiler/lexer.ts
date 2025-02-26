@@ -1,13 +1,9 @@
-import { BufferedAsyncIterator } from "@/core/libs/buffered-iterator";
-import { CharAsyncGenerator } from "@/core/libs/char-async-generator";
-import {
-  isOctalAscii,
-  isOctalDigit,
-  octalDigitToChar,
-} from "@/core/libs/octal";
+import { type Input, toReadable } from "@/compiler/lexer/input";
+import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
+import { CharAsyncGenerator } from "@/libs/char-async-generator";
+import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
 import { PegSyntaxError } from "./error";
 import { isEscapableChar, unescapeChar } from "./escape";
-import { type Input, toReadable } from "./input";
 import type {
   CharClass,
   Comment,

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { Tokens } from "@/compiler/lexer/token";
-import type { TokenWith } from "@/compiler/lexer/token";
+import { Parser } from "@/compiler/parser/parser";
+import { Tokens } from "@/compiler/token";
+import type { TokenWith } from "@/compiler/token";
 import { PegGrammar } from "@/core/grammar";
 import type { Expression } from "@/core/grammar";
-import { Parser } from "./parser";
 
 type Meta = unknown;
 
