@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { BufferedAsyncIterator } from "./buffered-iterator";
+import { BufferedAsyncIterator } from "@/core/libs/buffered-iterator";
 
 const arrayToAsyncGenrator = (arr: string[]) => {
   return (async function* () {

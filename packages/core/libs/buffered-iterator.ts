@@ -1,4 +1,4 @@
-import type { PrivateConstructorParameters } from "@/libs/types";
+import type { PrivateConstructorParameters } from "@/core/libs/types";
 
 /**
  * `BufferedAsyncIterator` のオプション。
