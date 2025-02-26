@@ -1,9 +1,9 @@
+import { type Input, toReadable } from "@/compiler/lexer/input";
 import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
 import { CharAsyncGenerator } from "@/libs/char-async-generator";
 import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
 import { PegSyntaxError } from "./error";
 import { isEscapableChar, unescapeChar } from "./escape";
-import { type Input, toReadable } from "./input";
 import type {
   CharClass,
   Comment,
@@ -77,8 +77,8 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
     const { char, pos } = p.value;
 
     let value: TokenWith<{ pos: Pos }> = token.endOfFile({ pos });
-    if (char === "\n") {
-      value = token.endOfLine({ pos });
+    if (char === "\n" || char === "\r\n") {
+      value = token.endOfLine(char, { pos });
       this.#iterator.reset();
     } else if (char === '"' || char === "'") {
       const literal = await this.consumeLiteral();
@@ -175,14 +175,9 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
       if (char === "-") {
         iter.reset();
 
-        return {
-          token: {
-            type: "LEFTARROW",
-          },
-          meta: {
-            pos: leftArrow.value.pos,
-          },
-        };
+        return this.#token.leftArrow({
+          pos: leftArrow.value.pos,
+        });
       }
 
       throw new PegSyntaxError(

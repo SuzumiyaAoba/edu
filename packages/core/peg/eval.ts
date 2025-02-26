@@ -1,5 +1,5 @@
-import type { Expression, Grammar } from "./grammar";
-import { PegGrammar } from "./grammar";
+import type { Expression, Grammar } from "@/core/grammar";
+import { PegGrammar } from "@/core/grammar";
 
 const g = new PegGrammar();
 

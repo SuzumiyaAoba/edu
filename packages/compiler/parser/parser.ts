@@ -1,13 +1,13 @@
-import type { Token, TokenType, TokenWith } from "@/lexer/token";
+import type { Token, TokenType, TokenWith } from "@/compiler/lexer/token";
 import type {
   CharacterClassValue,
   Definition,
   Expression,
   Grammar,
-} from "@/peg/grammar";
-import { PegGrammar } from "@/peg/grammar";
-import { isNonEmptyArray, isSingleElementArray } from "@/utils/array";
-import * as array from "@/utils/array";
+} from "@/core/grammar";
+import { PegGrammar } from "@/core/grammar";
+import { isNonEmptyArray, isSingleElementArray } from "@/core/utils/array";
+import * as array from "@/core/utils/array";
 
 const expectToken = <Meta, T extends TokenType>(
   tokenWith: TokenWith<Meta> | undefined,
@@ -72,17 +72,17 @@ export class Parser<Meta> {
   } {
     const g = this.#grammar;
 
-    let cursor = this.consumeSpace(tokenWiths, start);
+    let cursor = this.#consumeSpace(tokenWiths, start);
     const identifier = expectToken<Meta, "Identifier">(
       tokenWiths[cursor++],
       "Identifier",
     );
 
-    cursor = this.consumeSpace(tokenWiths, cursor);
+    cursor = this.#consumeSpace(tokenWiths, cursor);
 
     expectToken(tokenWiths[cursor++], "LEFTARROW");
 
-    cursor = this.consumeSpace(tokenWiths, cursor);
+    cursor = this.#consumeSpace(tokenWiths, cursor);
 
     const { expression, cursor: nextCursor } = this.parseExpression(
       tokenWiths,
@@ -90,7 +90,7 @@ export class Parser<Meta> {
     );
 
     cursor = nextCursor;
-    cursor = this.consumeSpace(tokenWiths, cursor);
+    cursor = this.#consumeSpace(tokenWiths, cursor);
 
     return {
       definition: g.definition(
@@ -170,19 +170,13 @@ export class Parser<Meta> {
         return this.parseExpression(tokens, nextCursor - 1, [choice]);
       }
       case "AND": {
-        return this.parseExpression(
-          tokens,
-          cursor + 1,
-          [],
-          (expr) => g.and(expr, meta),
+        return this.parseExpression(tokens, cursor + 1, [], (expr) =>
+          g.and(expr, meta),
         );
       }
       case "NOT": {
-        return this.parseExpression(
-          tokens,
-          cursor + 1,
-          [],
-          (expr) => g.not(expr, meta),
+        return this.parseExpression(tokens, cursor + 1, [], (expr) =>
+          g.not(expr, meta),
         );
       }
       case "QUESTION":
@@ -258,7 +252,7 @@ export class Parser<Meta> {
     }
   }
 
-  consumeSpace(tokenWiths: TokenWith<Meta>[], start = 0) {
+  #consumeSpace(tokenWiths: TokenWith<Meta>[], start = 0) {
     let cursor = start;
     while (
       tokenWiths[cursor]?.token.type === "Space" ||

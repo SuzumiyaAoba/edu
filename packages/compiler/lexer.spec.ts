@@ -1,14 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
-import { CharAsyncGenerator } from "@/libs/char-async-generator";
-import { Lexer } from "./index";
-import type { CharIterator } from "./index";
-
-const iteratorFromString = (str: string) => {
-  const gen = CharAsyncGenerator.from(str);
-
-  return BufferedAsyncIterator.from(gen);
-};
+import { Lexer } from "./lexer";
 
 const consumeCharN = async (lexer: Lexer, n: number) => {
   const results: Awaited<ReturnType<(typeof lexer)["consumeChar"]>>[] = [];

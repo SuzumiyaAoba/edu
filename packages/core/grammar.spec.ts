@@ -1,15 +1,15 @@
 import { describe, expect, it, jest } from "bun:test";
-import { mockModule } from "../test/mockModule";
-import { type Expression, printExpr } from "./grammar";
-import { PegGrammar, definitionToString, exprToString } from "./grammar";
+import { type Expression, printExpr } from "@/core/grammar";
+import { PegGrammar, definitionToString, exprToString } from "@/core/grammar";
+import { mockModule } from "@/test/mockModule";
 
-import * as ioModule from "../utils/io";
+import * as ioModule from "@/core/utils/io";
 
 const g = new PegGrammar();
 
 describe("printExpr", async () => {
   it("Identifier", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -21,7 +21,7 @@ describe("printExpr", async () => {
   });
 
   it("literal", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -33,7 +33,7 @@ describe("printExpr", async () => {
   });
 
   it("CharacterClass", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -45,7 +45,7 @@ describe("printExpr", async () => {
   });
 
   it("AnyCharacter", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -59,7 +59,7 @@ describe("printExpr", async () => {
   });
 
   it("ZeroOrMore", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -71,7 +71,7 @@ describe("printExpr", async () => {
   });
 
   it("OneOrMore", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -83,7 +83,7 @@ describe("printExpr", async () => {
   });
 
   it("Optional", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -95,7 +95,7 @@ describe("printExpr", async () => {
   });
 
   it("AndPredicate", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -107,7 +107,7 @@ describe("printExpr", async () => {
   });
 
   it("NotPredicate", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -119,7 +119,7 @@ describe("printExpr", async () => {
   });
 
   it("PrioritizedChoice", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -131,7 +131,7 @@ describe("printExpr", async () => {
   });
 
   it("Sequence", async () => {
-    using _ioModuleMock = await mockModule("../utils/io", () => ({
+    using _ioModuleMock = await mockModule("@/core/utils/io", () => ({
       print: jest.fn(),
     }));
 
@@ -199,7 +199,7 @@ describe("exprToString", () => {
     [g.and(g.id("id")), "&id"],
     [g.not(g.id("id")), "!id"],
     [g.seq([g.id("x"), g.lit("+"), g.id("y")]), 'x "+" y'],
-  ])("expression", (expr, expected) => {
+  ])("expression: %o", (expr, expected) => {
     const actual = exprToString(expr);
 
     expect(actual).toEqual(expected);

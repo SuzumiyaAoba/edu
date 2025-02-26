@@ -1,41 +1,46 @@
-import type { NonEmptyTuple } from "type-fest";
-import { print } from "../utils/io";
-import { escapeString } from "@/lexer/escape";
+import { escapeString } from "@/compiler/escape";
+import { print } from "@/core/utils/io";
+import { logger } from "@/core/utils/logger";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 
-export type Definition<Meta = unknown> = {
-  identifier: Identifier<Meta>;
-  expression: Expression<Meta>;
-};
+type Ast<TYPE, META, P> = {
+  type: TYPE;
+  meta?: META | undefined;
+} & P;
 
-export type Expression<Meta = unknown> =
-  | Identifier<Meta>
-  | Literal<Meta>
-  | CharacterClass<Meta>
-  | AnyCharacter<Meta>
-  | Grouping<Meta>
-  | Optional<Meta>
-  | ZeroOrMore<Meta>
-  | OneOrMore<Meta>
-  | AndPredicate<Meta>
-  | NotPredicate<Meta>
-  | Sequence<Meta>
-  | PrioritizedChoice<Meta>;
+export type Definition<META = unknown> = Ast<
+  "definition",
+  META,
+  {
+    identifier: Identifier<META>;
+    expression: Expression<META>;
+  }
+>;
 
-export type WithMeta<T, Meta> = T & {
-  meta?: Meta | undefined;
-};
+export type Expression<META = unknown> =
+  | Identifier<META>
+  | Literal<META>
+  | CharacterClass<META>
+  | AnyCharacter<META>
+  | Grouping<META>
+  | Optional<META>
+  | ZeroOrMore<META>
+  | OneOrMore<META>
+  | AndPredicate<META>
+  | NotPredicate<META>
+  | Sequence<META>
+  | PrioritizedChoice<META>;
 
 /**
  * Identifier.
  */
-export type Identifier<Meta = unknown> = WithMeta<
+export type Identifier<META = unknown> = Ast<
+  "Identifier",
+  META,
   {
-    type: "Identifier";
     name: string;
-  },
-  Meta
+  }
 >;
 
 /**
@@ -43,12 +48,12 @@ export type Identifier<Meta = unknown> = WithMeta<
  *
  * Operator: `' '` or `" "`
  */
-export type Literal<Meta = unknown> = WithMeta<
+export type Literal<META = unknown> = Ast<
+  "Literal",
+  META,
   {
-    type: "Literal";
     value: string;
-  },
-  Meta
+  }
 >;
 
 /**
@@ -56,12 +61,12 @@ export type Literal<Meta = unknown> = WithMeta<
  *
  * Operator: `[ ]`
  */
-export type CharacterClass<Meta = unknown> = WithMeta<
+export type CharacterClass<META = unknown> = Ast<
+  "CharacterClass",
+  META,
   {
-    type: "CharacterClass";
-    value: CharacterClassValue[];
-  },
-  Meta
+    value: readonly CharacterClassValue[];
+  }
 >;
 
 export type CharacterClassValue = Char | Range;
@@ -82,24 +87,19 @@ export type Range = {
  *
  * Operator: `.`
  */
-export type AnyCharacter<Meta = unknown> = WithMeta<
-  {
-    type: "AnyCharacter";
-  },
-  Meta
->;
+export type AnyCharacter<META = unknown> = Ast<"AnyCharacter", META, unknown>;
 
 /**
  * Grouping.
  *
  * Operator: `(e)`
  */
-export type Grouping<Meta = unknown> = WithMeta<
+export type Grouping<META = unknown> = Ast<
+  "Grouping",
+  META,
   {
-    type: "Grouping";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -107,12 +107,12 @@ export type Grouping<Meta = unknown> = WithMeta<
  *
  * Operator: `e?`
  */
-export type Optional<Meta = unknown> = WithMeta<
+export type Optional<META = unknown> = Ast<
+  "Optional",
+  META,
   {
-    type: "Optional";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -120,12 +120,12 @@ export type Optional<Meta = unknown> = WithMeta<
  *
  * Operator: `𝑒*`
  */
-export type ZeroOrMore<Meta = unknown> = WithMeta<
+export type ZeroOrMore<META = unknown> = Ast<
+  "ZeroOrMore",
+  META,
   {
-    type: "ZeroOrMore";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -133,12 +133,12 @@ export type ZeroOrMore<Meta = unknown> = WithMeta<
  *
  * Operator: `𝑒+`
  */
-export type OneOrMore<Meta = unknown> = WithMeta<
+export type OneOrMore<META = unknown> = Ast<
+  "OneOrMore",
+  META,
   {
-    type: "OneOrMore";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -146,12 +146,12 @@ export type OneOrMore<Meta = unknown> = WithMeta<
  *
  * Operator: `&𝑒`
  */
-export type AndPredicate<Meta = unknown> = WithMeta<
+export type AndPredicate<META = unknown> = Ast<
+  "AndPredicate",
+  META,
   {
-    type: "AndPredicate";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -159,12 +159,12 @@ export type AndPredicate<Meta = unknown> = WithMeta<
  *
  * Operator: `!𝑒`
  */
-export type NotPredicate<Meta = unknown> = WithMeta<
+export type NotPredicate<META = unknown> = Ast<
+  "NotPredicate",
+  META,
   {
-    type: "NotPredicate";
-    expression: Expression<Meta>;
-  },
-  Meta
+    expression: Expression<META>;
+  }
 >;
 
 /**
@@ -172,12 +172,12 @@ export type NotPredicate<Meta = unknown> = WithMeta<
  *
  * Operator: `𝑒₁ 𝑒₂`
  */
-export type Sequence<Meta = unknown> = WithMeta<
+export type Sequence<META = unknown> = Ast<
+  "Sequence",
+  META,
   {
-    type: "Sequence";
-    expressions: NonEmptyTuple<Expression<Meta>>;
-  },
-  Meta
+    expressions: ReadOnlyNonEmptyArray<Expression<META>>;
+  }
 >;
 
 /**
@@ -185,13 +185,13 @@ export type Sequence<Meta = unknown> = WithMeta<
  *
  * Operator: `𝑒₁ / 𝑒₂`
  */
-export type PrioritizedChoice<Meta = unknown> = WithMeta<
+export type PrioritizedChoice<META = unknown> = Ast<
+  "PrioritizedChoice",
+  META,
   {
-    type: "PrioritizedChoice";
-    firstChoice: Expression<Meta>;
-    secondChoice: Expression<Meta>;
-  },
-  Meta
+    firstChoice: Expression<META>;
+    secondChoice: Expression<META>;
+  }
 >;
 
 export class PegGrammar<Meta> {
@@ -200,6 +200,7 @@ export class PegGrammar<Meta> {
     expression: Expression<Meta>,
   ): Definition<Meta> {
     return {
+      type: "definition",
       identifier,
       expression,
     };
@@ -342,7 +343,7 @@ export class PegGrammar<Meta> {
   choice = this.prioritizedChoice;
 
   sequence(
-    expressions: NonEmptyTuple<Expression<Meta>>,
+    expressions: ReadOnlyNonEmptyArray<Expression<Meta>>,
     meta?: Meta,
   ): Sequence<Meta> {
     return {
@@ -359,11 +360,8 @@ export const printGrammar = <Meta>(grammar: Grammar<Meta>) => {
   print(grammerToString(grammar));
 };
 
-export const printDefinition = <Meta>({
-  identifier,
-  expression,
-}: Definition<Meta>) => {
-  print(definitionToString({ identifier, expression }));
+export const printDefinition = <Meta>(definition: Definition<Meta>) => {
+  print(definitionToString(definition));
 };
 
 export const printExpr = <Meta>(expr: Expression<Meta>) => {
@@ -381,7 +379,12 @@ export const definitionToString = <Meta>({
   return `${exprToString(identifier)} <- ${exprToString(expression)};`;
 };
 
-export const exprToString = (expr: Expression<unknown>): string => {
+export const exprToString = (
+  expr: Expression<unknown>,
+  group = false,
+): string => {
+  logger.trace(expr);
+
   switch (expr.type) {
     case "Identifier":
       return expr.name;
@@ -399,25 +402,31 @@ export const exprToString = (expr: Expression<unknown>): string => {
     case "AnyCharacter":
       return ".";
     case "Grouping":
-      return `(${exprToString(expr.expression)})`;
-    case "PrioritizedChoice":
-      return `(${exprToString(expr.firstChoice)} / ${exprToString(expr.secondChoice)})`;
+      return `(${exprToString(expr.expression, false)})`;
+    case "PrioritizedChoice": {
+      return `${exprToString(expr.firstChoice, false)} / ${exprToString(expr.secondChoice, false)}`;
+    }
     case "ZeroOrMore":
-      return `${exprToString(expr.expression)}*`;
+      return `${exprToString(expr.expression, true)}*`;
     case "OneOrMore":
-      return `${exprToString(expr.expression)}+`;
+      return `${exprToString(expr.expression, true)}+`;
     case "Optional":
-      return `${exprToString(expr.expression)}?`;
+      return `${exprToString(expr.expression, true)}?`;
     case "AndPredicate":
-      return `&${exprToString(expr.expression)}`;
+      return `&${exprToString(expr.expression, true)}`;
     case "NotPredicate":
-      return `!${exprToString(expr.expression)}`;
-    case "Sequence":
+      return `!${exprToString(expr.expression, true)}`;
+    case "Sequence": {
       if (expr.expressions.length === 1) {
-        return exprToString(expr.expressions[0]);
+        return exprToString(expr.expressions[0], true);
       }
 
-      return `(${expr.expressions.map(exprToString).join(" ")})`;
+      const str = expr.expressions
+        .map((expr) => exprToString(expr, true))
+        .join(" ");
+
+      return group ? `(${str})` : str;
+    }
     default: {
       const _exhaustiveCheck: never = expr;
       throw new Error(`Unreachable: ${_exhaustiveCheck}`);
