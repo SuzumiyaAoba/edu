@@ -16,7 +16,7 @@ describe("parseExpression", () => {
   it.each([
     [
       // id;
-      [t.identifier("id", undefined), t.semicolon(undefined)],
+      [t.identifier("id", undefined)],
       {
         expression: g.id("id"),
         cursor: 2,
@@ -24,7 +24,7 @@ describe("parseExpression", () => {
     ],
     [
       // "literal";
-      [t.literal("literal", undefined), t.semicolon(undefined)],
+      [t.literal("literal", undefined)],
       {
         expression: g.lit("literal"),
         cursor: 2,
@@ -32,7 +32,7 @@ describe("parseExpression", () => {
     ],
     [
       // [a];
-      [t.charClass(["a"], undefined), t.semicolon(undefined)],
+      [t.charClass(["a"], undefined)],
       {
         expression: g.charClass([g.char("a")]),
         cursor: 2,
@@ -42,7 +42,6 @@ describe("parseExpression", () => {
       [
         // [a-z];
         t.charClass([t.range(["a", "z"], undefined).token], undefined),
-        t.semicolon(undefined),
       ],
       {
         expression: g.charClass([g.range("a", "z")]),
@@ -55,7 +54,6 @@ describe("parseExpression", () => {
         t.literal("a", undefined),
         t.slash(undefined),
         t.literal("b", undefined),
-        t.semicolon(undefined),
       ],
       {
         expression: g.choice(g.lit("a"), g.lit("b")),
@@ -64,7 +62,7 @@ describe("parseExpression", () => {
     ],
     [
       // &"x";
-      [t.and(undefined), t.literal("x", undefined), t.semicolon(undefined)],
+      [t.and(undefined), t.literal("x", undefined)],
       {
         expression: g.and(g.lit("x")),
         cursor: 3,
@@ -72,7 +70,7 @@ describe("parseExpression", () => {
     ],
     [
       // !"x";
-      [t.not(undefined), t.literal("x", undefined), t.semicolon(undefined)],
+      [t.not(undefined), t.literal("x", undefined)],
       {
         expression: g.not(g.lit("x")),
         cursor: 3,
@@ -80,11 +78,7 @@ describe("parseExpression", () => {
     ],
     [
       // "x"?;
-      [
-        t.literal("x", undefined),
-        t.question(undefined),
-        t.semicolon(undefined),
-      ],
+      [t.literal("x", undefined), t.question(undefined)],
       {
         expression: g.opt(g.lit("x")),
         cursor: 3,
@@ -95,7 +89,6 @@ describe("parseExpression", () => {
         // "x"*;
         t.literal("x", undefined),
         t.star(undefined),
-        t.semicolon(undefined),
       ],
       {
         expression: g.star(g.lit("x")),
@@ -107,7 +100,6 @@ describe("parseExpression", () => {
         // "x"+;
         t.literal("x", undefined),
         t.plus(undefined),
-        t.semicolon(undefined),
       ],
       {
         expression: g.plus(g.lit("x")),
@@ -120,7 +112,6 @@ describe("parseExpression", () => {
         t.open(undefined),
         t.literal("x", undefined),
         t.literal("y", undefined),
-        t.semicolon(undefined),
         t.close(undefined),
       ],
       {
@@ -130,7 +121,7 @@ describe("parseExpression", () => {
     ],
     [
       // .;
-      [t.dot(undefined), t.semicolon(undefined)],
+      [t.dot(undefined)],
       {
         expression: g.any(),
         cursor: 2,
@@ -139,7 +130,7 @@ describe("parseExpression", () => {
   ] as Array<
     [TokenWith<unknown>[], { expression: Expression<unknown>; cursor: number }]
   >)("[%#] simple tokens", (tokens, expected) => {
-    const actual = sut.parseExpression(tokens);
+    const actual = sut.parseExpression([...tokens, t.semicolon(undefined)]);
 
     expect(actual).toEqual(expected);
   });
