@@ -1,4 +1,4 @@
-import { print } from "@/utils/io";
+import { print } from "@/core/utils/io";
 import { escapeString } from "./escape";
 import type { Pos } from "./index";
 import type { Token, TokenWith } from "./token";
