@@ -1,4 +1,4 @@
-import type { PrivateConstructorParameters } from "@/libs/types";
+import type { PrivateConstructorParameters } from "@/libs/std/types";
 import { graphemesGenerator } from "@/libs/unicode";
 
 export type Pos = {

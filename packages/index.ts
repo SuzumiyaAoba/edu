@@ -1,8 +1,8 @@
 import { Lexer } from "@/compiler/lexer";
 import type { Pos } from "@/compiler/lexer";
 import { toReadable } from "@/compiler/lexer/input";
-import { prettyPrintTokens } from "@/compiler/lexer/printer";
-import type { Token } from "@/compiler/lexer/token";
+import { prettyPrintTokens } from "@/compiler/token";
+import type { Token } from "@/compiler/token";
 import { Parser } from "@/compiler/parser/parser";
 import { definitionToString } from "@/core/grammar";
 

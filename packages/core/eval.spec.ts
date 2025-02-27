@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
+import type { Environment } from "@/core/eval";
+import * as sut from "@/core/eval";
 import { PegGrammar } from "@/core/grammar";
-import type { Environment } from "./eval";
-import * as sut from "./eval";
 
 const g = new PegGrammar();
 

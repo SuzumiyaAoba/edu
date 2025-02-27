@@ -1,4 +1,4 @@
-import type { Token, TokenType, TokenWith } from "@/compiler/lexer/token";
+import type { Token, TokenType, TokenWith } from "@/compiler/token";
 import type {
   CharacterClassValue,
   Definition,
@@ -6,8 +6,8 @@ import type {
   Grammar,
 } from "@/core/grammar";
 import { PegGrammar } from "@/core/grammar";
-import { isNonEmptyArray, isSingleElementArray } from "@/core/utils/array";
-import * as array from "@/core/utils/array";
+import { isNonEmptyArray, isSingleElementArray } from "@/libs/std/array";
+import * as array from "@/libs/std/array";
 
 const expectToken = <Meta, T extends TokenType>(
   tokenWith: TokenWith<Meta> | undefined,
