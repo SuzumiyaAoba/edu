@@ -8,7 +8,6 @@ export type Token =
   | Identifier
   | Literal
   | CharClass
-  | Range
   | LeftArrow
   | Slash
   | And
@@ -37,13 +36,16 @@ export type Literal = {
 
 export type CharClass = {
   type: "CharClass";
-  value: readonly (string | Range)[];
+  value: readonly CharClassElement[];
 };
 
-export type Range = {
-  type: "Range";
-  value: readonly [string, string];
-};
+export type CharClassElement = {
+  type: "char";
+  value: string;
+} | {
+  type: "range";
+  value: [string, string];
+}
 
 export type LeftArrow = {
   type: "LEFTARROW";
@@ -163,7 +165,7 @@ export class Tokens<META> {
     }) as const;
 
   charClass = (
-    value: readonly (string | Range)[],
+    value: CharClassElement[],
     meta: META,
   ): TokenWith<META, CharClass> =>
     ({
@@ -174,13 +176,16 @@ export class Tokens<META> {
       meta,
     }) as const;
 
-  range = (value: [string, string], meta: META): TokenWith<META, Range> =>
+  char = (value: string): CharClassElement =>
     ({
-      token: {
-        type: "Range",
-        value,
-      },
-      meta,
+      type: "char",
+      value,
+    }) as const;
+
+  range = (value: [string, string]): CharClassElement =>
+    ({
+      type: "range",
+      value,
     }) as const;
 
   slash = (meta: META): TokenWith<META, Slash> =>
@@ -321,13 +326,10 @@ export const printToken = (token: Token) => {
         if (typeof v === "string") {
           print(escapeString(v, true));
         } else {
-          printToken(v);
+          print(`${token.value[0]}-${token.value[1]}`);
         }
       }
       print("]");
-      break;
-    case "Range":
-      print(`${token.value[0]}-${token.value[1]}`);
       break;
     case "SLASH":
       print("/");

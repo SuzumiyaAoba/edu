@@ -131,8 +131,8 @@ export class Parser<Meta> {
         const charClass = token.value;
         const charClassValues: CharacterClassValue[] = [];
         for (const value of charClass) {
-          if (typeof value === "string") {
-            charClassValues.push(g.char(value));
+          if (value.type === "char") {
+            charClassValues.push(g.char(value.value));
           } else {
             const [start, stop] = value.value;
             charClassValues.push(g.range(start, stop));
@@ -143,8 +143,6 @@ export class Parser<Meta> {
 
         return this.parseExpression(tokens, cursor + 1, acc);
       }
-      case "Range":
-        throw new Error("Not implemented");
       case "LEFTARROW":
         throw new Error(`Unexpected LEFTARROW: ${JSON.stringify(meta)}`);
       case "SLASH": {
