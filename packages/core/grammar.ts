@@ -429,8 +429,8 @@ export const exprToString = (
       return group ? `(${str})` : str;
     }
     default: {
-      const _exhaustiveCheck: never = expr;
-      throw new Error(`Unreachable: ${_exhaustiveCheck}`);
+      const exhaustiveCheck: never = expr;
+      throw new Error(`Unreachable: ${exhaustiveCheck}`);
     }
   }
 };

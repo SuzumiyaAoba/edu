@@ -244,8 +244,8 @@ export class Parser<Meta> {
       case "EndOfFile":
         return this.parseExpression(tokens, cursor + 1, acc);
       default: {
-        const _exhaustiveCheck: never = token;
-        throw new Error(`Unexpected token: ${_exhaustiveCheck}`);
+        const exhaustiveCheck: never = token;
+        throw new Error(`Unexpected token: ${exhaustiveCheck}`);
       }
     }
   }
