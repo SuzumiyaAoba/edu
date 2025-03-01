@@ -1,10 +1,10 @@
 import { Lexer } from "@/compiler/lexer";
 import type { Pos } from "@/compiler/lexer";
-import { toReadable } from "@/compiler/lexer/input";
+import { Parser } from "@/compiler/parser/parser";
 import { prettyPrintTokens } from "@/compiler/token";
 import type { Token } from "@/compiler/token";
-import { Parser } from "@/compiler/parser/parser";
 import { definitionToString } from "@/core/grammar";
+import { toReadable } from "./input";
 
 const input = {
   type: "file",

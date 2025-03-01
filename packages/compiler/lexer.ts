@@ -1,7 +1,8 @@
-import { type Input, toReadable } from "@/compiler/lexer/input";
+import { toReadable } from "@/input";
 import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
 import { CharAsyncGenerator } from "@/libs/char-async-generator";
 import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
+import type { PrivateConstructorParameters } from "@/libs/std/types";
 import { PegSyntaxError } from "./error";
 import { isEscapableChar, unescapeChar } from "./escape";
 import type {
@@ -53,12 +54,12 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
   #iterator: CharIterator;
   #token = new Tokens<Meta>();
 
-  constructor(readableStream: ReadableStream | string) {
+  private constructor(readableStream: ReadableStream | string) {
     this.#charGenerator = CharAsyncGenerator.from(readableStream);
     this.#iterator = BufferedAsyncIterator.from(this.#charGenerator);
   }
 
-  static async from(input: Input) {
+  static async from(input: PrivateConstructorParameters<Lexer>) {
     const readableStream = await toReadable(input);
 
     return new Lexer(readableStream);
