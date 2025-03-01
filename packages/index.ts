@@ -18,7 +18,7 @@ const tokens: { token: Token; meta: { pos: Pos } }[] = [];
 
 const readable = await toReadable(input);
 
-for await (const token of new Lexer(readable)) {
+for await (const token of Lexer.from(readable)) {
   tokens.push(token);
   if (token.token.type === "EndOfLine") {
     prettyPrintTokens(lineTokens, line++, 3);

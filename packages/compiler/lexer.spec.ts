@@ -13,7 +13,7 @@ const consumeCharN = async (lexer: Lexer, n: number) => {
 
 describe("consumeChar", () => {
   it("should consume a single character correctly", async () => {
-    const sut = new Lexer("abc\n");
+    const sut = Lexer.from("abc\n");
 
     const actual = await consumeCharN(sut, 3);
 
@@ -25,7 +25,7 @@ describe("consumeChar", () => {
   });
 
   it("should consume a single character correctly", async () => {
-    const sut = new Lexer("");
+    const sut = Lexer.from("");
 
     const actual = await sut.consumeChar();
 
@@ -33,7 +33,7 @@ describe("consumeChar", () => {
   });
 
   it("should handle escaped characters correctly", async () => {
-    const sut = new Lexer("\\n\\t\\r\\176\\77\\0");
+    const sut = Lexer.from("\\n\\t\\r\\176\\77\\0");
 
     const actual = await consumeCharN(sut, 6);
 
@@ -48,7 +48,7 @@ describe("consumeChar", () => {
   });
 
   it("", async () => {
-    const sut = new Lexer("a");
+    const sut = Lexer.from("a");
 
     const actual = await consumeCharN(sut, 2);
 
@@ -61,7 +61,7 @@ describe("consumeChar", () => {
 
 describe("consumeLiteral", () => {
   it("should consume a literal string correctly", async () => {
-    const sut = new Lexer("'hello' world\n");
+    const sut = Lexer.from("'hello' world\n");
 
     const actual = await sut.consumeLiteral();
 
@@ -80,7 +80,7 @@ describe("consumeLiteral", () => {
   });
 
   it("should throw an error if the literal does not match", async () => {
-    const sut = new Lexer('"hello" world');
+    const sut = Lexer.from('"hello" world');
 
     const actual = await sut.consumeLiteral();
 
@@ -99,7 +99,7 @@ describe("consumeLiteral", () => {
   });
 
   it("should consume a literal with whitespace correctly", async () => {
-    const sut = new Lexer("'hello world'\n");
+    const sut = Lexer.from("'hello world'\n");
 
     const actual = await sut.consumeLiteral();
 
@@ -118,7 +118,7 @@ describe("consumeLiteral", () => {
   });
 
   it("should consume a literal with escaped character correctly", async () => {
-    const sut = new Lexer('"hello \\"world\\""');
+    const sut = Lexer.from('"hello \\"world\\""');
 
     const actual = await sut.consumeLiteral();
 

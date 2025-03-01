@@ -59,10 +59,8 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
     this.#iterator = BufferedAsyncIterator.from(this.#charGenerator);
   }
 
-  static async from(input: PrivateConstructorParameters<Lexer>) {
-    const readableStream = await toReadable(input);
-
-    return new Lexer(readableStream);
+  static from(...args: PrivateConstructorParameters<typeof Lexer>) {
+    return new Lexer(...args);
   }
 
   async next(
