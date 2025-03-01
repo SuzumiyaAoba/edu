@@ -1,10 +1,10 @@
 import { Lexer } from "@/compiler/lexer";
 import type { Pos } from "@/compiler/lexer";
-import { toReadable } from "@/compiler/lexer/input";
-import { prettyPrintTokens } from "@/compiler/lexer/printer";
-import type { Token } from "@/compiler/lexer/token";
 import { Parser } from "@/compiler/parser/parser";
+import { prettyPrintTokens } from "@/compiler/token";
+import type { Token } from "@/compiler/token";
 import { definitionToString } from "@/core/grammar";
+import { toReadable } from "./input";
 
 const input = {
   type: "file",
@@ -18,7 +18,7 @@ const tokens: { token: Token; meta: { pos: Pos } }[] = [];
 
 const readable = await toReadable(input);
 
-for await (const token of new Lexer(readable)) {
+for await (const token of Lexer.from(readable)) {
   tokens.push(token);
   if (token.token.type === "EndOfLine") {
     prettyPrintTokens(lineTokens, line++, 3);

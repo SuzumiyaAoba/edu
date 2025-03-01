@@ -1,6 +1,7 @@
 import { escapeString } from "@/compiler/escape";
 import { print } from "@/core/utils/io";
 import { logger } from "@/core/utils/logger";
+import type { ReadOnlyNonEmptyArray } from "@/libs/std/array";
 
 export type Grammar<Meta = unknown> = Definition<Meta>[];
 

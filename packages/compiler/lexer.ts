@@ -1,16 +1,16 @@
-import { type Input, toReadable } from "@/compiler/lexer/input";
 import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
 import { CharAsyncGenerator } from "@/libs/char-async-generator";
 import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
+import type { PrivateConstructorParameters } from "@/libs/std/types";
 import { PegSyntaxError } from "./error";
 import { isEscapableChar, unescapeChar } from "./escape";
 import type {
   CharClass,
+  CharClassElement,
   Comment,
   Identifier,
   LeftArrow,
   Literal,
-  Range,
   Token,
 } from "./token";
 import { Tokens } from "./token";
@@ -53,15 +53,13 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
   #iterator: CharIterator;
   #token = new Tokens<Meta>();
 
-  constructor(readableStream: ReadableStream | string) {
+  private constructor(readableStream: ReadableStream | string) {
     this.#charGenerator = CharAsyncGenerator.from(readableStream);
     this.#iterator = BufferedAsyncIterator.from(this.#charGenerator);
   }
 
-  static async from(input: Input) {
-    const readableStream = await toReadable(input);
-
-    return new Lexer(readableStream);
+  static from(...args: PrivateConstructorParameters<typeof Lexer>) {
+    return new Lexer(...args);
   }
 
   async next(
@@ -96,8 +94,7 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
       value = token.close({ pos });
       this.#iterator.reset();
     } else if (char === "[") {
-      const charClass = await this.consumeCharClass();
-      value = token.charClass(charClass.token.value, { pos });
+      value = await this.consumeCharClass();
     } else if (char === ".") {
       value = token.dot({ pos });
       this.#iterator.reset();
@@ -333,7 +330,7 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
       throw new PegSyntaxError("Unexpected char", ["CLOSE"], value.pos);
     }
 
-    const buf: (string | Range)[] = [];
+    const buf: CharClassElement[] = [];
     for (
       let p = await this.consumeChar();
       !p.done;
@@ -346,7 +343,7 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
 
       const end = await this.consumeRange();
 
-      buf.push(end ? token.range([char, end], {}).token : char);
+      buf.push(end ? token.range([char, end]) : token.char(char));
     }
 
     return token.charClass(buf, { pos: value.pos });

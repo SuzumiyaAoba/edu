@@ -32,7 +32,7 @@ describe("parseExpression", () => {
     ],
     [
       // [a];
-      [t.charClass(["a"], undefined)],
+      [t.charClass([t.char("a")], undefined)],
       {
         expression: g.charClass([g.char("a")]),
         cursor: 2,
@@ -41,7 +41,7 @@ describe("parseExpression", () => {
     [
       [
         // [a-z];
-        t.charClass([t.range(["a", "z"], undefined).token], undefined),
+        t.charClass([t.range(["a", "z"])], undefined),
       ],
       {
         expression: g.charClass([g.range("a", "z")]),

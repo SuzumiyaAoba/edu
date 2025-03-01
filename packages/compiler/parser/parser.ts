@@ -1,4 +1,4 @@
-import type { Token, TokenType, TokenWith } from "@/compiler/lexer/token";
+import type { Token, TokenType, TokenWith } from "@/compiler/token";
 import type {
   CharacterClassValue,
   Definition,
@@ -6,8 +6,8 @@ import type {
   Grammar,
 } from "@/core/grammar";
 import { PegGrammar } from "@/core/grammar";
-import { isNonEmptyArray, isSingleElementArray } from "@/core/utils/array";
-import * as array from "@/core/utils/array";
+import { isNonEmptyArray, isSingleElementArray } from "@/libs/std/array";
+import * as array from "@/libs/std/array";
 
 const expectToken = <Meta, T extends TokenType>(
   tokenWith: TokenWith<Meta> | undefined,
@@ -131,8 +131,8 @@ export class Parser<Meta> {
         const charClass = token.value;
         const charClassValues: CharacterClassValue[] = [];
         for (const value of charClass) {
-          if (typeof value === "string") {
-            charClassValues.push(g.char(value));
+          if (value.type === "char") {
+            charClassValues.push(g.char(value.value));
           } else {
             const [start, stop] = value.value;
             charClassValues.push(g.range(start, stop));
@@ -143,8 +143,6 @@ export class Parser<Meta> {
 
         return this.parseExpression(tokens, cursor + 1, acc);
       }
-      case "Range":
-        throw new Error("Not implemented");
       case "LEFTARROW":
         throw new Error(`Unexpected LEFTARROW: ${JSON.stringify(meta)}`);
       case "SLASH": {
