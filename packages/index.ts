@@ -38,7 +38,7 @@ for (const def of definitions) {
 }
 
 const env = toDefinitionMap(definitions);
-const grammar = definitions.find(def => def.identifier.name === "Grammar");
+const grammar = definitions.find((def) => def.identifier.name === "Grammar");
 if (grammar) {
   console.log(acceptedByExpression(env, grammar.identifier, "Grammar <- 'x';"));
 }

@@ -39,13 +39,15 @@ export type CharClass = {
   value: readonly CharClassElement[];
 };
 
-export type CharClassElement = {
-  type: "char";
-  value: string;
-} | {
-  type: "range";
-  value: [string, string];
-}
+export type CharClassElement =
+  | {
+      type: "char";
+      value: string;
+    }
+  | {
+      type: "range";
+      value: [string, string];
+    };
 
 export type LeftArrow = {
   type: "LEFTARROW";

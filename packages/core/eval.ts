@@ -90,7 +90,13 @@ export const acceptedByExpression = <Meta>(
     }
     case "Optional": {
       const optional = expr.expression;
-      const tryResult = acceptedByExpression(env, optional, input, current, depth + 1);
+      const tryResult = acceptedByExpression(
+        env,
+        optional,
+        input,
+        current,
+        depth + 1,
+      );
 
       return tryResult ?? current;
     }
@@ -100,7 +106,7 @@ export const acceptedByExpression = <Meta>(
         env,
         g.oneOrMore(zeroOrMore),
         input,
-        current + 1,
+        current,
         depth + 1,
       );
 
@@ -109,9 +115,21 @@ export const acceptedByExpression = <Meta>(
     case "OneOrMore": {
       const oneOrMore = expr.expression;
 
-      let eager = acceptedByExpression(env, oneOrMore, input, current, depth + 1);
-      while (eager) {
-        const tryResult = acceptedByExpression(env, oneOrMore, input, eager, depth + 1);
+      let eager = acceptedByExpression(
+        env,
+        oneOrMore,
+        input,
+        current,
+        depth + 1,
+      );
+      while (eager && eager < input.length) {
+        const tryResult = acceptedByExpression(
+          env,
+          oneOrMore,
+          input,
+          eager,
+          depth + 1,
+        );
         if (!tryResult) {
           break;
         }
@@ -124,14 +142,24 @@ export const acceptedByExpression = <Meta>(
     case "AndPredicate": {
       const andPredicate = expr.expression;
 
-      const tryResult = acceptedByExpression(env, andPredicate, input, current, depth + 1);
+      const tryResult = acceptedByExpression(
+        env,
+        andPredicate,
+        input,
+        current,
+        depth + 1,
+      );
 
       return tryResult ? current : undefined;
     }
     case "NotPredicate": {
-      const notPredicate = expr.expression;
-
-      const tryResult = acceptedByExpression(env, notPredicate, input, current, depth + 1);
+      const tryResult = acceptedByExpression(
+        env,
+        expr.expression,
+        input,
+        current,
+        depth + 1,
+      );
 
       return tryResult ? undefined : current;
     }
@@ -144,7 +172,12 @@ export const acceptedByExpression = <Meta>(
           return undefined;
         }
 
-        retval = acceptedByExpression(env, expr, input, retval, depth + 1);
+        const next: number | undefined = acceptedByExpression(env, expr, input, retval, depth + 1);
+        if (next === undefined) {
+          return undefined;
+        }
+
+        retval = next;
       }
 
       return retval;
@@ -157,7 +190,7 @@ export const acceptedByExpression = <Meta>(
         firstChoice,
         input,
         current,
-        depth + 1
+        depth + 1,
       );
       if (firstResult) {
         return firstResult;

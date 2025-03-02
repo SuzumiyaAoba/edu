@@ -405,7 +405,8 @@ export const exprToString = (
     case "Grouping":
       return `(${exprToString(expr.expression, false)})`;
     case "PrioritizedChoice": {
-      return `${exprToString(expr.firstChoice, false)} / ${exprToString(expr.secondChoice, false)}`;
+      const str = `${exprToString(expr.firstChoice, false)} / ${exprToString(expr.secondChoice, false)}`;
+      return group ? `(${str})` : str;
     }
     case "ZeroOrMore":
       return `${exprToString(expr.expression, true)}*`;

@@ -168,12 +168,12 @@ export class Parser<Meta> {
         return this.parseExpression(tokens, nextCursor - 1, [choice]);
       }
       case "AND": {
-        return this.parseExpression(tokens, cursor + 1, [], (expr) =>
+        return this.parseExpression(tokens, cursor + 1, acc, (expr) =>
           g.and(expr, meta),
         );
       }
       case "NOT": {
-        return this.parseExpression(tokens, cursor + 1, [], (expr) =>
+        return this.parseExpression(tokens, cursor + 1, acc, (expr) =>
           g.not(expr, meta),
         );
       }
@@ -224,7 +224,7 @@ export class Parser<Meta> {
           cursor: cursor + 1,
         };
       case "DOT":
-        acc.push(g.any(meta));
+        acc.push(wrap(g.any(meta)));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "SEMICOLON":
