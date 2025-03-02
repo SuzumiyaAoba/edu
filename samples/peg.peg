@@ -1,6 +1,6 @@
 # Hierarchical syntax
 Grammar    <- Spacing Definition+ EndOfFile;
-Definition <- Identifier LEFTARROW Expression;
+Definition <- Identifier LEFTARROW Expression SEMICOLON;
 
 Expression <- Sequence (SLASH Sequence)*;
 Sequence   <- Prefix*;
@@ -25,6 +25,7 @@ Char    <- '\\' [nrt'"\[\]\\]
          / !'\\' .;
 
 LEFTARROW <- '<-' Spacing;
+SEMICOLON <- ';'  Spacing;
 SLASH     <- '/'  Spacing;
 AND       <- '&'  Spacing;
 NOT       <- '!'  Spacing;

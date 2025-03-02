@@ -172,7 +172,13 @@ export const acceptedByExpression = <Meta>(
           return undefined;
         }
 
-        const next: number | undefined = acceptedByExpression(env, expr, input, retval, depth + 1);
+        const next: number | undefined = acceptedByExpression(
+          env,
+          expr,
+          input,
+          retval,
+          depth + 1,
+        );
         if (next === undefined) {
           return undefined;
         }
