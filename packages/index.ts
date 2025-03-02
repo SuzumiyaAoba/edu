@@ -6,6 +6,7 @@ import type { Token } from "@/compiler/token";
 import { definitionToString } from "@/core/grammar";
 import { acceptedByExpression, toDefinitionMap } from "./core/eval";
 import { toReadable } from "./input";
+import { print } from "./core/utils/io";
 
 const input = {
   type: "file",
@@ -22,7 +23,7 @@ const readable = await toReadable(input);
 for await (const token of Lexer.from(readable)) {
   tokens.push(token);
   if (token.token.type === "EndOfLine") {
-    prettyPrintTokens(lineTokens, line++, 3);
+    print(prettyPrintTokens(lineTokens, line++, 3));
 
     lineTokens = [];
   } else {
@@ -37,9 +38,9 @@ for (const def of definitions) {
   console.log(definitionToString(def));
 }
 
-const env = toDefinitionMap(definitions);
-const grammar = definitions.find((def) => def.identifier.name === "Grammar");
-const pegSyntax = await Bun.file("./samples/peg.peg").text();
-if (grammar) {
-  console.log(acceptedByExpression(env, grammar.identifier, pegSyntax));
-}
+// const env = toDefinitionMap(definitions);
+// const grammar = definitions.find((def) => def.identifier.name === "Grammar");
+// const pegSyntax = await Bun.file("./samples/peg.peg").text();
+// if (grammar) {
+//   console.log(acceptedByExpression(env, grammar.identifier, pegSyntax));
+// }

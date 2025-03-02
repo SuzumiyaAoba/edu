@@ -1,5 +1,6 @@
 import { escapeString } from "@/compiler/escape";
 import { print } from "@/core/utils/io";
+import { logger } from "@/core/utils/logger";
 import type { Pos } from "@/libs/char-async-generator";
 
 export type TokenType = Token["type"];
@@ -308,69 +309,57 @@ export class Tokens<META> {
     }) as const;
 }
 
-export const printToken = (token: Token) => {
+export const tokenToString = (token: Token): string => {
+  logger.trace(token);
+
   switch (token.type) {
     case "Identifier":
-      print(`${token.value}`);
-      break;
+      return token.value;
     case "LEFTARROW":
-      print("<-");
-      break;
+      return "<-";
     case "OPEN":
-      print("(");
-      break;
+      return "(";
     case "CLOSE":
-      print(")");
-      break;
-    case "CharClass":
-      print("[");
+      return ")";
+    case "CharClass": {
+      let buf = "";
+      buf += "[";
       for (const v of token.value) {
         if (v.type === "char") {
-          print(escapeString(v.value, true));
+          buf += escapeString(v.value, true);
         } else {
-          print(`${v.value[0]}-${v.value[1]}`);
+          buf += `${v.value[0]}-${v.value[1]}`;
         }
       }
-      print("]");
-      break;
+      buf += "]";
+      return buf;
+    }
     case "SLASH":
-      print("/");
-      break;
+      return "/";
     case "DOT":
-      print(".");
-      break;
+      return ".";
     case "STAR":
-      print("*");
-      break;
+      return "*";
     case "PLUS":
-      print("+");
-      break;
+      return "+";
     case "QUESTION":
-      print("?");
-      break;
+      return "?";
     case "AND":
-      print("&");
-      break;
+      return "&";
     case "NOT":
-      print("!");
-      break;
+      return "!";
     case "Literal":
-      print(`"${escapeString(token.value)}"`);
-      break;
+      return `"${escapeString(token.value)}"`;
     case "SEMICOLON":
-      print(";");
-      break;
+      return ";";
     case "Comment":
-      print(`#${token.value}`);
-      break;
+      return `#${token.value}`;
     case "Space":
-      print(token.value);
-      break;
+      return token.value;
     case "EndOfLine":
-      print("\n");
-      break;
+      return "\n";
     case "EndOfFile":
-      break;
+      return "";
     default: {
       const exhaustiveCheck: never = token;
       throw new Error(`Unreachable: ${exhaustiveCheck}`);
@@ -378,10 +367,13 @@ export const printToken = (token: Token) => {
   }
 };
 
-const printLine = (
+const lineToString = (
   tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
-  callback: (_arg: TokenWith<{ pos: Pick<Pos, "column"> }>) => void,
-) => {
+  callback: (_arg: TokenWith<{ pos: Pick<Pos, "column"> }>) => string,
+): string => {
+  logger.trace(tokens);
+
+  let buf = "";
   let column = 0;
   for (const {
     token,
@@ -392,66 +384,75 @@ const printLine = (
     }
 
     if (token.type === "Space") {
-      print(token.value);
+      buf += token.value;
       column++;
       continue;
     }
 
     while (column++ < pos.column) {
-      print(" ");
+      buf += " ";
     }
 
-    callback({ token, meta: { pos } });
+    buf += callback({ token, meta: { pos } });
   }
+
+  return buf;
 };
 
 export const prettyPrintTokens = (
   tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
   line?: number,
   linePadStart = 0,
-) => {
+): string => {
+  let buf = "";
+
   const linePart = line ? ` ${line.toString().padStart(linePadStart)} │ ` : "";
   const offset = line ? `${" ".repeat(linePart.length - 2)}│ ` : "";
 
-  print(linePart);
+  buf += linePart;
   for (const { token } of tokens) {
-    printToken(token);
+    buf += tokenToString(token);
   }
-  print("\n");
+  buf += "\n";
 
   let tokenNum = 0;
   let lastTokenPos: Pick<Pos, "column"> = { column: 0 };
 
-  print(offset);
-  printLine(tokens, ({ meta: { pos } }) => {
-    print(".");
-
+  buf += offset;
+  buf += lineToString(tokens, ({ meta: { pos } }) => {
     tokenNum++;
     lastTokenPos = pos;
+
+    return ".";
   });
-  print("\n");
+  buf += "\n";
 
   for (let i = 0; i < tokenNum; i++) {
     let j = 0;
 
-    print(offset);
-    printLine(tokens, ({ token, meta: { pos } }) => {
+    buf += offset;
+    buf += lineToString(tokens, ({ token, meta: { pos } }) => {
       j++;
 
+      let buf = "";
       if (j < tokenNum - i) {
-        print("│");
+        buf += "│";
       } else if (j === tokenNum - i) {
-        print("└───");
+        buf += "└───";
         for (let k = pos.column; k < lastTokenPos.column; k++) {
-          print("─");
+          buf += "─";
         }
 
-        print(" ");
-        print(token.type);
+        buf += " ";
+        buf += token.type;
       }
+
+      return buf;
     });
-    print("\n");
+    buf += "\n";
   }
-  print(offset);
-  print("\n");
+  buf += offset;
+  buf += "\n";
+
+  return buf;
 };
