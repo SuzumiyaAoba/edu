@@ -168,12 +168,12 @@ export class Parser<Meta> {
         return this.parseExpression(tokens, nextCursor - 1, [choice]);
       }
       case "AND": {
-        return this.parseExpression(tokens, cursor + 1, [], (expr) =>
+        return this.parseExpression(tokens, cursor + 1, acc, (expr) =>
           g.and(expr, meta),
         );
       }
       case "NOT": {
-        return this.parseExpression(tokens, cursor + 1, [], (expr) =>
+        return this.parseExpression(tokens, cursor + 1, acc, (expr) =>
           g.not(expr, meta),
         );
       }
@@ -224,7 +224,7 @@ export class Parser<Meta> {
           cursor: cursor + 1,
         };
       case "DOT":
-        acc.push(g.any(meta));
+        acc.push(wrap(g.any(meta)));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "SEMICOLON":
@@ -244,8 +244,8 @@ export class Parser<Meta> {
       case "EndOfFile":
         return this.parseExpression(tokens, cursor + 1, acc);
       default: {
-        const _exhaustiveCheck: never = token;
-        throw new Error(`Unexpected token: ${_exhaustiveCheck}`);
+        const exhaustiveCheck: never = token;
+        throw new Error(`Unexpected token: ${exhaustiveCheck}`);
       }
     }
   }

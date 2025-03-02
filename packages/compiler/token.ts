@@ -39,13 +39,15 @@ export type CharClass = {
   value: readonly CharClassElement[];
 };
 
-export type CharClassElement = {
-  type: "char";
-  value: string;
-} | {
-  type: "range";
-  value: [string, string];
-}
+export type CharClassElement =
+  | {
+      type: "char";
+      value: string;
+    }
+  | {
+      type: "range";
+      value: [string, string];
+    };
 
 export type LeftArrow = {
   type: "LEFTARROW";
@@ -323,10 +325,10 @@ export const printToken = (token: Token) => {
     case "CharClass":
       print("[");
       for (const v of token.value) {
-        if (typeof v === "string") {
-          print(escapeString(v, true));
+        if (v.type === "char") {
+          print(escapeString(v.value, true));
         } else {
-          print(`${token.value[0]}-${token.value[1]}`);
+          print(`${v.value[0]}-${v.value[1]}`);
         }
       }
       print("]");
@@ -370,8 +372,8 @@ export const printToken = (token: Token) => {
     case "EndOfFile":
       break;
     default: {
-      const _exhaustiveCheck: never = token;
-      throw new Error(`Unreachable: ${_exhaustiveCheck}`);
+      const exhaustiveCheck: never = token;
+      throw new Error(`Unreachable: ${exhaustiveCheck}`);
     }
   }
 };

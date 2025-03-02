@@ -5,6 +5,7 @@ import { prettyPrintTokens } from "@/compiler/token";
 import type { Token } from "@/compiler/token";
 import { definitionToString } from "@/core/grammar";
 import { toReadable } from "./input";
+import { acceptedByExpression, toDefinitionMap } from "./core/eval";
 
 const input = {
   type: "file",
@@ -34,4 +35,10 @@ const definitions = parser.parse(tokens);
 
 for (const def of definitions) {
   console.log(definitionToString(def));
+}
+
+const env = toDefinitionMap(definitions);
+const grammar = definitions.find((def) => def.identifier.name === "Grammar");
+if (grammar) {
+  console.log(acceptedByExpression(env, grammar.identifier, "Grammar <- 'x';"));
 }
