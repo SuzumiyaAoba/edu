@@ -422,9 +422,7 @@ export const prettyPrintTokens = (
   const {
     line: { number, padding },
   } = defu(options, defaultPrettyPrintTokensOptions);
-  const linePart = number
-    ? ` ${number.toString().padStart(padding)} │ `
-    : "";
+  const linePart = number ? ` ${number.toString().padStart(padding)} │ ` : "";
   const offset = number ? `${" ".repeat(linePart.length - 2)}│ ` : "";
 
   let buf = `${linePart}${tokensToString(tokenWidths)}\n`;

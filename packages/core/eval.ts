@@ -7,7 +7,7 @@ const g = new PegGrammar();
 type DefinitionMap<Meta = unknown> = Record<string, Expression<Meta>>;
 export type Environment<Meta = unknown> = DefinitionMap<Meta>;
 
-export const toDefinitionMap = <Meta>(grammar: Grammar<Meta>) => {
+export const grammarToEnv = <Meta>(grammar: Grammar<Meta>) => {
   const definitionMap: DefinitionMap<Meta> = {};
 
   for (const definition of grammar) {
@@ -22,17 +22,13 @@ export const toDefinitionMap = <Meta>(grammar: Grammar<Meta>) => {
   return definitionMap;
 };
 
-export const acceptedByExpression = <Meta>(
+const acceptedByExpression = <Meta>(
   env: Environment<Meta>,
   expr: Expression<Meta>,
   input: string,
   current = 0,
   depth = 0,
 ): number | undefined => {
-  if (current >= input.length) {
-    return current;
-  }
-
   print(input[current] ?? "");
   print(" ");
   print(current.toString());
@@ -68,7 +64,7 @@ export const acceptedByExpression = <Meta>(
       return current + literal.length;
     }
     case "AnyCharacter":
-      return current + 1;
+      return current >= input.length ? undefined : current + 1;
     case "CharacterClass": {
       const charClass = expr.value;
       const find = charClass.some((value) => {
@@ -168,22 +164,17 @@ export const acceptedByExpression = <Meta>(
 
       let retval: number | undefined = current;
       for (const expr of sequence) {
-        if (retval === undefined) {
+        if (retval === undefined || retval > input.length) {
           return undefined;
         }
 
-        const next: number | undefined = acceptedByExpression(
+        retval = acceptedByExpression(
           env,
           expr,
           input,
           retval,
           depth + 1,
         );
-        if (next === undefined) {
-          return undefined;
-        }
-
-        retval = next;
       }
 
       return retval;
@@ -211,28 +202,20 @@ export const acceptedByExpression = <Meta>(
   }
 };
 
-const acceptedBy = <Meta>(
-  definitionMap: DefinitionMap<Meta>,
-  entryPoint: string,
-  input: string,
-): boolean => {
-  const exprs = definitionMap[entryPoint];
+export const accept = <Meta>(
+  grammar: Grammar<Meta>,
+  entryPoint = "Grammar",
+) => (input: string): boolean => {
+  const env = grammarToEnv(grammar);
 
-  if (exprs) {
+  const exprs = env[entryPoint];
+  if (!exprs) {
     throw new Error(`Unknown identifier: ${entryPoint}`);
   }
 
-  // TODO
+  const pos = acceptedByExpression(env, exprs, input);
 
-  return false;
-};
+  console.log(pos);
 
-export const accept = <Meta>(
-  grammar: Grammar<Meta>,
-  input: string,
-  entryPointId = "Grammar",
-): boolean => {
-  const definitionMap = toDefinitionMap(grammar);
-
-  return acceptedBy(definitionMap, entryPointId, input);
+  return pos === input.length;
 };

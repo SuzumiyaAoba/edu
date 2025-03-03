@@ -4,7 +4,7 @@ import { Parser } from "@/compiler/parser/parser";
 import { prettyPrintTokens } from "@/compiler/token";
 import type { Token } from "@/compiler/token";
 import { definitionToString } from "@/core/grammar";
-import { acceptedByExpression, toDefinitionMap } from "./core/eval";
+import { accept } from "./core/eval";
 import { print } from "./core/utils/io";
 import { toReadable } from "./input";
 
@@ -42,9 +42,7 @@ for (const def of definitions) {
   console.log(definitionToString(def));
 }
 
-// const env = toDefinitionMap(definitions);
-// const grammar = definitions.find((def) => def.identifier.name === "Grammar");
-// const pegSyntax = await Bun.file("./samples/peg.peg").text();
-// if (grammar) {
-//   console.log(acceptedByExpression(env, grammar.identifier, pegSyntax));
-// }
+const pegSyntax = await Bun.file("./samples/peg.peg").text();
+console.log(accept(definitions)(pegSyntax));
+
+console.log(accept(definitions)("x <- 'y';"));
