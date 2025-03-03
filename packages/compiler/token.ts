@@ -2,6 +2,8 @@ import { escapeString } from "@/compiler/escape";
 import { print } from "@/core/utils/io";
 import { logger } from "@/core/utils/logger";
 import type { Pos } from "@/libs/char-async-generator";
+import type { RecursiveRequired } from "@/libs/std/types";
+import defu from "defu";
 
 export type TokenType = Token["type"];
 
@@ -310,8 +312,6 @@ export class Tokens<META> {
 }
 
 export const tokenToString = (token: Token): string => {
-  logger.trace(token);
-
   switch (token.type) {
     case "Identifier":
       return token.value;
@@ -400,51 +400,64 @@ export const tokensToString = (
   return buf;
 };
 
+export type PrettyPrintTokensOptions = {
+  line?: {
+    number?: number | undefined;
+    padding?: number;
+  };
+};
+
+const defaultPrettyPrintTokensOptions: RecursiveRequired<PrettyPrintTokensOptions> =
+  {
+    line: {
+      number: undefined,
+      padding: 3,
+    },
+  } as const;
+
 export const prettyPrintTokens = (
   tokenWidths: TokenWith<{ pos: Pick<Pos, "column"> }>[],
-  line?: number,
-  linePadStart = 0,
+  options?: PrettyPrintTokensOptions,
 ): string => {
-  const linePart = line ? ` ${line.toString().padStart(linePadStart)} │ ` : "";
-  const offset = line ? `${" ".repeat(linePart.length - 2)}│ ` : "";
+  const {
+    line: { number, padding },
+  } = defu(options, defaultPrettyPrintTokensOptions);
+  const linePart = number
+    ? ` ${number.toString().padStart(padding)} │ `
+    : "";
+  const offset = number ? `${" ".repeat(linePart.length - 2)}│ ` : "";
 
-  let buf = linePart;
-  buf += tokensToString(tokenWidths);
-  buf += "\n";
-
+  let buf = `${linePart}${tokensToString(tokenWidths)}\n`;
   let tokenNum = 0;
   let lastTokenPos = { column: 0 };
 
-  buf += offset;
-  buf += lineToString(tokenWidths, ({ meta: { pos } }) => {
+  const points = lineToString(tokenWidths, ({ meta: { pos } }) => {
     tokenNum++;
     lastTokenPos = pos;
 
     return ".";
   });
-  buf += "\n";
+  buf += `${offset}${points}\n`;
 
   for (let i = 0; i < tokenNum; i++) {
-    let j = 0;
+    let x = 0;
 
-    buf += offset;
-    buf += lineToString(tokenWidths, ({ token, meta: { pos } }) => {
-      j++;
+    const line = lineToString(tokenWidths, ({ token, meta: { pos } }) => {
+      x++;
 
       let buf = "";
-      if (j < tokenNum - i) {
+      if (x < tokenNum - i) {
         buf += "│";
-      } else if (j === tokenNum - i) {
+      } else if (x === tokenNum - i) {
         const line = "─".repeat(lastTokenPos.column - pos.column);
         buf += `└───${line}╼ ${token.type}`;
       }
 
       return buf;
     });
-    buf += "\n";
+    buf += `${offset}${line}\n`;
   }
-  buf += offset;
-  buf += "\n";
+  buf += `${offset}\n`;
 
   return buf;
 };

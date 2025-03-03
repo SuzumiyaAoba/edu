@@ -23,7 +23,11 @@ const readable = await toReadable(input);
 for await (const token of Lexer.from(readable)) {
   tokens.push(token);
   if (token.token.type === "EndOfLine") {
-    print(prettyPrintTokens(lineTokens, line++, 3));
+    print(
+      prettyPrintTokens(lineTokens, {
+        line: { number: line++ },
+      }),
+    );
 
     lineTokens = [];
   } else {

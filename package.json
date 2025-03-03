@@ -25,6 +25,7 @@
     "fix": "bunx biome check --fix --unsafe ./packages"
   },
   "dependencies": {
+    "defu": "^6.1.4",
     "tslog": "^4.9.3",
     "unicode-segmenter": "^0.11.3"
   }
