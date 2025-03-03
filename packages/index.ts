@@ -5,8 +5,8 @@ import { prettyPrintTokens } from "@/compiler/token";
 import type { Token } from "@/compiler/token";
 import { definitionToString } from "@/core/grammar";
 import { acceptedByExpression, toDefinitionMap } from "./core/eval";
-import { toReadable } from "./input";
 import { print } from "./core/utils/io";
+import { toReadable } from "./input";
 
 const input = {
   type: "file",

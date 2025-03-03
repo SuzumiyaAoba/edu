@@ -371,55 +371,52 @@ const lineToString = (
   tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
   callback: (_arg: TokenWith<{ pos: Pick<Pos, "column"> }>) => string,
 ): string => {
-  logger.trace(tokens);
-
   let buf = "";
   let column = 0;
-  for (const {
-    token,
-    meta: { pos },
-  } of tokens) {
+  for (const { token, meta } of tokens) {
     if (token.type === "EndOfLine") {
-      break;
-    }
-
-    if (token.type === "Space") {
+    } else if (token.type === "Space") {
       buf += token.value;
-      column++;
-      continue;
+    } else {
+      buf += " ".repeat(meta.pos.column - column);
+      buf += callback({ token, meta });
+
+      column = meta.pos.column;
     }
 
-    while (column++ < pos.column) {
-      buf += " ";
-    }
-
-    buf += callback({ token, meta: { pos } });
+    column++;
   }
 
   return buf;
 };
 
+export const tokensToString = (
+  tokenWiths: TokenWith<{ pos: Pick<Pos, "column"> }>[],
+): string => {
+  let buf = "";
+  for (const { token } of tokenWiths) {
+    buf += tokenToString(token);
+  }
+  return buf;
+};
+
 export const prettyPrintTokens = (
-  tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
+  tokenWidths: TokenWith<{ pos: Pick<Pos, "column"> }>[],
   line?: number,
   linePadStart = 0,
 ): string => {
-  let buf = "";
-
   const linePart = line ? ` ${line.toString().padStart(linePadStart)} │ ` : "";
   const offset = line ? `${" ".repeat(linePart.length - 2)}│ ` : "";
 
-  buf += linePart;
-  for (const { token } of tokens) {
-    buf += tokenToString(token);
-  }
+  let buf = linePart;
+  buf += tokensToString(tokenWidths);
   buf += "\n";
 
   let tokenNum = 0;
-  let lastTokenPos: Pick<Pos, "column"> = { column: 0 };
+  let lastTokenPos = { column: 0 };
 
   buf += offset;
-  buf += lineToString(tokens, ({ meta: { pos } }) => {
+  buf += lineToString(tokenWidths, ({ meta: { pos } }) => {
     tokenNum++;
     lastTokenPos = pos;
 
@@ -431,20 +428,15 @@ export const prettyPrintTokens = (
     let j = 0;
 
     buf += offset;
-    buf += lineToString(tokens, ({ token, meta: { pos } }) => {
+    buf += lineToString(tokenWidths, ({ token, meta: { pos } }) => {
       j++;
 
       let buf = "";
       if (j < tokenNum - i) {
         buf += "│";
       } else if (j === tokenNum - i) {
-        buf += "└───";
-        for (let k = pos.column; k < lastTokenPos.column; k++) {
-          buf += "─";
-        }
-
-        buf += " ";
-        buf += token.type;
+        const line = "─".repeat(lastTokenPos.column - pos.column);
+        buf += `└───${line}╼ ${token.type}`;
       }
 
       return buf;
