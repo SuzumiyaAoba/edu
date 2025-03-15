@@ -4,8 +4,9 @@ import { Parser } from "@/compiler/parser/parser";
 import { prettyPrintTokens } from "@/compiler/token";
 import type { Token } from "@/compiler/token";
 import { definitionToString } from "@/core/grammar";
+import { accept } from "./core/eval";
+import { print } from "./core/utils/io";
 import { toReadable } from "./input";
-import { acceptedByExpression, toDefinitionMap } from "./core/eval";
 
 const input = {
   type: "file",
@@ -22,7 +23,11 @@ const readable = await toReadable(input);
 for await (const token of Lexer.from(readable)) {
   tokens.push(token);
   if (token.token.type === "EndOfLine") {
-    prettyPrintTokens(lineTokens, line++, 3);
+    print(
+      prettyPrintTokens(lineTokens, {
+        line: { number: line++ },
+      }),
+    );
 
     lineTokens = [];
   } else {
@@ -37,8 +42,7 @@ for (const def of definitions) {
   console.log(definitionToString(def));
 }
 
-const env = toDefinitionMap(definitions);
-const grammar = definitions.find((def) => def.identifier.name === "Grammar");
-if (grammar) {
-  console.log(acceptedByExpression(env, grammar.identifier, "Grammar <- 'x';"));
-}
+const pegSyntax = await Bun.file("./samples/peg.peg").text();
+console.log(accept(definitions)(pegSyntax));
+
+console.log(accept(definitions)("x <- 'y';"));

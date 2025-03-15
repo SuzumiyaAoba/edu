@@ -1,6 +1,9 @@
 import { escapeString } from "@/compiler/escape";
 import { print } from "@/core/utils/io";
+import { logger } from "@/core/utils/logger";
 import type { Pos } from "@/libs/char-async-generator";
+import type { RecursiveRequired } from "@/libs/std/types";
+import defu from "defu";
 
 export type TokenType = Token["type"];
 
@@ -308,69 +311,55 @@ export class Tokens<META> {
     }) as const;
 }
 
-export const printToken = (token: Token) => {
+export const tokenToString = (token: Token): string => {
   switch (token.type) {
     case "Identifier":
-      print(`${token.value}`);
-      break;
+      return token.value;
     case "LEFTARROW":
-      print("<-");
-      break;
+      return "<-";
     case "OPEN":
-      print("(");
-      break;
+      return "(";
     case "CLOSE":
-      print(")");
-      break;
-    case "CharClass":
-      print("[");
+      return ")";
+    case "CharClass": {
+      let buf = "";
+      buf += "[";
       for (const v of token.value) {
         if (v.type === "char") {
-          print(escapeString(v.value, true));
+          buf += escapeString(v.value, true);
         } else {
-          print(`${v.value[0]}-${v.value[1]}`);
+          buf += `${v.value[0]}-${v.value[1]}`;
         }
       }
-      print("]");
-      break;
+      buf += "]";
+      return buf;
+    }
     case "SLASH":
-      print("/");
-      break;
+      return "/";
     case "DOT":
-      print(".");
-      break;
+      return ".";
     case "STAR":
-      print("*");
-      break;
+      return "*";
     case "PLUS":
-      print("+");
-      break;
+      return "+";
     case "QUESTION":
-      print("?");
-      break;
+      return "?";
     case "AND":
-      print("&");
-      break;
+      return "&";
     case "NOT":
-      print("!");
-      break;
+      return "!";
     case "Literal":
-      print(`"${escapeString(token.value)}"`);
-      break;
+      return `"${escapeString(token.value)}"`;
     case "SEMICOLON":
-      print(";");
-      break;
+      return ";";
     case "Comment":
-      print(`#${token.value}`);
-      break;
+      return `#${token.value}`;
     case "Space":
-      print(token.value);
-      break;
+      return token.value;
     case "EndOfLine":
-      print("\n");
-      break;
+      return "\n";
     case "EndOfFile":
-      break;
+      return "";
     default: {
       const exhaustiveCheck: never = token;
       throw new Error(`Unreachable: ${exhaustiveCheck}`);
@@ -378,80 +367,95 @@ export const printToken = (token: Token) => {
   }
 };
 
-const printLine = (
+const lineToString = (
   tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
-  callback: (_arg: TokenWith<{ pos: Pick<Pos, "column"> }>) => void,
-) => {
+  callback: (_arg: TokenWith<{ pos: Pick<Pos, "column"> }>) => string,
+): string => {
+  let buf = "";
   let column = 0;
-  for (const {
-    token,
-    meta: { pos },
-  } of tokens) {
+  for (const { token, meta } of tokens) {
     if (token.type === "EndOfLine") {
-      break;
+    } else if (token.type === "Space") {
+      buf += token.value;
+    } else {
+      buf += " ".repeat(meta.pos.column - column);
+      buf += callback({ token, meta });
+
+      column = meta.pos.column;
     }
 
-    if (token.type === "Space") {
-      print(token.value);
-      column++;
-      continue;
-    }
-
-    while (column++ < pos.column) {
-      print(" ");
-    }
-
-    callback({ token, meta: { pos } });
+    column++;
   }
+
+  return buf;
 };
 
-export const prettyPrintTokens = (
-  tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
-  line?: number,
-  linePadStart = 0,
-) => {
-  const linePart = line ? ` ${line.toString().padStart(linePadStart)} │ ` : "";
-  const offset = line ? `${" ".repeat(linePart.length - 2)}│ ` : "";
-
-  print(linePart);
-  for (const { token } of tokens) {
-    printToken(token);
+export const tokensToString = (
+  tokenWiths: TokenWith<{ pos: Pick<Pos, "column"> }>[],
+): string => {
+  let buf = "";
+  for (const { token } of tokenWiths) {
+    buf += tokenToString(token);
   }
-  print("\n");
+  return buf;
+};
 
+export type PrettyPrintTokensOptions = {
+  line?: {
+    number?: number | undefined;
+    padding?: number;
+  };
+};
+
+const defaultPrettyPrintTokensOptions: RecursiveRequired<PrettyPrintTokensOptions> =
+  {
+    line: {
+      number: undefined,
+      padding: 3,
+    },
+  } as const;
+
+export const prettyPrintTokens = (
+  tokenWidths: TokenWith<{ pos: Pick<Pos, "column"> }>[],
+  options?: PrettyPrintTokensOptions,
+): string => {
+  const {
+    line: { number, padding },
+  } = defu(options, defaultPrettyPrintTokensOptions);
+  const linePart = number ? ` ${number.toString().padStart(padding)} │ ` : "";
+  const offset = number ? `${" ".repeat(linePart.length - 2)}│ ` : "";
+
+  let buf = `${linePart}${tokensToString(tokenWidths)}\n`;
   let tokenNum = 0;
-  let lastTokenPos: Pick<Pos, "column"> = { column: 0 };
+  let lastTokenPos = { column: 0 };
 
-  print(offset);
-  printLine(tokens, ({ meta: { pos } }) => {
-    print(".");
-
+  const points = lineToString(tokenWidths, ({ meta: { pos } }) => {
     tokenNum++;
     lastTokenPos = pos;
+
+    return ".";
   });
-  print("\n");
+  buf += `${offset}${points}\n`;
 
   for (let i = 0; i < tokenNum; i++) {
-    let j = 0;
+    let x = 0;
 
-    print(offset);
-    printLine(tokens, ({ token, meta: { pos } }) => {
-      j++;
+    const line = lineToString(tokenWidths, ({ token, meta: { pos } }) => {
+      x++;
 
-      if (j < tokenNum - i) {
-        print("│");
-      } else if (j === tokenNum - i) {
-        print("└───");
-        for (let k = pos.column; k < lastTokenPos.column; k++) {
-          print("─");
-        }
-
-        print(" ");
-        print(token.type);
+      let buf = "";
+      if (x < tokenNum - i) {
+        buf += "│";
+      } else if (x === tokenNum - i) {
+        const line = "─".repeat(lastTokenPos.column - pos.column);
+        buf += `└───${line}╼ ${token.type}`;
       }
+
+      return buf;
     });
-    print("\n");
+    buf += `${offset}${line}\n`;
   }
-  print(offset);
-  print("\n");
+  buf += `${offset}\n`;
+
+  return buf;
 };
