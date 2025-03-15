@@ -168,13 +168,7 @@ export const acceptedByExpression = <Meta>(
           return undefined;
         }
 
-        retval = acceptedByExpression(
-          env,
-          expr,
-          input,
-          retval,
-          depth + 1,
-        );
+        retval = acceptedByExpression(env, expr, input, retval, depth + 1);
       }
 
       return retval;
@@ -202,20 +196,19 @@ export const acceptedByExpression = <Meta>(
   }
 };
 
-export const accept = <Meta>(
-  grammar: Grammar<Meta>,
-  entryPoint = "Grammar",
-) => (input: string): boolean => {
-  const env = grammarToEnv(grammar);
+export const accept =
+  <Meta>(grammar: Grammar<Meta>, entryPoint = "Grammar") =>
+  (input: string): boolean => {
+    const env = grammarToEnv(grammar);
 
-  const exprs = env[entryPoint];
-  if (!exprs) {
-    throw new Error(`Unknown identifier: ${entryPoint}`);
-  }
+    const exprs = env[entryPoint];
+    if (!exprs) {
+      throw new Error(`Unknown identifier: ${entryPoint}`);
+    }
 
-  const pos = acceptedByExpression(env, exprs, input);
+    const pos = acceptedByExpression(env, exprs, input);
 
-  console.log(pos);
+    console.log(pos);
 
-  return pos === input.length;
-};
+    return pos === input.length;
+  };

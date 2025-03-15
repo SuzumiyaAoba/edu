@@ -116,7 +116,7 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
     } else if (char === ";") {
       value = token.semicolon({ pos });
       this.#iterator.reset();
-    } else if (char === "#") {
+    } else if (char === "-") {
       const comment = await this.consumeComment();
       value = token.comment(comment.token.value, { pos });
     } else if (char.match(identifierRegex)) {
@@ -368,13 +368,22 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
   async consumeComment(): Promise<ConsumeResult<Comment>> {
     const token = this.#token;
 
-    const { value, done } = await this.#iterator.next();
-    if (done) {
+    const c1 = await this.#iterator.next();
+    if (c1.done) {
       throw new PegSyntaxError("Unexpected EOF", [], EofPos);
     }
 
-    if (value.char !== "#") {
+    if (c1.value.char !== "-") {
       throw new Error("Unexpected char");
+    }
+
+    const c2 = await this.#iterator.next();
+    if (c2.done) {
+      throw new PegSyntaxError("Unexpected char", [], EofPos);
+    }
+
+    if (c2.value.char !== "-") {
+      throw new PegSyntaxError("Unexpected char", [], c2.value.pos);
     }
 
     this.#iterator.reset();
@@ -395,6 +404,6 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
       this.#iterator.reset();
     }
 
-    return token.comment(buf, { pos: value.pos });
+    return token.comment(buf, { pos: c1.value.pos });
   }
 }
