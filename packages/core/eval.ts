@@ -22,7 +22,7 @@ export const grammarToEnv = <Meta>(grammar: Grammar<Meta>) => {
   return definitionMap;
 };
 
-const acceptedByExpression = <Meta>(
+export const acceptedByExpression = <Meta>(
   env: Environment<Meta>,
   expr: Expression<Meta>,
   input: string,
