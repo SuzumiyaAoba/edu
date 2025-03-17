@@ -1,0 +1,29 @@
+-- 四則演算
+
+grammar <- expr;
+grammer := $0;
+
+expr <- term$left ( '+'$op term$right
+                  / '-'$op term$right
+                  );
+expr := case $op of
+          '+' -> Plus  { $left, $right }
+          '-' -> Minus { $left, $right };
+
+term <- factor$left ( '*'$op factor$right
+                    / '/'$op factor$right
+                    / '%'$op factor$right
+                    );
+term := case $op of
+          '*' -> Add { $left, $right }
+          '/' -> Div { $left, $right }
+          '%' -> Mod { $left, $right };
+
+factor <- _ '(' _ $expr _ ')' _ / _ $number _;
+factor := $expr | $number;
+
+number <- digit+
+number := %integer($0);
+
+digit <- [0-9];
+digit := $0;
