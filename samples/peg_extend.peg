@@ -1,0 +1,104 @@
+-- Hierarchical syntax
+Grammar    <- Spacing Definition+$definitions EndOfFile;
+Grammar    := Grammar $definitions;
+
+Definition <- Identifier$id LEFTARROW Expression$expr SEMICOLON;
+Definition := Definition { $id, $expr  };
+
+Expression <- Sequence$expr (SLASH Sequence)*$choices;
+Expression := case %empty($choices) of
+                true  -> $expr;
+                false -> Choice $choices;
+
+Sequence   <- Prefix*;
+Seqeunce   := $0;
+
+Prefix     <- @prefix (@AND / @NOT)? Suffix$expr;
+Prefix     := case @prefix of
+                @AND -> AndPredicate $expr;
+                @NOT -> NotPredicate $expr;
+
+Suffix     <- Primary$expr @suffix ( @QUESTION
+                                   / @STAR
+                                   / @PLUS )?;
+Suffix     := case @suffix of
+                @QUESTION -> Optional $expr;
+                @STAR     -> ZeroOrMore $expr;
+                @PLUS     -> OneOrMore $expr;
+                none      -> $expr;
+
+Primary    <- Identifier !LEFTARROW
+            / ~OPEN Expression ~CLOSE
+            / Literal
+            / Class
+            / DOT;
+Primary    := $0;
+
+-- Lexical syntax
+Identifier <- IdentStart IdentCont* ~Spacing;
+Identifier := Identifier %string.join($0);
+
+IdentStart <- [a-zA-Z_];
+IdentStart := $0;
+
+IdentCont  <- IdentStart / [0-9];
+IdentCont  := $0;
+
+Literal <- ['] (!['] Char)*$chars ['] Spacing
+         / ["] (!["] Char)*$chars ["] Spacing;
+Literal := %string.join($chars);
+
+Class   <- '[' (!']' Range)*$class ']' Spacing;
+Class   := Class $class;
+
+Range   <- @range Char$start '-' Char$stop / @char Char$char;
+Range   := case @0 of
+             @range -> Range { $start, $stop };
+             @char  -> Char $char;
+
+Char    <- @escape '\\' [nrt'"\[\]\\]$char
+         / @octal3 '\\' ([0-2][0-7][0-7])$octal
+         / @octal2 '\\' ([0-7][0-7]?)$octal
+         / @normal !'\\' .$char;
+Char    := case @0 of
+             @escape          -> $char;
+             @octal3, @ocatl2 -> %ocatalToChar($ocatal);
+             @normal          -> $char;
+
+LEFTARROW <- '<-' Spacing;
+
+SEMICOLON <- ';'  Spacing;
+
+SLASH     <- '/'  Spacing;
+SLASH     := Slash;
+
+AND       <- '&'  Spacing;
+AND       := And;
+
+NOT       <- '!'  Spacing;
+NOT       := Not;
+
+QUESTION  <- '?'  Spacing;
+QUESTION  := Question;
+
+STAR      <- '*'  Spacing;
+STAR      := Star;
+
+PLUS      <- '+'  Spacing;
+PLUS      := Plus;
+
+OPEN      <- '('  Spacing;
+CLOSE     <- ')'  Spacing;
+
+DOT       <- '.'  Spacing;
+DOT       := Dot;
+
+Spacing   <- (~Space / Comment)*$comments;
+Spacing   := $comments;
+
+Comment   <- '--' (!EndOfLine .)*$chars EndOfLine;
+Comment   := %string.join($chars);
+
+Space     <- ' ' / '\t' / EndOfLine;
+EndOfLine <- '\r\n' / '\n' / '\r';
+EndOfFile <- !.;
