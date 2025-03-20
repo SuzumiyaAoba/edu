@@ -6,7 +6,7 @@ Definition <- Identifier$id LEFTARROW Expression$expr SEMICOLON;
 Definition := Definition { $id, $expr  };
 
 Expression <- Sequence$expr (SLASH Sequence)*$choices;
-Expression := case %empty($choices) of
+Expression := case %array.empty($choices) of
                 true  -> $expr;
                 false -> Choice $choices;
 
@@ -22,9 +22,9 @@ Suffix     <- Primary$expr @suffix ( @QUESTION
                                    / @STAR
                                    / @PLUS )?;
 Suffix     := case @suffix of
-                @QUESTION -> Optional $expr;
+                @QUESTION -> Optional   $expr;
                 @STAR     -> ZeroOrMore $expr;
-                @PLUS     -> OneOrMore $expr;
+                @PLUS     -> OneOrMore  $expr;
                 none      -> $expr;
 
 Primary    <- Identifier !LEFTARROW
@@ -36,7 +36,7 @@ Primary    := $0;
 
 -- Lexical syntax
 Identifier <- IdentStart IdentCont* ~Spacing;
-Identifier := Identifier %string.join($0);
+Identifier := Identifier %string.join($$);
 
 IdentStart <- [a-zA-Z_];
 IdentStart := $0;
