@@ -1,4 +1,4 @@
-import type { Pos } from "@/compiler/lexer";
+import type { Pos } from "@/compiler/lexer/grammar";
 import type { TokenType } from "@/compiler/token/grammar";
 
 export class PegSyntaxError extends Error {

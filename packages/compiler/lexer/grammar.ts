@@ -2,8 +2,8 @@ import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
 import { CharAsyncGenerator } from "@/libs/char-async-generator";
 import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
 import type { PrivateConstructorParameters } from "@/libs/std/types";
-import { PegSyntaxError } from "./error";
-import { isEscapableChar, unescapeChar } from "./escape";
+import { PegSyntaxError } from "@/compiler/error";
+import { isEscapableChar, unescapeChar } from "@/compiler/escape";
 import type {
   CharClass,
   CharClassElement,
@@ -12,9 +12,9 @@ import type {
   LeftArrow,
   Literal,
   Token,
-} from "./token/grammar";
-import { Tokens } from "./token/grammar";
-import type { TokenWith } from "./token/grammar";
+} from "@/compiler/token/grammar";
+import { Tokens } from "@/compiler/token/grammar";
+import type { TokenWith } from "@/compiler/token/grammar";
 
 export type Pos = {
   column: number;

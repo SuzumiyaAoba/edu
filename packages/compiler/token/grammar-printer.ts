@@ -1,7 +1,8 @@
 import defu from "defu";
 import { escapeString } from "../escape";
-import type { Pos } from "../lexer";
+
 import type { Token, TokenWith } from "./grammar";
+import type { Pos } from "@/compiler/lexer/grammar";
 
 export const tokenToString = (token: Token): string => {
   switch (token.type) {
