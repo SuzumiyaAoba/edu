@@ -1,6 +1,4 @@
 import { escapeString } from "@/compiler/escape";
-import { print } from "@/core/utils/io";
-import { logger } from "@/core/utils/logger";
 import type { Pos } from "@/libs/char-async-generator";
 import type { RecursiveRequired } from "@/libs/std/types";
 import defu from "defu";

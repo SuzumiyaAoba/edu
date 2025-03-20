@@ -4,11 +4,11 @@ import { print } from "./utils/io";
 
 const g = new PegGrammar();
 
-type DefinitionMap<Meta = unknown> = Record<string, Expression<Meta>>;
-export type Environment<Meta = unknown> = DefinitionMap<Meta>;
+type DefinitionMap<META = unknown> = Record<string, Expression<META>>;
+export type Environment<META = unknown> = DefinitionMap<META>;
 
-export const grammarToEnv = <Meta>(grammar: Grammar<Meta>) => {
-  const definitionMap: DefinitionMap<Meta> = {};
+export const grammarToEnv = <META>(grammar: Grammar<META>) => {
+  const definitionMap: DefinitionMap<META> = {};
 
   for (const definition of grammar) {
     const key = definition.identifier.name;
@@ -22,9 +22,9 @@ export const grammarToEnv = <Meta>(grammar: Grammar<Meta>) => {
   return definitionMap;
 };
 
-export const acceptedByExpression = <Meta>(
-  env: Environment<Meta>,
-  expr: Expression<Meta>,
+export const acceptedByExpression = <META>(
+  env: Environment<META>,
+  expr: Expression<META>,
   input: string,
   current = 0,
   depth = 0,
@@ -197,7 +197,7 @@ export const acceptedByExpression = <Meta>(
 };
 
 export const accept =
-  <Meta>(grammar: Grammar<Meta>, entryPoint = "Grammar") =>
+  <META>(grammar: Grammar<META>, entryPoint = "Grammar") =>
   (input: string): boolean => {
     const env = grammarToEnv(grammar);
 
