@@ -12,9 +12,9 @@ import type {
   LeftArrow,
   Literal,
   Token,
-} from "./token";
-import { Tokens } from "./token";
-import type { TokenWith } from "./token";
+} from "./token/grammar";
+import { Tokens } from "./token/grammar";
+import type { TokenWith } from "./token/grammar";
 
 export type Pos = {
   column: number;

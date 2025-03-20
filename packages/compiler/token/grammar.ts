@@ -138,7 +138,7 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   leftArrow = (meta: META): TokenWith<META, LeftArrow> =>
     ({
@@ -147,7 +147,7 @@ export class Tokens<META> {
         value: "<-",
       },
       meta,
-    } as const);
+    }) as const;
 
   open = (meta: META): TokenWith<META, Open> =>
     ({
@@ -156,7 +156,7 @@ export class Tokens<META> {
         value: "(",
       },
       meta,
-    } as const);
+    }) as const;
 
   close = (meta: META): TokenWith<META, Close> =>
     ({
@@ -165,11 +165,11 @@ export class Tokens<META> {
         value: ")",
       },
       meta,
-    } as const);
+    }) as const;
 
   charClass = (
     value: CharClassElement[],
-    meta: META
+    meta: META,
   ): TokenWith<META, CharClass> =>
     ({
       token: {
@@ -177,19 +177,19 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   char = (value: string): CharClassElement =>
     ({
       type: "char",
       value,
-    } as const);
+    }) as const;
 
   range = (value: [string, string]): CharClassElement =>
     ({
       type: "range",
       value,
-    } as const);
+    }) as const;
 
   slash = (meta: META): TokenWith<META, Slash> =>
     ({
@@ -198,7 +198,7 @@ export class Tokens<META> {
         value: "/",
       },
       meta,
-    } as const);
+    }) as const;
 
   dot = (meta: META): TokenWith<META, Dot> =>
     ({
@@ -207,7 +207,7 @@ export class Tokens<META> {
         value: ".",
       },
       meta,
-    } as const);
+    }) as const;
 
   star = (meta: META): TokenWith<META, Star> =>
     ({
@@ -216,7 +216,7 @@ export class Tokens<META> {
         value: "*",
       },
       meta,
-    } as const);
+    }) as const;
 
   plus = (meta: META): TokenWith<META, Plus> =>
     ({
@@ -225,7 +225,7 @@ export class Tokens<META> {
         value: "+",
       },
       meta,
-    } as const);
+    }) as const;
 
   question = (meta: META): TokenWith<META, Question> =>
     ({
@@ -234,7 +234,7 @@ export class Tokens<META> {
         value: "?",
       },
       meta,
-    } as const);
+    }) as const;
 
   and = (meta: META): TokenWith<META, And> =>
     ({
@@ -243,7 +243,7 @@ export class Tokens<META> {
         value: "&",
       },
       meta,
-    } as const);
+    }) as const;
 
   not = (meta: META): TokenWith<META, Not> =>
     ({
@@ -252,7 +252,7 @@ export class Tokens<META> {
         value: "!",
       },
       meta,
-    } as const);
+    }) as const;
 
   literal = (value: string, meta: META): TokenWith<META, Literal> =>
     ({
@@ -261,7 +261,7 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   semicolon = (meta: META): TokenWith<META, Semicolon> =>
     ({
@@ -270,7 +270,7 @@ export class Tokens<META> {
         value: ";",
       },
       meta,
-    } as const);
+    }) as const;
 
   comment = (value: string, meta: META): TokenWith<META, Comment> =>
     ({
@@ -279,7 +279,7 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   space = (value: string, meta: META): TokenWith<META, Space> =>
     ({
@@ -288,7 +288,7 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   endOfLine = (value: string, meta: META): TokenWith<META, EndOfLine> =>
     ({
@@ -297,7 +297,7 @@ export class Tokens<META> {
         value: value,
       },
       meta,
-    } as const);
+    }) as const;
 
   endOfFile = (meta: META): TokenWith<META, EndOfFile> =>
     ({
@@ -306,7 +306,7 @@ export class Tokens<META> {
         value: "\0",
       },
       meta,
-    } as const);
+    }) as const;
 }
 
 export const tokenToString = (token: Token): string => {
@@ -367,7 +367,7 @@ export const tokenToString = (token: Token): string => {
 
 const lineToString = (
   tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
-  callback: (_arg: TokenWith<{ pos: Pick<Pos, "column"> }>) => string
+  callback: (_arg: TokenWith<{ pos: Pick<Pos, "column"> }>) => string,
 ): string => {
   let buf = "";
   let column = 0;
@@ -389,7 +389,7 @@ const lineToString = (
 };
 
 export const tokensToString = (
-  tokenWiths: TokenWith<{ pos: Pick<Pos, "column"> }>[]
+  tokenWiths: TokenWith<{ pos: Pick<Pos, "column"> }>[],
 ): string => {
   let buf = "";
   for (const { token } of tokenWiths) {
@@ -415,7 +415,7 @@ const defaultPrettyPrintTokensOptions: RecursiveRequired<PrettyPrintTokensOption
 
 export const prettyPrintTokens = (
   tokenWidths: TokenWith<{ pos: Pick<Pos, "column"> }>[],
-  options?: PrettyPrintTokensOptions
+  options?: PrettyPrintTokensOptions,
 ): string => {
   const {
     line: { number, padding },

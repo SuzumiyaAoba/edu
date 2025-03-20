@@ -1,5 +1,5 @@
 import type { Pos } from "@/compiler/lexer";
-import type { TokenType } from "@/compiler/token";
+import type { TokenType } from "@/compiler/token/grammar";
 
 export class PegSyntaxError extends Error {
   readonly expected: TokenType[];

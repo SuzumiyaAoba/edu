@@ -1,4 +1,4 @@
-import type { Token, TokenType, TokenWith } from "@/compiler/token";
+import type { Token, TokenType, TokenWith } from "@/compiler/token/grammar";
 import type {
   CharacterClassValue,
   Definition,
