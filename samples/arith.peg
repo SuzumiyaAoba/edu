@@ -1,6 +1,6 @@
--- PEG 定義ファイルのサンプル
+-- 四則演算
 
--- -- から末尾まではコメントとして扱われます。
+grammar <- expr;
 
 expr <- term ( '+' term
              / '-' term
@@ -11,11 +11,8 @@ term <- factor ( '*' factor
                / '%' factor
                );
 
-factor <- '(' expr ')' / number;
+factor <- _ '(' _ expr _ ')' _ / _ number _;
 
-number <- digit+;
+number <- digit+
 
 digit <- [0-9];
-
-spacing <- ' ' / '\t' / eof;
-eof     <- '\r\n' / '\n' / '\r';
