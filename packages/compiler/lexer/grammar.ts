@@ -1,9 +1,9 @@
-import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
-import { CharAsyncGenerator } from "@/libs/char-async-generator";
-import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
-import type { PrivateConstructorParameters } from "@/libs/std/types";
-import { PegSyntaxError } from "./error";
-import { isEscapableChar, unescapeChar } from "./escape";
+import {
+  PegSyntaxError,
+  UnexpectedCharError,
+  UnexpectedEofError,
+} from "@/compiler/error";
+import { isEscapableChar, unescapeChar } from "@/compiler/escape";
 import type {
   CharClass,
   CharClassElement,
@@ -12,9 +12,14 @@ import type {
   LeftArrow,
   Literal,
   Token,
-} from "./token";
-import { Tokens } from "./token";
-import type { TokenWith } from "./token";
+} from "@/compiler/token/grammar";
+import { Tokens } from "@/compiler/token/grammar";
+import type { TokenWith } from "@/compiler/token/grammar";
+import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
+import { CharAsyncGenerator } from "@/libs/char-async-generator";
+import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
+import { isNonEmptyArray, type NonEmptyArray } from "@/libs/std/array";
+import type { PrivateConstructorParameters } from "@/libs/std/types";
 
 export type Pos = {
   column: number;
@@ -82,7 +87,7 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
       const literal = await this.consumeLiteral();
       value = token.literal(literal.token.value, { pos });
     } else if (char === "<") {
-      await this.consumeLeftArrow(this.#iterator);
+      await this.consumeLeftArrow();
       value = token.leftArrow({ pos });
     } else if (char === "/") {
       value = token.slash({ pos });
@@ -154,37 +159,12 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
     throw new Error("Method not implemented.");
   }
 
-  async consumeLeftArrow(
-    iter: CharIterator,
-  ): Promise<ConsumeResult<LeftArrow>> {
-    const leftArrow = await iter.next();
-    if (leftArrow.done || leftArrow.value.char !== "<") {
-      throw new PegSyntaxError(
-        `'<' is expected, but EOF found`,
-        ["LEFTARROW"],
-        EofPos,
-      );
-    }
+  async consumeLeftArrow(): Promise<ConsumeResult<LeftArrow>> {
+    const p = await this.expectString("<-");
 
-    const p = await iter.next();
-    if (!p.done) {
-      const { char } = p.value;
-      if (char === "-") {
-        iter.reset();
-
-        return this.#token.leftArrow({
-          pos: leftArrow.value.pos,
-        });
-      }
-
-      throw new PegSyntaxError(
-        `'<-' is expected, but '${char}' found`,
-        ["LEFTARROW"],
-        p.value.pos,
-      );
-    }
-
-    throw new PegSyntaxError("Syntax Error", ["LEFTARROW"], EofPos);
+    return this.#token.leftArrow({
+      pos: p[0].value.pos,
+    });
   }
 
   async consumeIdentifier(): Promise<ConsumeResult<Identifier>> {
@@ -368,23 +348,7 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
   async consumeComment(): Promise<ConsumeResult<Comment>> {
     const token = this.#token;
 
-    const c1 = await this.#iterator.next();
-    if (c1.done) {
-      throw new PegSyntaxError("Unexpected EOF", [], EofPos);
-    }
-
-    if (c1.value.char !== "-") {
-      throw new Error("Unexpected char");
-    }
-
-    const c2 = await this.#iterator.next();
-    if (c2.done) {
-      throw new PegSyntaxError("Unexpected char", [], EofPos);
-    }
-
-    if (c2.value.char !== "-") {
-      throw new PegSyntaxError("Unexpected char", [], c2.value.pos);
-    }
+    const chars = await this.expectString("--");
 
     this.#iterator.reset();
 
@@ -404,6 +368,38 @@ export class Lexer implements AsyncGenerator<TokenWith<Meta>, void, unknown> {
       this.#iterator.reset();
     }
 
-    return token.comment(buf, { pos: c1.value.pos });
+    return token.comment(buf, { pos: chars[0].value.pos });
+  }
+
+  async expectString(
+    str: string,
+  ): Promise<NonEmptyArray<IteratorYieldResult<CharWithPos>>> {
+    const results: IteratorYieldResult<CharWithPos>[] = [];
+
+    let i = 0;
+    for (
+      let p = await this.#iterator.next();
+      !p.done && i < str.length;
+      p = await this.#iterator.peek(i++)
+    ) {
+      if (p.value.char !== str.charAt(i)) {
+        throw new UnexpectedCharError({
+          expected: str.charAt(i),
+          actual: p.value,
+        });
+      }
+
+      results.push(p);
+    }
+
+    if (results.length !== str.length) {
+      throw new UnexpectedEofError("");
+    }
+
+    if (isNonEmptyArray(results)) {
+      return results;
+    }
+
+    throw new UnexpectedEofError("");
   }
 }

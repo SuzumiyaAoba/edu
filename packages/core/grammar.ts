@@ -3,7 +3,7 @@ import { print } from "@/core/utils/io";
 import { logger } from "@/core/utils/logger";
 import type { ReadOnlyNonEmptyArray } from "@/libs/std/array";
 
-export type Grammar<Meta = unknown> = Definition<Meta>[];
+export type Grammar<META = unknown> = Definition<META>[];
 
 type Ast<TYPE, META, P> = {
   type: TYPE;
@@ -195,11 +195,11 @@ export type PrioritizedChoice<META = unknown> = Ast<
   }
 >;
 
-export class PegGrammar<Meta> {
+export class PegGrammar<META> {
   definition(
-    identifier: Identifier<Meta>,
-    expression: Expression<Meta>,
-  ): Definition<Meta> {
+    identifier: Identifier<META>,
+    expression: Expression<META>,
+  ): Definition<META> {
     return {
       type: "definition",
       identifier,
@@ -209,7 +209,7 @@ export class PegGrammar<Meta> {
 
   def = this.definition;
 
-  identifier(name: string, meta?: Meta): Identifier<Meta> {
+  identifier(name: string, meta?: META): Identifier<META> {
     return {
       type: "Identifier",
       name: name,
@@ -219,7 +219,7 @@ export class PegGrammar<Meta> {
 
   id = this.identifier;
 
-  literal(value: string, meta?: Meta): Literal<Meta> {
+  literal(value: string, meta?: META): Literal<META> {
     return {
       type: "Literal",
       value,
@@ -231,8 +231,8 @@ export class PegGrammar<Meta> {
 
   characterClass(
     value: CharacterClassValue[],
-    meta?: Meta,
-  ): CharacterClass<Meta> {
+    meta?: META,
+  ): CharacterClass<META> {
     return {
       type: "CharacterClass",
       value,
@@ -259,7 +259,7 @@ export class PegGrammar<Meta> {
 
   range = this.charClassRange;
 
-  anyCharacter(meta?: Meta): AnyCharacter<Meta> {
+  anyCharacter(meta?: META): AnyCharacter<META> {
     return {
       type: "AnyCharacter",
       meta,
@@ -268,7 +268,7 @@ export class PegGrammar<Meta> {
 
   any = this.anyCharacter;
 
-  zeroOrMore(expression: Expression<Meta>, meta?: Meta): ZeroOrMore<Meta> {
+  zeroOrMore(expression: Expression<META>, meta?: META): ZeroOrMore<META> {
     return {
       type: "ZeroOrMore",
       expression,
@@ -278,7 +278,7 @@ export class PegGrammar<Meta> {
 
   star = this.zeroOrMore;
 
-  oneOrMore(expression: Expression<Meta>, meta?: Meta): OneOrMore<Meta> {
+  oneOrMore(expression: Expression<META>, meta?: META): OneOrMore<META> {
     return {
       type: "OneOrMore",
       expression,
@@ -288,7 +288,7 @@ export class PegGrammar<Meta> {
 
   plus = this.oneOrMore;
 
-  grouping(expression: Expression<Meta>, meta?: Meta): Grouping<Meta> {
+  grouping(expression: Expression<META>, meta?: META): Grouping<META> {
     return {
       type: "Grouping",
       expression,
@@ -298,7 +298,7 @@ export class PegGrammar<Meta> {
 
   group = this.grouping;
 
-  optional(expression: Expression<Meta>, meta?: Meta): Optional<Meta> {
+  optional(expression: Expression<META>, meta?: META): Optional<META> {
     return {
       type: "Optional",
       expression,
@@ -308,7 +308,7 @@ export class PegGrammar<Meta> {
 
   opt = this.optional;
 
-  andPredicate(expression: Expression<Meta>, meta?: Meta): AndPredicate<Meta> {
+  andPredicate(expression: Expression<META>, meta?: META): AndPredicate<META> {
     return {
       type: "AndPredicate",
       expression,
@@ -318,7 +318,7 @@ export class PegGrammar<Meta> {
 
   and = this.andPredicate;
 
-  notPredicate(expression: Expression<Meta>, meta?: Meta): NotPredicate<Meta> {
+  notPredicate(expression: Expression<META>, meta?: META): NotPredicate<META> {
     return {
       type: "NotPredicate",
       expression,
@@ -329,10 +329,10 @@ export class PegGrammar<Meta> {
   not = this.notPredicate;
 
   prioritizedChoice(
-    firstChoice: Expression<Meta>,
-    secondChoice: Expression<Meta>,
-    meta?: Meta,
-  ): PrioritizedChoice<Meta> {
+    firstChoice: Expression<META>,
+    secondChoice: Expression<META>,
+    meta?: META,
+  ): PrioritizedChoice<META> {
     return {
       type: "PrioritizedChoice",
       firstChoice,
@@ -344,9 +344,9 @@ export class PegGrammar<Meta> {
   choice = this.prioritizedChoice;
 
   sequence(
-    expressions: ReadOnlyNonEmptyArray<Expression<Meta>>,
-    meta?: Meta,
-  ): Sequence<Meta> {
+    expressions: ReadOnlyNonEmptyArray<Expression<META>>,
+    meta?: META,
+  ): Sequence<META> {
     return {
       type: "Sequence",
       expressions,
@@ -357,26 +357,26 @@ export class PegGrammar<Meta> {
   seq = this.sequence;
 }
 
-export const printGrammar = <Meta>(grammar: Grammar<Meta>) => {
+export const printGrammar = <META>(grammar: Grammar<META>) => {
   print(grammerToString(grammar));
 };
 
-export const printDefinition = <Meta>(definition: Definition<Meta>) => {
+export const printDefinition = <META>(definition: Definition<META>) => {
   print(definitionToString(definition));
 };
 
-export const printExpr = <Meta>(expr: Expression<Meta>) => {
+export const printExpr = <META>(expr: Expression<META>) => {
   print(exprToString(expr));
 };
 
-export const grammerToString = <Meta>(grammar: Grammar<Meta>): string => {
+export const grammerToString = <META>(grammar: Grammar<META>): string => {
   return grammar.map(definitionToString).join("\n");
 };
 
-export const definitionToString = <Meta>({
+export const definitionToString = <META>({
   identifier,
   expression,
-}: Definition<Meta>): string => {
+}: Definition<META>): string => {
   return `${exprToString(identifier)} <- ${exprToString(expression)};`;
 };
 

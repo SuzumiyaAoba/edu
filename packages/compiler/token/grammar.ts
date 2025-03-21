@@ -1,10 +1,3 @@
-import { escapeString } from "@/compiler/escape";
-import { print } from "@/core/utils/io";
-import { logger } from "@/core/utils/logger";
-import type { Pos } from "@/libs/char-async-generator";
-import type { RecursiveRequired } from "@/libs/std/types";
-import defu from "defu";
-
 export type TokenType = Token["type"];
 
 export type Token =
@@ -140,7 +133,7 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   leftArrow = (meta: META): TokenWith<META, LeftArrow> =>
     ({
@@ -149,7 +142,7 @@ export class Tokens<META> {
         value: "<-",
       },
       meta,
-    } as const);
+    }) as const;
 
   open = (meta: META): TokenWith<META, Open> =>
     ({
@@ -158,7 +151,7 @@ export class Tokens<META> {
         value: "(",
       },
       meta,
-    } as const);
+    }) as const;
 
   close = (meta: META): TokenWith<META, Close> =>
     ({
@@ -167,11 +160,11 @@ export class Tokens<META> {
         value: ")",
       },
       meta,
-    } as const);
+    }) as const;
 
   charClass = (
     value: CharClassElement[],
-    meta: META
+    meta: META,
   ): TokenWith<META, CharClass> =>
     ({
       token: {
@@ -179,19 +172,19 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   char = (value: string): CharClassElement =>
     ({
       type: "char",
       value,
-    } as const);
+    }) as const;
 
   range = (value: [string, string]): CharClassElement =>
     ({
       type: "range",
       value,
-    } as const);
+    }) as const;
 
   slash = (meta: META): TokenWith<META, Slash> =>
     ({
@@ -200,7 +193,7 @@ export class Tokens<META> {
         value: "/",
       },
       meta,
-    } as const);
+    }) as const;
 
   dot = (meta: META): TokenWith<META, Dot> =>
     ({
@@ -209,7 +202,7 @@ export class Tokens<META> {
         value: ".",
       },
       meta,
-    } as const);
+    }) as const;
 
   star = (meta: META): TokenWith<META, Star> =>
     ({
@@ -218,7 +211,7 @@ export class Tokens<META> {
         value: "*",
       },
       meta,
-    } as const);
+    }) as const;
 
   plus = (meta: META): TokenWith<META, Plus> =>
     ({
@@ -227,7 +220,7 @@ export class Tokens<META> {
         value: "+",
       },
       meta,
-    } as const);
+    }) as const;
 
   question = (meta: META): TokenWith<META, Question> =>
     ({
@@ -236,7 +229,7 @@ export class Tokens<META> {
         value: "?",
       },
       meta,
-    } as const);
+    }) as const;
 
   and = (meta: META): TokenWith<META, And> =>
     ({
@@ -245,7 +238,7 @@ export class Tokens<META> {
         value: "&",
       },
       meta,
-    } as const);
+    }) as const;
 
   not = (meta: META): TokenWith<META, Not> =>
     ({
@@ -254,7 +247,7 @@ export class Tokens<META> {
         value: "!",
       },
       meta,
-    } as const);
+    }) as const;
 
   literal = (value: string, meta: META): TokenWith<META, Literal> =>
     ({
@@ -263,7 +256,7 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   semicolon = (meta: META): TokenWith<META, Semicolon> =>
     ({
@@ -272,7 +265,7 @@ export class Tokens<META> {
         value: ";",
       },
       meta,
-    } as const);
+    }) as const;
 
   comment = (value: string, meta: META): TokenWith<META, Comment> =>
     ({
@@ -281,7 +274,7 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   space = (value: string, meta: META): TokenWith<META, Space> =>
     ({
@@ -290,7 +283,7 @@ export class Tokens<META> {
         value,
       },
       meta,
-    } as const);
+    }) as const;
 
   endOfLine = (value: string, meta: META): TokenWith<META, EndOfLine> =>
     ({
@@ -299,7 +292,7 @@ export class Tokens<META> {
         value: value,
       },
       meta,
-    } as const);
+    }) as const;
 
   endOfFile = (meta: META): TokenWith<META, EndOfFile> =>
     ({
@@ -308,154 +301,5 @@ export class Tokens<META> {
         value: "\0",
       },
       meta,
-    } as const);
+    }) as const;
 }
-
-export const tokenToString = (token: Token): string => {
-  switch (token.type) {
-    case "Identifier":
-      return token.value;
-    case "LEFTARROW":
-      return "<-";
-    case "OPEN":
-      return "(";
-    case "CLOSE":
-      return ")";
-    case "CharClass": {
-      let buf = "";
-      buf += "[";
-      for (const v of token.value) {
-        if (v.type === "char") {
-          buf += escapeString(v.value, true);
-        } else {
-          buf += `${v.value[0]}-${v.value[1]}`;
-        }
-      }
-      buf += "]";
-      return buf;
-    }
-    case "SLASH":
-      return "/";
-    case "DOT":
-      return ".";
-    case "STAR":
-      return "*";
-    case "PLUS":
-      return "+";
-    case "QUESTION":
-      return "?";
-    case "AND":
-      return "&";
-    case "NOT":
-      return "!";
-    case "Literal":
-      return `"${escapeString(token.value)}"`;
-    case "SEMICOLON":
-      return ";";
-    case "Comment":
-      return `--${token.value}`;
-    case "Space":
-      return token.value;
-    case "EndOfLine":
-      return "\n";
-    case "EndOfFile":
-      return "";
-    default: {
-      const exhaustiveCheck: never = token;
-      throw new Error(`Unreachable: ${exhaustiveCheck}`);
-    }
-  }
-};
-
-const lineToString = (
-  tokens: TokenWith<{ pos: Pick<Pos, "column"> }>[],
-  callback: (_arg: TokenWith<{ pos: Pick<Pos, "column"> }>) => string
-): string => {
-  let buf = "";
-  let column = 0;
-  for (const { token, meta } of tokens) {
-    if (token.type === "EndOfLine") {
-    } else if (token.type === "Space") {
-      buf += token.value;
-    } else {
-      buf += " ".repeat(meta.pos.column - column);
-      buf += callback({ token, meta });
-
-      column = meta.pos.column;
-    }
-
-    column++;
-  }
-
-  return buf;
-};
-
-export const tokensToString = (
-  tokenWiths: TokenWith<{ pos: Pick<Pos, "column"> }>[]
-): string => {
-  let buf = "";
-  for (const { token } of tokenWiths) {
-    buf += tokenToString(token);
-  }
-  return buf;
-};
-
-export type PrettyPrintTokensOptions = {
-  line?: {
-    number?: number | undefined;
-    padding?: number;
-  };
-};
-
-const defaultPrettyPrintTokensOptions: RecursiveRequired<PrettyPrintTokensOptions> =
-  {
-    line: {
-      number: undefined,
-      padding: 3,
-    },
-  } as const;
-
-export const prettyPrintTokens = (
-  tokenWidths: TokenWith<{ pos: Pick<Pos, "column"> }>[],
-  options?: PrettyPrintTokensOptions
-): string => {
-  const {
-    line: { number, padding },
-  } = defu(options, defaultPrettyPrintTokensOptions);
-  const linePart = number ? ` ${number.toString().padStart(padding)} │ ` : "";
-  const offset = number ? `${" ".repeat(linePart.length - 2)}│ ` : "";
-
-  let buf = `${linePart}${tokensToString(tokenWidths)}\n`;
-  let tokenNum = 0;
-  let lastTokenPos = { column: 0 };
-
-  const points = lineToString(tokenWidths, ({ meta: { pos } }) => {
-    tokenNum++;
-    lastTokenPos = pos;
-
-    return ".";
-  });
-  buf += `${offset}${points}\n`;
-
-  for (let i = 0; i < tokenNum; i++) {
-    let x = 0;
-
-    const line = lineToString(tokenWidths, ({ token, meta: { pos } }) => {
-      x++;
-
-      let buf = "";
-      if (x < tokenNum - i) {
-        buf += "│";
-      } else if (x === tokenNum - i) {
-        const line = "─".repeat(lastTokenPos.column - pos.column);
-        buf += `└───${line}╼ ${token.type}`;
-      }
-
-      return buf;
-    });
-    buf += `${offset}${line}\n`;
-  }
-  buf += `${offset}\n`;
-
-  return buf;
-};

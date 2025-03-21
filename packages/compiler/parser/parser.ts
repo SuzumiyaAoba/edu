@@ -1,4 +1,4 @@
-import type { Token, TokenType, TokenWith } from "@/compiler/token";
+import type { Token, TokenType, TokenWith } from "@/compiler/token/grammar";
 import type {
   CharacterClassValue,
   Definition,
@@ -9,10 +9,10 @@ import { PegGrammar } from "@/core/grammar";
 import { isNonEmptyArray, isSingleElementArray } from "@/libs/std/array";
 import * as array from "@/libs/std/array";
 
-const expectToken = <Meta, T extends TokenType>(
-  tokenWith: TokenWith<Meta> | undefined,
+const expectToken = <META, T extends TokenType>(
+  tokenWith: TokenWith<META> | undefined,
   expect: T,
-): TokenWith<Meta, Token & { type: T }> => {
+): TokenWith<META, Token & { type: T }> => {
   if (tokenWith === undefined) {
     throw new Error("Unexpected EOF");
   }
@@ -24,14 +24,14 @@ const expectToken = <Meta, T extends TokenType>(
     );
   }
 
-  return tokenWith as TokenWith<Meta, Token & { type: T }>;
+  return tokenWith as TokenWith<META, Token & { type: T }>;
 };
 
-export class Parser<Meta> {
-  #grammar = new PegGrammar<Meta>();
+export class Parser<META> {
+  #grammar = new PegGrammar<META>();
 
-  parse(tokenWiths: TokenWith<Meta>[]) {
-    const definitions: Grammar<Meta> = [];
+  parse(tokenWiths: TokenWith<META>[]) {
+    const definitions: Grammar<META> = [];
 
     let cursor = 0;
     while (cursor < tokenWiths.length) {
@@ -64,16 +64,16 @@ export class Parser<Meta> {
   }
 
   parseDefeinition(
-    tokenWiths: TokenWith<Meta>[],
+    tokenWiths: TokenWith<META>[],
     start = 0,
   ): {
-    definition: Definition<Meta>;
+    definition: Definition<META>;
     cursor: number;
   } {
     const g = this.#grammar;
 
     let cursor = this.#consumeSpace(tokenWiths, start);
-    const identifier = expectToken<Meta, "Identifier">(
+    const identifier = expectToken<META, "Identifier">(
       tokenWiths[cursor++],
       "Identifier",
     );
@@ -102,12 +102,12 @@ export class Parser<Meta> {
   }
 
   parseExpression(
-    tokens: TokenWith<Meta>[],
+    tokens: TokenWith<META>[],
     cursor = 0,
-    acc: Expression<Meta>[] = [],
-    wrap: (expr: Expression<Meta>) => Expression<Meta> = (expr) => expr,
+    acc: Expression<META>[] = [],
+    wrap: (expr: Expression<META>) => Expression<META> = (expr) => expr,
   ): {
-    expression: Expression<Meta>;
+    expression: Expression<META>;
     cursor: number;
   } {
     const g = this.#grammar;
@@ -250,7 +250,7 @@ export class Parser<Meta> {
     }
   }
 
-  #consumeSpace(tokenWiths: TokenWith<Meta>[], start = 0) {
+  #consumeSpace(tokenWiths: TokenWith<META>[], start = 0) {
     let cursor = start;
     while (
       tokenWiths[cursor]?.token.type === "Space" ||
