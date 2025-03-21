@@ -186,6 +186,85 @@ describe("toString", () => {
   });
 });
 
+describe("PegGrammar", () => {
+  it("identifier", () => {
+    const expr = g.id("id");
+    expect(expr.type).toBe("Identifier");
+    expect(expr.name).toBe("id");
+  });
+
+  it("literal", () => {
+    const expr = g.lit("+");
+    expect(expr.type).toBe("Literal");
+    expect(expr.value).toBe("+");
+  });
+
+  it("characterClass", () => {
+    const expr = g.charClass([g.range("a", "z")]);
+    expect(expr.type).toBe("CharacterClass");
+    expect(expr.value).toEqual([{ type: "range", start: "a", stop: "z" }]);
+  });
+
+  it("any", () => {
+    const expr = g.any();
+    expect(expr.type).toBe("AnyCharacter");
+  });
+
+  it("zeroOrMore", () => {
+    const expr = g.star(g.id("id"));
+    expect(expr.type).toBe("ZeroOrMore");
+    expect(expr.expression).toEqual({ type: "Identifier", name: "id" });
+  });
+
+  it("oneOrMore", () => {
+    const expr = g.plus(g.id("id"));
+    expect(expr.type).toBe("OneOrMore");
+    expect(expr.expression).toEqual({ type: "Identifier", name: "id" });
+  });
+
+  it("optional", () => {
+    const expr = g.opt(g.id("id"));
+    expect(expr.type).toBe("Optional");
+    expect(expr.expression).toEqual({ type: "Identifier", name: "id" });
+  });
+
+  it("and", () => {
+    const expr = g.and(g.id("id"));
+    expect(expr.type).toBe("AndPredicate");
+    expect(expr.expression).toEqual({ type: "Identifier", name: "id" });
+  });
+
+  it("not", () => {
+    const expr = g.not(g.id("id"));
+    expect(expr.type).toBe("NotPredicate");
+    expect(expr.expression).toEqual({ type: "Identifier", name: "id" });
+  });
+
+  it("choice", () => {
+    const expr = g.choice(g.id("id"), g.lit("+"));
+    expect(expr.type).toBe("PrioritizedChoice");
+    expect(expr.firstChoice).toEqual({ type: "Identifier", name: "id" });
+    expect(expr.secondChoice).toEqual({ type: "Literal", value: "+" });
+  });
+
+  it("sequence", () => {
+    const expr = g.seq([g.id("x"), g.lit("+"), g.id("y")]);
+    expect(expr.type).toBe("Sequence");
+    expect(expr.expressions).toEqual([
+      { type: "Identifier", name: "x" },
+      { type: "Literal", value: "+" },
+      { type: "Identifier", name: "y" },
+    ]);
+  });
+
+  it("definition", () => {
+    const expr = g.def(g.id("definition"), g.id("x"));
+    expect(expr.type).toBe("definition");
+    expect(expr.identifier).toEqual({ type: "Identifier", name: "definition" });
+    expect(expr.expression).toEqual({ type: "Identifier", name: "x" });
+  });
+});
+
 describe("exprToString", () => {
   it.each([
     [g.id("id"), "id"],

@@ -21,6 +21,11 @@ describe("acceptedByExpression", () => {
     [g.and(g.lit("b")), "ab", undefined],
     [g.not(g.lit("a")), "ab", undefined],
     [g.not(g.lit("b")), "ab", 0],
+    [g.seq([g.lit("a"), g.lit("b")]), "ab", "ab".length],
+    [g.seq([g.lit("a"), g.lit("b")]), "ac", undefined],
+    [g.choice(g.lit("a"), g.lit("b")), "a", "a".length],
+    [g.choice(g.lit("a"), g.lit("b")), "b", "b".length],
+    [g.choice(g.lit("a"), g.lit("b")), "c", undefined],
   ])("find", (expr, input, expected) => {
     const env: Environment = {
       literal: g.lit("literal"),
