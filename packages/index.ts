@@ -2,7 +2,7 @@ import { Lexer } from "@/compiler/lexer/grammar";
 import type { Pos } from "@/compiler/lexer/grammar";
 import { Parser } from "@/compiler/parser/parser";
 import type { Token } from "@/compiler/token/grammar";
-import { definitionToString } from "@/core/grammar";
+import { definitionToString } from "@/core/printer";
 import { prettyPrintTokens } from "./compiler/token/grammar-printer";
 import { accept } from "./core/eval";
 import { print } from "./core/utils/io";

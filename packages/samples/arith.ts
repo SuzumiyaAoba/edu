@@ -1,13 +1,13 @@
 import {
-  lit,
-  map,
-  seq,
-  plus,
-  choice,
   type ParseResult,
   charClass,
+  choice,
+  lit,
+  map,
+  plus,
+  seq,
   zeroOrMore,
-} from ".";
+} from "../core/parser";
 
 export type ArithOp = "+" | "-" | "*" | "/";
 
@@ -32,8 +32,6 @@ export function createArithNode(
     right,
   };
 }
-
-// パーサーの定義
 
 export const numberParser: Parser<number> = map(
   plus(charClass([["0", "9"]])),

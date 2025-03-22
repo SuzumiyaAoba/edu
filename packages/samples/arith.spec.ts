@@ -1,11 +1,11 @@
+import { describe, expect, it } from "bun:test";
 import {
   arithParser,
   createArithNode,
-  numberParser,
   factorParser,
+  numberParser,
   termParser,
 } from "./arith";
-import { expect, describe, it } from "bun:test";
 
 describe("arithParser", () => {
   it("should parse basic arithmetic expressions", () => {

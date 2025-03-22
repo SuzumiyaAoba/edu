@@ -1,437 +1,204 @@
-import { escapeString } from "@/compiler/escape";
-import { print } from "@/core/utils/io";
-import { logger } from "@/core/utils/logger";
-import type { ReadOnlyNonEmptyArray } from "@/libs/std/array";
+import { type Escapable, unescapeChar } from "@/compiler/escape";
+import { octalDigitToChar } from "@/libs/octal";
+import { isEmptyArray } from "@/libs/std/array";
+import { type Expression, PegGrammar } from "./ast";
+import {
+  type Parser,
+  any,
+  charClass,
+  choice,
+  lit,
+  map,
+  not,
+  oneOrMore,
+  opt,
+  seq,
+  zeroOrMore,
+} from "./parser";
 
-export type Grammar<META = unknown> = Definition<META>[];
+const g = new PegGrammar();
 
-type Ast<TYPE, META, P> = {
-  type: TYPE;
-  meta?: META | undefined;
-} & P;
+export const endOfFile: Parser<string> = not(any());
 
-export type Definition<META = unknown> = Ast<
-  "definition",
-  META,
-  {
-    identifier: Identifier<META>;
-    expression: Expression<META>;
-  }
->;
+export const endOfLine = choice(lit("\r\n"), lit("\n"), lit("\r"));
 
-export type Expression<META = unknown> =
-  | Identifier<META>
-  | Literal<META>
-  | CharacterClass<META>
-  | AnyCharacter<META>
-  | Grouping<META>
-  | Optional<META>
-  | ZeroOrMore<META>
-  | OneOrMore<META>
-  | AndPredicate<META>
-  | NotPredicate<META>
-  | Sequence<META>
-  | PrioritizedChoice<META>;
+export const space = choice(lit(" "), lit("\t"), endOfLine);
 
-/**
- * Identifier.
- */
-export type Identifier<META = unknown> = Ast<
-  "Identifier",
-  META,
-  {
-    name: string;
-  }
->;
+export const comment: Parser<string> = map(
+  seq(
+    lit("--"),
+    oneOrMore(map(seq(not(endOfLine), any()), ([, char]) => char)),
+    endOfLine,
+  ),
+  ($) => $[1].join(""),
+);
 
-/**
- * Literal string.
- *
- * Operator: `' '` or `" "`
- */
-export type Literal<META = unknown> = Ast<
-  "Literal",
-  META,
-  {
-    value: string;
-  }
->;
+export const spacing: Parser<string[]> = zeroOrMore(choice(space, comment));
 
-/**
- * Character class.
- *
- * Operator: `[ ]`
- */
-export type CharacterClass<META = unknown> = Ast<
-  "CharacterClass",
-  META,
-  {
-    value: readonly CharacterClassValue[];
-  }
->;
+export const dot: Parser<Expression> = map(
+  seq(
+    map(lit("."), () => g.any()),
+    spacing,
+  ),
+  ($) => $[0],
+);
 
-export type CharacterClassValue = Char | Range;
+export const close = map(seq(lit(")"), spacing), ($) => $[0]);
 
-export type Char = {
-  type: "char";
-  value: string;
-};
+export const open = map(seq(lit("("), spacing), ($) => $[0]);
 
-export type Range = {
-  type: "range";
-  start: string;
-  stop: string;
-};
+export const plus = map(seq(lit("+"), spacing), ($) => $[0]);
 
-/**
- * Any character.
- *
- * Operator: `.`
- */
-export type AnyCharacter<META = unknown> = Ast<"AnyCharacter", META, unknown>;
+export const star = map(seq(lit("*"), spacing), ($) => $[0]);
 
-/**
- * Grouping.
- *
- * Operator: `(e)`
- */
-export type Grouping<META = unknown> = Ast<
-  "Grouping",
-  META,
-  {
-    expression: Expression<META>;
-  }
->;
+export const question = map(seq(lit("?"), spacing), ($) => $[0]);
 
-/**
- * Optional.
- *
- * Operator: `e?`
- */
-export type Optional<META = unknown> = Ast<
-  "Optional",
-  META,
-  {
-    expression: Expression<META>;
-  }
->;
+export const notPredicate = map(seq(lit("!"), spacing), ($) => $[0]);
 
-/**
- * Zero-or-more.
- *
- * Operator: `𝑒*`
- */
-export type ZeroOrMore<META = unknown> = Ast<
-  "ZeroOrMore",
-  META,
-  {
-    expression: Expression<META>;
-  }
->;
+export const andPredicate = map(seq(lit("&"), spacing), ($) => $[0]);
 
-/**
- * One-or-more.
- *
- * Operator: `𝑒+`
- */
-export type OneOrMore<META = unknown> = Ast<
-  "OneOrMore",
-  META,
-  {
-    expression: Expression<META>;
-  }
->;
+export const slash = map(seq(lit("/"), spacing), ($) => $[0]);
 
-/**
- * And-predicate.
- *
- * Operator: `&𝑒`
- */
-export type AndPredicate<META = unknown> = Ast<
-  "AndPredicate",
-  META,
-  {
-    expression: Expression<META>;
-  }
->;
+export const semicolon = map(seq(lit(";"), spacing), ($) => $[0]);
 
-/**
- * Not-predicate.
- *
- * Operator: `!𝑒`
- */
-export type NotPredicate<META = unknown> = Ast<
-  "NotPredicate",
-  META,
-  {
-    expression: Expression<META>;
-  }
->;
+export const leftArrow = map(seq(lit("<-"), spacing), ($) => $[0]);
 
-/**
- * Sequence.
- *
- * Operator: `𝑒₁ 𝑒₂`
- */
-export type Sequence<META = unknown> = Ast<
-  "Sequence",
-  META,
-  {
-    expressions: ReadOnlyNonEmptyArray<Expression<META>>;
-  }
->;
+export const char = choice(
+  map(
+    seq(
+      lit("\\"),
+      map(
+        charClass(["n", "r", "t", "'", '"', "[", "]", "\\"]),
+        ($) => $[0] as Escapable,
+      ),
+    ),
+    ($) => unescapeChar($[1]),
+  ),
+  choice(
+    map(
+      seq(lit("\\"), charClass([["0", "7"]]), opt(charClass([["0", "7"]]))),
+      ($) => octalDigitToChar(`${$[1]}${$[2].length === 0 ? "" : $[2]}`),
+    ),
+    map(seq(not(lit("\\")), any()), ($) => $[1]),
+  ),
+);
 
-/**
- * Prioritized Choice.
- *
- * Operator: `𝑒₁ / 𝑒₂`
- */
-export type PrioritizedChoice<META = unknown> = Ast<
-  "PrioritizedChoice",
-  META,
-  {
-    firstChoice: Expression<META>;
-    secondChoice: Expression<META>;
-  }
->;
+export const range = choice(
+  map(seq(char, lit("-"), char), ($) => g.range($[0], $[2])),
+  map(char, ($) => g.char($)),
+);
 
-export class PegGrammar<META> {
-  definition(
-    identifier: Identifier<META>,
-    expression: Expression<META>,
-  ): Definition<META> {
-    return {
-      type: "definition",
-      identifier,
-      expression,
-    };
-  }
+export const characterClass = map(
+  seq(
+    lit("["),
+    zeroOrMore(map(seq(not(lit("]")), range), ($) => $[1])),
+    lit("]"),
+    spacing,
+  ),
+  ($) => g.charClass($[1]),
+);
 
-  def = this.definition;
+export const literal = map(
+  choice(
+    seq(
+      lit("'"),
+      map(zeroOrMore(map(seq(not(lit("'")), char), ($) => $[1])), ($) =>
+        $.join(""),
+      ),
+      lit("'"),
+      spacing,
+    ),
+    seq(
+      lit('"'),
+      map(zeroOrMore(map(seq(not(lit('"')), char), ($) => $[1])), ($) =>
+        $.join(""),
+      ),
+      lit("'"),
+      spacing,
+    ),
+  ),
+  ($) => g.lit($[1]),
+);
 
-  identifier(name: string, meta?: META): Identifier<META> {
-    return {
-      type: "Identifier",
-      name: name,
-      meta,
-    };
-  }
+export const identStart = charClass([["a", "z"], ["A", "Z"], "_"]);
 
-  id = this.identifier;
+export const identCont = choice(identStart, charClass([["0", "9"]]));
 
-  literal(value: string, meta?: META): Literal<META> {
-    return {
-      type: "Literal",
-      value,
-      meta,
-    };
-  }
+export const identifier = map(
+  seq(identStart, zeroOrMore(identCont), spacing),
+  ($) => g.identifier($[0] + $[1].join("")),
+);
 
-  lit = this.literal;
-
-  characterClass(
-    value: CharacterClassValue[],
-    meta?: META,
-  ): CharacterClass<META> {
-    return {
-      type: "CharacterClass",
-      value,
-      meta,
-    };
-  }
-
-  charClass = this.characterClass;
-
-  char(value: string): Char {
-    return {
-      type: "char",
-      value,
-    };
-  }
-
-  charClassRange(start: string, stop: string): Range {
-    return {
-      type: "range",
-      start,
-      stop,
-    };
-  }
-
-  range = this.charClassRange;
-
-  anyCharacter(meta?: META): AnyCharacter<META> {
-    return {
-      type: "AnyCharacter",
-      meta,
-    };
-  }
-
-  any = this.anyCharacter;
-
-  zeroOrMore(expression: Expression<META>, meta?: META): ZeroOrMore<META> {
-    return {
-      type: "ZeroOrMore",
-      expression,
-      meta,
-    };
-  }
-
-  star = this.zeroOrMore;
-
-  oneOrMore(expression: Expression<META>, meta?: META): OneOrMore<META> {
-    return {
-      type: "OneOrMore",
-      expression,
-      meta,
-    };
-  }
-
-  plus = this.oneOrMore;
-
-  grouping(expression: Expression<META>, meta?: META): Grouping<META> {
-    return {
-      type: "Grouping",
-      expression,
-      meta,
-    };
-  }
-
-  group = this.grouping;
-
-  optional(expression: Expression<META>, meta?: META): Optional<META> {
-    return {
-      type: "Optional",
-      expression,
-      meta,
-    };
-  }
-
-  opt = this.optional;
-
-  andPredicate(expression: Expression<META>, meta?: META): AndPredicate<META> {
-    return {
-      type: "AndPredicate",
-      expression,
-      meta,
-    };
-  }
-
-  and = this.andPredicate;
-
-  notPredicate(expression: Expression<META>, meta?: META): NotPredicate<META> {
-    return {
-      type: "NotPredicate",
-      expression,
-      meta,
-    };
-  }
-
-  not = this.notPredicate;
-
-  prioritizedChoice(
-    firstChoice: Expression<META>,
-    secondChoice: Expression<META>,
-    meta?: META,
-  ): PrioritizedChoice<META> {
-    return {
-      type: "PrioritizedChoice",
-      firstChoice,
-      secondChoice,
-      meta,
-    };
-  }
-
-  choice = this.prioritizedChoice;
-
-  sequence(
-    expressions: ReadOnlyNonEmptyArray<Expression<META>>,
-    meta?: META,
-  ): Sequence<META> {
-    return {
-      type: "Sequence",
-      expressions,
-      meta,
-    };
-  }
-
-  seq = this.sequence;
+export function primary(input: string, index: number) {
+  return choice(
+    map(seq(identifier, not(leftArrow)), ($) => $[0]),
+    map(seq(open, expression, close), ($) => $[1]),
+    literal,
+    characterClass,
+    dot,
+  )(input, index);
 }
 
-export const printGrammar = <META>(grammar: Grammar<META>) => {
-  print(grammerToString(grammar));
-};
-
-export const printDefinition = <META>(definition: Definition<META>) => {
-  print(definitionToString(definition));
-};
-
-export const printExpr = <META>(expr: Expression<META>) => {
-  print(exprToString(expr));
-};
-
-export const grammerToString = <META>(grammar: Grammar<META>): string => {
-  return grammar.map(definitionToString).join("\n");
-};
-
-export const definitionToString = <META>({
-  identifier,
-  expression,
-}: Definition<META>): string => {
-  return `${exprToString(identifier)} <- ${exprToString(expression)};`;
-};
-
-export const exprToString = (
-  expr: Expression<unknown>,
-  group = false,
-): string => {
-  logger.trace(expr);
-
-  switch (expr.type) {
-    case "Identifier":
-      return expr.name;
-    case "Literal":
-      return `"${escapeString(expr.value)}"`;
-    case "CharacterClass":
-      return `[${expr.value.reduce((acc, elm) => {
-        switch (elm.type) {
-          case "char":
-            return acc + escapeString(elm.value, true);
-          case "range":
-            return `${acc}${escapeString(elm.start, true)}-${escapeString(elm.stop, true)}`;
-        }
-      }, "")}]`;
-    case "AnyCharacter":
-      return ".";
-    case "Grouping":
-      return `(${exprToString(expr.expression, false)})`;
-    case "PrioritizedChoice": {
-      const str = `${exprToString(expr.firstChoice, false)} / ${exprToString(expr.secondChoice, false)}`;
-      return group ? `(${str})` : str;
+export const suffix = map(
+  seq(primary, opt(choice(question, star, plus))),
+  ([expr, quantifier]) => {
+    if (quantifier.length === 0) {
+      return expr;
     }
-    case "ZeroOrMore":
-      return `${exprToString(expr.expression, true)}*`;
-    case "OneOrMore":
-      return `${exprToString(expr.expression, true)}+`;
-    case "Optional":
-      return `${exprToString(expr.expression, true)}?`;
-    case "AndPredicate":
-      return `&${exprToString(expr.expression, true)}`;
-    case "NotPredicate":
-      return `!${exprToString(expr.expression, true)}`;
-    case "Sequence": {
-      if (expr.expressions.length === 1) {
-        return exprToString(expr.expressions[0], true);
+
+    switch (quantifier[0]) {
+      case "*":
+        return g.star(expr);
+      case "+":
+        return g.plus(expr);
+      case "?":
+        return g.opt(expr);
+      default: {
+        const exhaustiveCheck: never = quantifier[0];
+        throw new Error(`Unreachable: ${exhaustiveCheck}`);
       }
-
-      const str = expr.expressions
-        .map((expr) => exprToString(expr, true))
-        .join(" ");
-
-      return group ? `(${str})` : str;
     }
-    default: {
-      const exhaustiveCheck: never = expr;
-      throw new Error(`Unreachable: ${exhaustiveCheck}`);
+  },
+);
+
+export const prefix = map(
+  seq(opt(choice(andPredicate, notPredicate)), suffix),
+  ([prefix, expr]) => {
+    if (isEmptyArray(prefix)) {
+      return expr;
     }
-  }
-};
+
+    switch (prefix[0]) {
+      case "&":
+        return g.and(expr);
+      case "!":
+        return g.not(expr);
+      default: {
+        const exhaustiveCheck: never = prefix[0];
+        throw new Error(`Unreachable: ${exhaustiveCheck}`);
+      }
+    }
+  },
+);
+
+export const sequence = map(oneOrMore(prefix), ($) =>
+  $.length === 1 ? $[0] : g.seq($),
+);
+
+export const expression: Parser<Expression> = map(
+  seq(sequence, zeroOrMore(map(seq(slash, sequence), ($) => $[1]))),
+  ($) =>
+    $[1].length === 0
+      ? $[0]
+      : $[1].reduce((left, right) => g.choice(left, right), $[0]),
+);
+
+export const definition = map(
+  seq(identifier, leftArrow, expression, semicolon),
+  ($) => g.def($[0], $[2]),
+);
+
+export const grammar = map(
+  seq(spacing, oneOrMore(definition), endOfFile),
+  ($) => $[1],
+);

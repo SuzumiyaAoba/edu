@@ -1,5 +1,5 @@
-import { literal, sequence, choice, optional } from "./index";
-import { expect, describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { choice, literal, optional, sequence } from "./parser";
 
 describe("literal", () => {
   it("should parse a literal string correctly", () => {

@@ -4,8 +4,8 @@ import type {
   Definition,
   Expression,
   Grammar,
-} from "@/core/grammar";
-import { PegGrammar } from "@/core/grammar";
+} from "@/core/ast";
+import { PegGrammar } from "@/core/ast";
 import { isNonEmptyArray, isSingleElementArray } from "@/libs/std/array";
 import * as array from "@/libs/std/array";
 
