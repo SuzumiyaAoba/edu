@@ -62,12 +62,42 @@ export const spacing: Parser<string[]> = zeroOrMore(choice(space, comment));
 
 /**
  * ```txt
- * DOT <- '.' Spacing;
+ * BindStart <- [a-zA-Z_];
+ * ```
+ */
+export const bindStart = charClass([["a", "z"], ["A", "Z"], "_"]);
+
+/**
+ * ```txt
+ * BindCont <- BindStart / [0-9];
+ * ```
+ */
+export const bindCont = choice(bindStart, charClass([["0", "9"]]));
+
+/**
+ * ```txt
+ * Bind <- BindStart BindCont* Spacing;
+ * ```
+ */
+export const bind = map(
+  seq(bindStart, zeroOrMore(bindCont), spacing),
+  ($) => $[0] + $[1].join(""),
+);
+
+/**
+ * ```txt
+ * Bindable <- ("$" bind)?
+ */
+export const bindable = opt(map(seq(lit("$"), bind), ($) => $[1]));
+
+/**
+ * ```txt
+ * DOT <- '.' Bindable Spacing;
  * ```
  */
 export const dot: Parser<Expression> = map(
   seq(
-    map(lit("."), () => g.any()),
+    map(seq(lit("."), bindable), ($) => g.any($[1]?.[0])),
     spacing,
   ),
   ($) => $[0],
@@ -78,7 +108,7 @@ export const dot: Parser<Expression> = map(
  * CLOSE <- ')' Spacing;
  * ```
  */
-export const close = map(seq(lit(")"), spacing), ($) => $[0]);
+export const close = map(seq(lit(")"), bindable, spacing), ($) => $[1]?.[0]);
 
 /**
  * ```txt
@@ -89,24 +119,35 @@ export const open = map(seq(lit("("), spacing), ($) => $[0]);
 
 /**
  * ```txt
- * PLUS <- '+' Spacing;
+ * alias Quantifier = <sign> Bindable Spacing;
  * ```
  */
-export const plus = map(seq(lit("+"), spacing), ($) => $[0]);
+const quantifier = <T extends string>(sign: T) =>
+  map(seq(lit(sign), bindable, spacing), ($) => ({
+    quantifier: $[0],
+    as: $[1]?.[0],
+  }));
+
+/**
+ * ```txt
+ * PLUS <- '+' Bindable Spacing;
+ * ```
+ */
+export const plus = quantifier("+");
 
 /**
  * ```txt
  * STAR <- '*' Spacing;
  * ```
  */
-export const star = map(seq(lit("*"), spacing), ($) => $[0]);
+export const star = quantifier("*");
 
 /**
  * ```txt
  * QUESTION <- '?' Spacing;
  * ```
  */
-export const question = map(seq(lit("?"), spacing), ($) => $[0]);
+export const question = quantifier("?");
 
 /**
  * ```txt
@@ -183,7 +224,7 @@ export const range = choice(
 
 /**
  * ```txt
- * Class <- '[' (!']' Range)* ']' Spacing;
+ * Class <- '[' (!']' Range)* ']' Bindable Spacing;
  * ```
  */
 export const characterClass = map(
@@ -191,9 +232,10 @@ export const characterClass = map(
     lit("["),
     zeroOrMore(map(seq(not(lit("]")), range), ($) => $[1])),
     lit("]"),
+    bindable,
     spacing,
   ),
-  ($) => g.charClass($[1]),
+  ($) => g.charClass($[1], $[3]?.[0]),
 );
 
 /**
@@ -240,12 +282,12 @@ export const identCont = choice(identStart, charClass([["0", "9"]]));
 
 /**
  * ```txt
- * Identifier <- IdentStart IdentCont* Spacing;
+ * Identifier <- IdentStart IdentCont* ("$" Bind)? Spacing;
  * ```
  */
 export const identifier = map(
-  seq(identStart, zeroOrMore(identCont), spacing),
-  ($) => g.identifier($[0] + $[1].join("")),
+  seq(identStart, zeroOrMore(identCont), bindable, spacing),
+  ($) => g.identifier($[0] + $[1].join(""), $[2]?.[0]),
 );
 
 /**
@@ -260,7 +302,7 @@ export const identifier = map(
 export function primary(input: string, index: number) {
   return choice(
     map(seq(identifier, not(leftArrow)), ($) => $[0]),
-    map(seq(open, expression, close), ($) => $[1]),
+    map(seq(open, expression, close), ($) => ({ ...$[1], as: $[2] })),
     literal,
     characterClass,
     dot,
@@ -274,18 +316,19 @@ export function primary(input: string, index: number) {
  */
 export const suffix = map(
   seq(primary, opt(choice(question, star, plus))),
-  ([expr, quantifier]) => {
-    if (quantifier.length === 0) {
+  ([expr, quant]) => {
+    if (quant.length === 0) {
       return expr;
     }
 
-    switch (quantifier[0]) {
+    const { quantifier, as } = quant[0];
+    switch (quantifier) {
       case "*":
-        return g.star(expr);
+        return g.star(expr, as);
       case "+":
-        return g.plus(expr);
+        return g.plus(expr, as);
       case "?":
-        return g.opt(expr);
+        return g.opt(expr, as);
       default: {
         const exhaustiveCheck: never = quantifier[0];
         throw new Error(`Unreachable: ${exhaustiveCheck}`);

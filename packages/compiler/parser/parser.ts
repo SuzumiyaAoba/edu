@@ -120,11 +120,11 @@ export class Parser<META> {
     const { token, meta } = tokenWith;
     switch (token.type) {
       case "Identifier":
-        acc.push(wrap(g.id(token.value, meta)));
+        acc.push(wrap(g.id(token.value, undefined, meta)));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "Literal":
-        acc.push(wrap(g.lit(token.value, meta)));
+        acc.push(wrap(g.lit(token.value, undefined, meta)));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "CharClass": {
@@ -139,7 +139,7 @@ export class Parser<META> {
           }
         }
 
-        acc.push(wrap(g.charClass(charClassValues, meta)));
+        acc.push(wrap(g.charClass(charClassValues, undefined, meta)));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       }
@@ -182,7 +182,7 @@ export class Parser<META> {
           throw new Error("Unexpected QUESTION");
         }
 
-        array.replaceLast(acc, (last) => g.opt(last, meta));
+        array.replaceLast(acc, (last) => g.opt(last, undefined, meta));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "STAR":
@@ -190,7 +190,7 @@ export class Parser<META> {
           throw new Error(`Unexpected STAR: ${JSON.stringify(meta)}`);
         }
 
-        array.replaceLast(acc, (last) => g.star(last, meta));
+        array.replaceLast(acc, (last) => g.star(last, undefined, meta));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "PLUS":
@@ -198,7 +198,7 @@ export class Parser<META> {
           throw new Error("Unexpected PLUS");
         }
 
-        array.replaceLast(acc, (last) => g.plus(last, meta));
+        array.replaceLast(acc, (last) => g.plus(last, undefined, meta));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "OPEN": {
@@ -224,7 +224,7 @@ export class Parser<META> {
           cursor: cursor + 1,
         };
       case "DOT":
-        acc.push(wrap(g.any(meta)));
+        acc.push(wrap(g.any(undefined, meta)));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "SEMICOLON":

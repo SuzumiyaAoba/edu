@@ -38,6 +38,7 @@ export type Identifier<META = unknown> = Ast<
   META,
   {
     name: string;
+    as: string | undefined;
   }
 >;
 
@@ -51,6 +52,7 @@ export type Literal<META = unknown> = Ast<
   META,
   {
     value: string;
+    as: string | undefined;
   }
 >;
 
@@ -64,6 +66,7 @@ export type CharacterClass<META = unknown> = Ast<
   META,
   {
     value: readonly CharacterClassValue[];
+    as: string | undefined;
   }
 >;
 
@@ -85,7 +88,13 @@ export type Range = {
  *
  * Operator: `.`
  */
-export type AnyCharacter<META = unknown> = Ast<"AnyCharacter", META, unknown>;
+export type AnyCharacter<META = unknown> = Ast<
+  "AnyCharacter",
+  META,
+  {
+    as: string | undefined;
+  }
+>;
 
 /**
  * Grouping.
@@ -97,6 +106,7 @@ export type Grouping<META = unknown> = Ast<
   META,
   {
     expression: Expression<META>;
+    as: string | undefined;
   }
 >;
 
@@ -110,6 +120,7 @@ export type Optional<META = unknown> = Ast<
   META,
   {
     expression: Expression<META>;
+    as: string | undefined;
   }
 >;
 
@@ -123,6 +134,7 @@ export type ZeroOrMore<META = unknown> = Ast<
   META,
   {
     expression: Expression<META>;
+    as: string | undefined;
   }
 >;
 
@@ -136,6 +148,7 @@ export type OneOrMore<META = unknown> = Ast<
   META,
   {
     expression: Expression<META>;
+    as: string | undefined;
   }
 >;
 
@@ -206,20 +219,26 @@ export class PegGrammar<META> {
 
   def = this.definition;
 
-  identifier(name: string, meta?: META): Identifier<META> {
+  identifier(
+    name: string,
+    as?: string | undefined,
+    meta?: META,
+  ): Identifier<META> {
     return {
       type: "Identifier",
-      name: name,
+      name,
+      as,
       meta,
     };
   }
 
   id = this.identifier;
 
-  literal(value: string, meta?: META): Literal<META> {
+  literal(value: string, as?: string | undefined, meta?: META): Literal<META> {
     return {
       type: "Literal",
       value,
+      as,
       meta,
     };
   }
@@ -228,11 +247,13 @@ export class PegGrammar<META> {
 
   characterClass(
     value: CharacterClassValue[],
+    as?: string | undefined,
     meta?: META,
   ): CharacterClass<META> {
     return {
       type: "CharacterClass",
       value,
+      as,
       meta,
     };
   }
@@ -256,49 +277,70 @@ export class PegGrammar<META> {
 
   range = this.charClassRange;
 
-  anyCharacter(meta?: META): AnyCharacter<META> {
+  anyCharacter(as?: string | undefined, meta?: META): AnyCharacter<META> {
     return {
       type: "AnyCharacter",
+      as,
       meta,
     };
   }
 
   any = this.anyCharacter;
 
-  zeroOrMore(expression: Expression<META>, meta?: META): ZeroOrMore<META> {
+  zeroOrMore(
+    expression: Expression<META>,
+    as?: string | undefined,
+    meta?: META,
+  ): ZeroOrMore<META> {
     return {
       type: "ZeroOrMore",
       expression,
+      as,
       meta,
     };
   }
 
   star = this.zeroOrMore;
 
-  oneOrMore(expression: Expression<META>, meta?: META): OneOrMore<META> {
+  oneOrMore(
+    expression: Expression<META>,
+    as?: string | undefined,
+    meta?: META,
+  ): OneOrMore<META> {
     return {
       type: "OneOrMore",
       expression,
+      as,
       meta,
     };
   }
 
   plus = this.oneOrMore;
 
-  grouping(expression: Expression<META>, meta?: META): Grouping<META> {
+  grouping(
+    expression: Expression<META>,
+    as?: string | undefined,
+    meta?: META,
+  ): Grouping<META> {
     return {
       type: "Grouping",
       expression,
+      as,
       meta,
     };
   }
 
   group = this.grouping;
 
-  optional(expression: Expression<META>, meta?: META): Optional<META> {
+  optional(
+    expression: Expression<META>,
+    as?: string | undefined,
+    meta?: META,
+  ): Optional<META> {
     return {
       type: "Optional",
       expression,
+      as,
       meta,
     };
   }
