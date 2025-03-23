@@ -18,23 +18,53 @@ import {
 
 const g = new PegGrammar();
 
+/**
+ * ```txt
+ * EndOfFile <- !.;
+ * ```
+ */
 export const endOfFile: Parser<string> = not(any());
 
+/**
+ * ```txt
+ * EndOfLine <- '\r\n' / '\n' / '\r';
+ * ```
+ */
 export const endOfLine = choice(lit("\r\n"), lit("\n"), lit("\r"));
 
+/**
+ * ```txt
+ * Space <- ' ' / '\t' / EndOfLine;
+ * ```
+ */
 export const space = choice(lit(" "), lit("\t"), endOfLine);
 
+/**
+ * ```txt
+ * Comment <- "--" (!EndOfLine .)* EndOfLine;
+ * ```
+ */
 export const comment: Parser<string> = map(
   seq(
     lit("--"),
-    oneOrMore(map(seq(not(endOfLine), any()), ([, char]) => char)),
+    zeroOrMore(map(seq(not(endOfLine), any()), ([, char]) => char)),
     endOfLine,
   ),
   ($) => $[1].join(""),
 );
 
+/**
+ * ```txt
+ * Spacing <- (Space / Comment)*;
+ * ```
+ */
 export const spacing: Parser<string[]> = zeroOrMore(choice(space, comment));
 
+/**
+ * ```txt
+ * DOT <- '.' Spacing;
+ * ```
+ */
 export const dot: Parser<Expression> = map(
   seq(
     map(lit("."), () => g.any()),
@@ -43,26 +73,84 @@ export const dot: Parser<Expression> = map(
   ($) => $[0],
 );
 
+/**
+ * ```txt
+ * CLOSE <- ')' Spacing;
+ * ```
+ */
 export const close = map(seq(lit(")"), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * OPEN <- '(' Spacing;
+ * ```
+ */
 export const open = map(seq(lit("("), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * PLUS <- '+' Spacing;
+ * ```
+ */
 export const plus = map(seq(lit("+"), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * STAR <- '*' Spacing;
+ * ```
+ */
 export const star = map(seq(lit("*"), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * QUESTION <- '?' Spacing;
+ * ```
+ */
 export const question = map(seq(lit("?"), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * NOT <- '!' Spacing;
+ * ```
+ */
 export const notPredicate = map(seq(lit("!"), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * AND <- '&' Spacing;
+ * ```
+ */
 export const andPredicate = map(seq(lit("&"), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * SLASH <- '/' Spacing;
+ * ```
+ */
 export const slash = map(seq(lit("/"), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * SEMICOLON <- ';' Spacing;
+ * ```
+ */
 export const semicolon = map(seq(lit(";"), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * LEFTARROW <- '<-' Spacing;
+ * ```
+ */
 export const leftArrow = map(seq(lit("<-"), spacing), ($) => $[0]);
 
+/**
+ * ```txt
+ * Char <- '\\' [nrt'"\[\]\\]
+ *       / '\\' [0-2][0-7][0-7]
+ *       / '\\' [0-7][0-7]?
+ *       / !'\\' .;
+ * ```
+ */
 export const char = choice(
   map(
     seq(
@@ -83,11 +171,21 @@ export const char = choice(
   ),
 );
 
+/**
+ * ```txt
+ * Range <- Char '-' Char / Char;
+ * ```
+ */
 export const range = choice(
   map(seq(char, lit("-"), char), ($) => g.range($[0], $[2])),
   map(char, ($) => g.char($)),
 );
 
+/**
+ * ```txt
+ * Class <- '[' (!']' Range)* ']' Spacing;
+ * ```
+ */
 export const characterClass = map(
   seq(
     lit("["),
@@ -98,6 +196,12 @@ export const characterClass = map(
   ($) => g.charClass($[1]),
 );
 
+/**
+ * ```txt
+ * Literal <- ['] (!['] Char)* ['] Spacing
+ *          / ["] (!["] Char)* ["] Spacing;
+ * ```
+ */
 export const literal = map(
   choice(
     seq(
@@ -120,15 +224,39 @@ export const literal = map(
   ($) => g.lit($[1]),
 );
 
+/**
+ * ```txt
+ * IdentStart <- [a-zA-Z_];
+ * ```
+ */
 export const identStart = charClass([["a", "z"], ["A", "Z"], "_"]);
 
+/**
+ * ```txt
+ * IdentCont <- IdentStart / [0-9];
+ * ```
+ */
 export const identCont = choice(identStart, charClass([["0", "9"]]));
 
+/**
+ * ```txt
+ * Identifier <- IdentStart IdentCont* Spacing;
+ * ```
+ */
 export const identifier = map(
   seq(identStart, zeroOrMore(identCont), spacing),
   ($) => g.identifier($[0] + $[1].join("")),
 );
 
+/**
+ * ```txt
+ * Primary <- Identifier !LEFTARROW
+ *          / OPEN Expression CLOSE
+ *          / Literal
+ *          / Class
+ *          / DOT;
+ * ```
+ */
 export function primary(input: string, index: number) {
   return choice(
     map(seq(identifier, not(leftArrow)), ($) => $[0]),
@@ -139,6 +267,11 @@ export function primary(input: string, index: number) {
   )(input, index);
 }
 
+/**
+ * ```txt
+ * Suffix <- Primary (QUESTION / STAR / PLUS)?;
+ * ```
+ */
 export const suffix = map(
   seq(primary, opt(choice(question, star, plus))),
   ([expr, quantifier]) => {
@@ -161,6 +294,11 @@ export const suffix = map(
   },
 );
 
+/**
+ * ```txt
+ * Prefix <- (AND / NOT)? Suffix;
+ * ```
+ */
 export const prefix = map(
   seq(opt(choice(andPredicate, notPredicate)), suffix),
   ([prefix, expr]) => {
@@ -181,10 +319,20 @@ export const prefix = map(
   },
 );
 
+/**
+ * ```txt
+ * Sequence <- Prefix*;
+ * ```
+ */
 export const sequence = map(oneOrMore(prefix), ($) =>
   $.length === 1 ? $[0] : g.seq($),
 );
 
+/**
+ * ```txt
+ * Expression <- Sequence (SLASH Sequence)*;
+ * ```
+ */
 export const expression: Parser<Expression> = map(
   seq(sequence, zeroOrMore(map(seq(slash, sequence), ($) => $[1]))),
   ($) =>
@@ -193,11 +341,21 @@ export const expression: Parser<Expression> = map(
       : $[1].reduce((left, right) => g.choice(left, right), $[0]),
 );
 
+/**
+ * ```txt
+ * Definition <- Identifier LEFTARROW Expression SEMICOLON;
+ * ```
+ */
 export const definition = map(
   seq(identifier, leftArrow, expression, semicolon),
   ($) => g.def($[0], $[2]),
 );
 
+/**
+ * ```txt
+ * Grammar <- Spacing Definition+ EndOfFile;
+ * ```
+ */
 export const grammar = map(
   seq(spacing, oneOrMore(definition), endOfFile),
   ($) => $[1],

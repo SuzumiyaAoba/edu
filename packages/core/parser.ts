@@ -1,8 +1,4 @@
-import {
-  type NonEmptyArray,
-  isEmptyArray,
-  isNonEmptyArray,
-} from "@/libs/std/array";
+import { type NonEmptyArray, isNonEmptyArray } from "@/libs/std/array";
 
 export type ParseResult<T> =
   | {
@@ -246,13 +242,4 @@ export const map =
   (input, index) => {
     const result = parser(input, index);
     return result.success ? { ...result, value: f(result.value) } : result;
-  };
-
-export const ignore =
-  (parser: Parser<unknown>): Parser<never> =>
-  (input, index) => {
-    const result = parser(input, index);
-    return result.success
-      ? { success: true, value: undefined as never, next: result.next }
-      : result;
   };
