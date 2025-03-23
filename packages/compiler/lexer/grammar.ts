@@ -18,7 +18,7 @@ import type { TokenWith } from "@/compiler/token/grammar";
 import { BufferedAsyncIterator } from "@/libs/buffered-iterator";
 import { CharAsyncGenerator } from "@/libs/char-async-generator";
 import { isOctalAscii, isOctalDigit, octalDigitToChar } from "@/libs/octal";
-import { isNonEmptyArray, type NonEmptyArray } from "@/libs/std/array";
+import { type NonEmptyArray, isNonEmptyArray } from "@/libs/std/array";
 import type { PrivateConstructorParameters } from "@/libs/std/types";
 
 export type Pos = {

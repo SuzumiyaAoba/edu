@@ -1,28 +1,32 @@
 -- Hierarchical syntax
-Grammar    <- Spacing Definition+ EndOfFile;
-Definition <- Identifier LEFTARROW Expression SEMICOLON;
+Grammar    <- Spacing Definition+$definitions EndOfFile;
+Definition <- Identifier$id LEFTARROW Expression$expr SEMICOLON;
 
-Expression <- Sequence (SLASH Sequence)*;
+Expression <- Sequence$expr (SLASH Sequence)*$choices;
 Sequence   <- Prefix*;
-Prefix     <- (AND / NOT)? Suffix;
-Suffix     <- Primary (QUESTION / STAR / PLUS)?;
+Prefix     <- (AND / NOT)? Suffix$suffix;
+Suffix     <- Primary$expr (QUESTION / STAR / PLUS)?;
 Primary    <- Identifier !LEFTARROW
             / OPEN Expression CLOSE
-            / Literal / Class / DOT;
+            / Literal 
+            / Class 
+            / DOT
+            ;
 
 -- Lexical syntax
 Identifier <- IdentStart IdentCont* Spacing;
 IdentStart <- [a-zA-Z_];
 IdentCont  <- IdentStart / [0-9];
 
-Literal <- ['] (!['] Char)* ['] Spacing
-         / ["] (!["] Char)* ["] Spacing;
-Class   <- '[' (!']' Range)* ']' Spacing;
-Range   <- Char '-' Char / Char;
-Char    <- '\\' [nrt'"\[\]\\]
-         / '\\' [0-2][0-7][0-7]
-         / '\\' [0-7][0-7]?
-         / !'\\' .;
+Literal <- ['] (!['] Char)*$chars ['] Spacing
+         / ["] (!["] Char)*$chars ["] Spacing
+         ;
+Class   <- '[' (!']' Range)*$class ']' Spacing;
+Range   <- Char$start '-' Char$stop / Char$char;
+Char    <- '\\' [nrt'"\[\]\\]$char
+         / '\\' ([0-2][0-7][0-7])$ocatal
+         / '\\' ([0-7][0-7]?)$octal
+         / !'\\' .$char;
 
 LEFTARROW <- '<-' Spacing;
 SEMICOLON <- ';'  Spacing;
@@ -36,7 +40,7 @@ OPEN      <- '('  Spacing;
 CLOSE     <- ')'  Spacing;
 DOT       <- '.'  Spacing;
 
-Spacing   <- (Space / Comment)*;
+Spacing   <- (Space / Comment)*$comments;
 Comment   <- '--' (!EndOfLine .)* EndOfLine;
 Space     <- ' ' / '\t' / EndOfLine;
 EndOfLine <- '\r\n' / '\n' / '\r';

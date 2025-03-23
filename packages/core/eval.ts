@@ -1,5 +1,6 @@
-import type { Expression, Grammar } from "@/core/grammar";
-import { PegGrammar, printExpr } from "@/core/grammar";
+import type { Expression, Grammar } from "@/core/ast";
+import { PegGrammar } from "@/core/ast";
+import { printExpr } from "./printer";
 import { print } from "./utils/io";
 
 const g = new PegGrammar();
