@@ -38,6 +38,7 @@ export type Identifier<META = unknown> = Ast<
   META,
   {
     name: string;
+    marker: string | undefined;
     as: string | undefined;
   }
 >;
@@ -121,6 +122,7 @@ export type Optional<META = unknown> = Ast<
   {
     expression: Expression<META>;
     as: string | undefined;
+    marker: string | undefined;
   }
 >;
 
@@ -221,12 +223,14 @@ export class PegGrammar<META> {
 
   identifier(
     name: string,
+    marker?: string | undefined,
     as?: string | undefined,
     meta?: META,
   ): Identifier<META> {
     return {
       type: "Identifier",
       name,
+      marker,
       as,
       meta,
     };
@@ -334,12 +338,14 @@ export class PegGrammar<META> {
 
   optional(
     expression: Expression<META>,
+    marker?: string | undefined,
     as?: string | undefined,
     meta?: META,
   ): Optional<META> {
     return {
       type: "Optional",
       expression,
+      marker,
       as,
       meta,
     };

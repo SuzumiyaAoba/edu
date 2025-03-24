@@ -4,6 +4,7 @@ import { isEmptyArray } from "@/libs/std/array";
 import { type Expression, PegGrammar } from "./ast";
 import {
   type Parser,
+  and,
   any,
   charClass,
   choice,
@@ -76,28 +77,46 @@ export const bindCont = choice(bindStart, charClass([["0", "9"]]));
 
 /**
  * ```txt
- * Bind <- BindStart BindCont* Spacing;
+ * Bind <- "$" BindStart BindCont* Spacing;
  * ```
  */
 export const bind = map(
-  seq(bindStart, zeroOrMore(bindCont), spacing),
-  ($) => $[0] + $[1].join(""),
+  seq(lit("$"), bindStart, zeroOrMore(bindCont), spacing),
+  ($) => $[1] + $[2].join(""),
 );
 
 /**
  * ```txt
- * Bindable <- ("$" bind)?
+ * MarkerStart <- [a-zA-Z_];
+ * ```
  */
-export const bindable = opt(map(seq(lit("$"), bind), ($) => $[1]));
+export const markerStart = charClass([["a", "z"], ["A", "Z"], "_"]);
 
 /**
  * ```txt
- * DOT <- '.' Bindable Spacing;
+ * MarkerCont <- MarkStart / [0-9];
+ * ```
+ */
+export const markerCont = choice(markerStart, charClass([["0", "9"]]));
+
+/**
+ * ```txt
+ * Marker <- "@" MarkerStart MarkerCont* Spacing;
+ * ```
+ */
+export const marker = map(
+  seq(lit("@"), markerStart, zeroOrMore(markerCont), spacing),
+  ($) => $[1] + $[2].join(""),
+);
+
+/**
+ * ```txt
+ * DOT <- '.' Bind? Spacing;
  * ```
  */
 export const dot: Parser<Expression> = map(
   seq(
-    map(seq(lit("."), bindable), ($) => g.any($[1]?.[0])),
+    map(seq(lit("."), opt(bind)), ($) => g.any($[1]?.[0])),
     spacing,
   ),
   ($) => $[0],
@@ -105,10 +124,10 @@ export const dot: Parser<Expression> = map(
 
 /**
  * ```txt
- * CLOSE <- ')' Spacing;
+ * CLOSE <- ')' Bind? Spacing;
  * ```
  */
-export const close = map(seq(lit(")"), bindable, spacing), ($) => $[1]?.[0]);
+export const close = map(seq(lit(")"), opt(bind), spacing), ($) => $[1]?.[0]);
 
 /**
  * ```txt
@@ -119,11 +138,11 @@ export const open = map(seq(lit("("), spacing), ($) => $[0]);
 
 /**
  * ```txt
- * alias Quantifier = <sign> Bindable Spacing;
+ * alias Quantifier = <sign> Bind? Spacing;
  * ```
  */
 const quantifier = <T extends string>(sign: T) =>
-  map(seq(lit(sign), bindable, spacing), ($) => ({
+  map(seq(lit(sign), opt(bind), spacing), ($) => ({
     quantifier: $[0],
     as: $[1]?.[0],
   }));
@@ -224,7 +243,7 @@ export const range = choice(
 
 /**
  * ```txt
- * Class <- '[' (!']' Range)* ']' Bindable Spacing;
+ * Class <- '[' (!']' Range)* ']' Bind? Spacing;
  * ```
  */
 export const characterClass = map(
@@ -232,7 +251,7 @@ export const characterClass = map(
     lit("["),
     zeroOrMore(map(seq(not(lit("]")), range), ($) => $[1])),
     lit("]"),
-    bindable,
+    opt(bind),
     spacing,
   ),
   ($) => g.charClass($[1], $[3]?.[0]),
@@ -282,17 +301,17 @@ export const identCont = choice(identStart, charClass([["0", "9"]]));
 
 /**
  * ```txt
- * Identifier <- IdentStart IdentCont* ("$" Bind)? Spacing;
+ * Identifier <- IdentStart IdentCont* Bind? Spacing;
  * ```
  */
 export const identifier = map(
-  seq(identStart, zeroOrMore(identCont), bindable, spacing),
+  seq(identStart, zeroOrMore(identCont), opt(bind), spacing),
   ($) => g.identifier($[0] + $[1].join(""), $[2]?.[0]),
 );
 
 /**
  * ```txt
- * Primary <- Identifier !LEFTARROW
+ * Primary <- "@@"? Identifier !LEFTARROW
  *          / OPEN Expression CLOSE
  *          / Literal
  *          / Class
@@ -301,7 +320,10 @@ export const identifier = map(
  */
 export function primary(input: string, index: number) {
   return choice(
-    map(seq(identifier, not(leftArrow)), ($) => $[0]),
+    map(seq(opt(lit("@@")), identifier, not(leftArrow)), ($) => ({
+      ...$[1],
+      marker: $[0].length === 0 ? undefined : $[1].name,
+    })),
     map(seq(open, expression, close), ($) => ({ ...$[1], as: $[2] })),
     literal,
     characterClass,
@@ -311,14 +333,18 @@ export function primary(input: string, index: number) {
 
 /**
  * ```txt
- * Suffix <- Primary (QUESTION / STAR / PLUS)?;
+ * Suffix <- Marker? Primary (QUESTION / STAR / PLUS)?;
  * ```
  */
 export const suffix = map(
-  seq(primary, opt(choice(question, star, plus))),
-  ([expr, quant]) => {
+  seq(opt(marker), primary, opt(choice(question, star, plus))),
+  ([marker, expr, quant]) => {
     if (quant.length === 0) {
       return expr;
+    }
+
+    if (marker.length === 1 && quant[0].quantifier !== "?") {
+      throw new Error("Maker exists at illegal position");
     }
 
     const { quantifier, as } = quant[0];
@@ -328,7 +354,7 @@ export const suffix = map(
       case "+":
         return g.plus(expr, as);
       case "?":
-        return g.opt(expr, as);
+        return g.opt(expr, marker[0], as);
       default: {
         const exhaustiveCheck: never = quantifier[0];
         throw new Error(`Unreachable: ${exhaustiveCheck}`);
@@ -364,20 +390,34 @@ export const prefix = map(
 
 /**
  * ```txt
- * Sequence <- Prefix*;
+ * Sequence <- Marker? Prefix*;
  * ```
  */
-export const sequence = map(oneOrMore(prefix), ($) =>
-  $.length === 1 ? $[0] : g.seq($),
+export const sequence = map(seq(opt(marker), oneOrMore(prefix)), ($) =>
+  $[1].length === 1 ? $[1][0] : g.seq($[1]),
 );
 
 /**
  * ```txt
- * Expression <- Sequence (SLASH Sequence)*;
+ * Expression <- Sequence (SLASH Marker? Sequence)*;
  * ```
  */
 export const expression: Parser<Expression> = map(
-  seq(sequence, zeroOrMore(map(seq(slash, sequence), ($) => $[1]))),
+  seq(
+    sequence,
+    zeroOrMore(
+      map(
+        seq(
+          slash,
+          map(seq(opt(marker), sequence), ($) => ({
+            ...$[1],
+            marker: $[0]?.[0],
+          })),
+        ),
+        ($) => $[1],
+      ),
+    ),
+  ),
   ($) =>
     $[1].length === 0
       ? $[0]

@@ -120,7 +120,7 @@ export class Parser<META> {
     const { token, meta } = tokenWith;
     switch (token.type) {
       case "Identifier":
-        acc.push(wrap(g.id(token.value, undefined, meta)));
+        acc.push(wrap(g.id(token.value, undefined, undefined, meta)));
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "Literal":
@@ -182,7 +182,9 @@ export class Parser<META> {
           throw new Error("Unexpected QUESTION");
         }
 
-        array.replaceLast(acc, (last) => g.opt(last, undefined, meta));
+        array.replaceLast(acc, (last) =>
+          g.opt(last, undefined, undefined, meta),
+        );
 
         return this.parseExpression(tokens, cursor + 1, acc);
       case "STAR":

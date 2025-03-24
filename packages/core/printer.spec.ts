@@ -216,6 +216,7 @@ describe("PegGrammar", () => {
     expect(expr.expression).toEqual({
       type: "Identifier",
       name: "id",
+      marker: undefined,
       as: undefined,
     });
   });
@@ -226,6 +227,7 @@ describe("PegGrammar", () => {
     expect(expr.expression).toEqual({
       type: "Identifier",
       name: "id",
+      marker: undefined,
       as: undefined,
     });
   });
@@ -236,6 +238,7 @@ describe("PegGrammar", () => {
     expect(expr.expression).toEqual({
       type: "Identifier",
       name: "id",
+      marker: undefined,
       as: undefined,
     });
   });
@@ -246,6 +249,7 @@ describe("PegGrammar", () => {
     expect(expr.expression).toEqual({
       type: "Identifier",
       name: "id",
+      marker: undefined,
       as: undefined,
     });
   });
@@ -256,6 +260,7 @@ describe("PegGrammar", () => {
     expect(expr.expression).toEqual({
       type: "Identifier",
       name: "id",
+      marker: undefined,
       as: undefined,
     });
   });
@@ -266,6 +271,7 @@ describe("PegGrammar", () => {
     expect(expr.firstChoice).toEqual({
       type: "Identifier",
       name: "id",
+      marker: undefined,
       as: undefined,
     });
     expect(expr.secondChoice).toEqual({
@@ -279,9 +285,9 @@ describe("PegGrammar", () => {
     const expr = g.seq([g.id("x"), g.lit("+"), g.id("y")]);
     expect(expr.type).toBe("Sequence");
     expect(expr.expressions).toEqual([
-      { type: "Identifier", name: "x", as: undefined },
+      { type: "Identifier", name: "x", marker: undefined, as: undefined },
       { type: "Literal", value: "+", as: undefined },
-      { type: "Identifier", name: "y", as: undefined },
+      { type: "Identifier", name: "y", marker: undefined, as: undefined },
     ]);
   });
 
@@ -291,11 +297,13 @@ describe("PegGrammar", () => {
     expect(expr.identifier).toEqual({
       type: "Identifier",
       name: "definition",
+      marker: undefined,
       as: undefined,
     });
     expect(expr.expression).toEqual({
       type: "Identifier",
       name: "x",
+      marker: undefined,
       as: undefined,
     });
   });
