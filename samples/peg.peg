@@ -4,8 +4,8 @@ Definition <- Identifier$id LEFTARROW Expression$expr SEMICOLON;
 
 Expression <- Sequence$expr (SLASH Sequence)*$choices;
 Sequence   <- Prefix*;
-Prefix     <- (AND / NOT)? Suffix$suffix;
-Suffix     <- Primary$expr (QUESTION / STAR / PLUS)?;
+Prefix     <- @prefix (@@AND / @@NOT)? Suffix$suffix;
+Suffix     <- Primary$expr @suffix (@@QUESTION / @@STAR / @@PLUS)?;
 Primary    <- Identifier !LEFTARROW
             / OPEN Expression CLOSE
             / Literal 
@@ -22,7 +22,7 @@ Literal <- ['] (!['] Char)*$chars ['] Spacing
          / ["] (!["] Char)*$chars ["] Spacing
          ;
 Class   <- '[' (!']' Range)*$class ']' Spacing;
-Range   <- Char$start '-' Char$stop / Char$char;
+Range   <- @range Char$start '-' Char$stop / @char Char$char;
 Char    <- '\\' [nrt'"\[\]\\]$char
          / '\\' ([0-2][0-7][0-7])$ocatal
          / '\\' ([0-7][0-7]?)$octal
