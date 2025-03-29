@@ -8,8 +8,8 @@ Prefix     <- @prefix (@@AND / @@NOT)? Suffix$suffix;
 Suffix     <- Primary$expr @suffix (@@QUESTION / @@STAR / @@PLUS)?;
 Primary    <- Identifier !LEFTARROW
             / OPEN Expression CLOSE
-            / Literal 
-            / Class 
+            / Literal
+            / Class
             / DOT
             ;
 

@@ -4,18 +4,18 @@ import { isEmptyArray } from "@/libs/std/array";
 import { type Expression, PegGrammar } from "./ast";
 import {
   type Parser,
-  and,
-  any,
-  charClass,
-  choice,
-  lit,
-  map,
+  type Pos,
   not,
-  oneOrMore,
-  opt,
+  any,
+  lit,
+  choice,
+  map,
   seq,
-  zeroOrMore,
-} from "./parser";
+  charClass,
+  opt,
+  star,
+  plus
+} from "tpeg";
 
 const g = new PegGrammar();
 
@@ -24,64 +24,62 @@ const g = new PegGrammar();
  * EndOfFile <- !.;
  * ```
  */
-export const endOfFile: Parser<string> = not(any());
+export const EndOfFile: Parser<string> = not(any());
 
 /**
  * ```txt
  * EndOfLine <- '\r\n' / '\n' / '\r';
  * ```
  */
-export const endOfLine = choice(lit("\r\n"), lit("\n"), lit("\r"));
+export const EndOfLine = choice(lit("\r\n"), lit("\n"), lit("\r"));
 
 /**
  * ```txt
  * Space <- ' ' / '\t' / EndOfLine;
  * ```
  */
-export const space = choice(lit(" "), lit("\t"), endOfLine);
+export const Space = choice(lit(" "), lit("\t"), EndOfLine);
 
 /**
  * ```txt
  * Comment <- "--" (!EndOfLine .)* EndOfLine;
  * ```
  */
-export const comment: Parser<string> = map(
+export const Comment: Parser<string> = map(
   seq(
     lit("--"),
-    zeroOrMore(map(seq(not(endOfLine), any()), ([, char]) => char)),
-    endOfLine,
-  ),
-  ($) => $[1].join(""),
-);
+    star(map(seq(not(EndOfLine), any()), ([, char]) => char)),
+    EndOfLine,
+  ), ($) => $[1].join(""));
 
 /**
  * ```txt
  * Spacing <- (Space / Comment)*;
  * ```
  */
-export const spacing: Parser<string[]> = zeroOrMore(choice(space, comment));
+export const Spacing: Parser<string[]> = star(choice(Space, Comment));
 
 /**
  * ```txt
  * BindStart <- [a-zA-Z_];
  * ```
  */
-export const bindStart = charClass([["a", "z"], ["A", "Z"], "_"]);
+export const BindStart = charClass([["a", "z"], ["A", "Z"], "_"]);
 
 /**
  * ```txt
  * BindCont <- BindStart / [0-9];
  * ```
  */
-export const bindCont = choice(bindStart, charClass([["0", "9"]]));
+export const BindCont = choice(BindStart, charClass([["0", "9"]]));
 
 /**
  * ```txt
  * Bind <- "$" BindStart BindCont* Spacing;
  * ```
  */
-export const bind = map(
-  seq(lit("$"), bindStart, zeroOrMore(bindCont), spacing),
+export const Bind = map(
+  seq(lit("$"), BindStart, star(BindCont), Spacing),
   ($) => $[1] + $[2].join(""),
 );
 
@@ -90,22 +88,22 @@ export const bind = map(
  * MarkerStart <- [a-zA-Z_];
  * ```
  */
-export const markerStart = charClass([["a", "z"], ["A", "Z"], "_"]);
+export const MarkerStart = charClass([["a", "z"], ["A", "Z"], "_"]);
 
 /**
  * ```txt
  * MarkerCont <- MarkStart / [0-9];
  * ```
  */
-export const markerCont = choice(markerStart, charClass([["0", "9"]]));
+export const MarkerCont = choice(MarkerStart, charClass([["0", "9"]]));
 
 /**
  * ```txt
  * Marker <- "@" MarkerStart MarkerCont* Spacing;
  * ```
  */
-export const marker = map(
-  seq(lit("@"), markerStart, zeroOrMore(markerCont), spacing),
+export const Marker = map(
+  seq(lit("@"), MarkerStart, star(MarkerCont), Spacing),
   ($) => $[1] + $[2].join(""),
 );
 
@@ -114,10 +112,10 @@ export const marker = map(
  * DOT <- '.' Bind? Spacing;
  * ```
  */
-export const dot: Parser<Expression> = map(
+export const DOT: Parser<Expression> = map(
   seq(
-    map(seq(lit("."), opt(bind)), ($) => g.any($[1]?.[0])),
-    spacing,
+    map(seq(lit("."), opt(Bind)), ($) => g.any($[1]?.[0])),
+    Spacing,
   ),
   ($) => $[0],
 );
@@ -127,14 +125,14 @@ export const dot: Parser<Expression> = map(
  * CLOSE <- ')' Bind? Spacing;
  * ```
  */
-export const close = map(seq(lit(")"), opt(bind), spacing), ($) => $[1]?.[0]);
+export const CLOSE = map(seq(lit(")"), opt(Bind), Spacing), ($) => $[1]?.[0]);
 
 /**
  * ```txt
  * OPEN <- '(' Spacing;
  * ```
  */
-export const open = map(seq(lit("("), spacing), ($) => $[0]);
+export const OPEN = map(seq(lit("("), Spacing), ($) => $[0]);
 
 /**
  * ```txt
@@ -142,7 +140,7 @@ export const open = map(seq(lit("("), spacing), ($) => $[0]);
  * ```
  */
 const quantifier = <T extends string>(sign: T) =>
-  map(seq(lit(sign), opt(bind), spacing), ($) => ({
+  map(seq(lit(sign), opt(Bind), Spacing), ($) => ({
     quantifier: $[0],
     as: $[1]?.[0],
   }));
@@ -152,56 +150,56 @@ const quantifier = <T extends string>(sign: T) =>
  * PLUS <- '+' Bindable Spacing;
  * ```
  */
-export const plus = quantifier("+");
+export const PLUS = quantifier("+");
 
 /**
  * ```txt
  * STAR <- '*' Spacing;
  * ```
  */
-export const star = quantifier("*");
+export const STAR = quantifier("*");
 
 /**
  * ```txt
  * QUESTION <- '?' Spacing;
  * ```
  */
-export const question = quantifier("?");
+export const QUESTION = quantifier("?");
 
 /**
  * ```txt
  * NOT <- '!' Spacing;
  * ```
  */
-export const notPredicate = map(seq(lit("!"), spacing), ($) => $[0]);
+export const NOT = map(seq(lit("!"), Spacing), ($) => $[0]);
 
 /**
  * ```txt
  * AND <- '&' Spacing;
  * ```
  */
-export const andPredicate = map(seq(lit("&"), spacing), ($) => $[0]);
+export const AND = map(seq(lit("&"), Spacing), ($) => $[0]);
 
 /**
  * ```txt
  * SLASH <- '/' Spacing;
  * ```
  */
-export const slash = map(seq(lit("/"), spacing), ($) => $[0]);
+export const SLASH = map(seq(lit("/"), Spacing), ($) => $[0]);
 
 /**
  * ```txt
  * SEMICOLON <- ';' Spacing;
  * ```
  */
-export const semicolon = map(seq(lit(";"), spacing), ($) => $[0]);
+export const SEMICOLON = map(seq(lit(";"), Spacing), ($) => $[0]);
 
 /**
  * ```txt
  * LEFTARROW <- '<-' Spacing;
  * ```
  */
-export const leftArrow = map(seq(lit("<-"), spacing), ($) => $[0]);
+export const LEFTARROW = map(seq(lit("<-"), Spacing), ($) => $[0]);
 
 /**
  * ```txt
@@ -211,7 +209,7 @@ export const leftArrow = map(seq(lit("<-"), spacing), ($) => $[0]);
  *       / !'\\' .;
  * ```
  */
-export const char = choice(
+export const Char = choice(
   map(
     seq(
       lit("\\"),
@@ -236,9 +234,9 @@ export const char = choice(
  * Range <- Char '-' Char / Char;
  * ```
  */
-export const range = choice(
-  map(seq(char, lit("-"), char), ($) => g.range($[0], $[2])),
-  map(char, ($) => g.char($)),
+export const Range = choice(
+  map(seq(Char, lit("-"), Char), ($) => g.range($[0], $[2])),
+  map(Char, ($) => g.char($)),
 );
 
 /**
@@ -246,13 +244,13 @@ export const range = choice(
  * Class <- '[' (!']' Range)* ']' Bind? Spacing;
  * ```
  */
-export const characterClass = map(
+export const Class = map(
   seq(
     lit("["),
-    zeroOrMore(map(seq(not(lit("]")), range), ($) => $[1])),
+    star(map(seq(not(lit("]")), Range), ($) => $[1])),
     lit("]"),
-    opt(bind),
-    spacing,
+    opt(Bind),
+    Spacing,
   ),
   ($) => g.charClass($[1], $[3]?.[0]),
 );
@@ -263,23 +261,21 @@ export const characterClass = map(
  *          / ["] (!["] Char)* ["] Spacing;
  * ```
  */
-export const literal = map(
+export const Literal = map(
   choice(
     seq(
       lit("'"),
-      map(zeroOrMore(map(seq(not(lit("'")), char), ($) => $[1])), ($) =>
+      map(star(map(seq(not(lit("'")), Char), ($) => $[1])), ($) =>
         $.join(""),
       ),
       lit("'"),
-      spacing,
+      Spacing,
     ),
     seq(
       lit('"'),
-      map(zeroOrMore(map(seq(not(lit('"')), char), ($) => $[1])), ($) =>
-        $.join(""),
-      ),
+      map(star(map(seq(not(lit('"')), Char), ($) => $[1])), ($) => $.join("")),
       lit("'"),
-      spacing,
+      Spacing,
     ),
   ),
   ($) => g.lit($[1]),
@@ -290,22 +286,22 @@ export const literal = map(
  * IdentStart <- [a-zA-Z_];
  * ```
  */
-export const identStart = charClass([["a", "z"], ["A", "Z"], "_"]);
+export const IdentStart = charClass([["a", "z"], ["A", "Z"], "_"]);
 
 /**
  * ```txt
  * IdentCont <- IdentStart / [0-9];
  * ```
  */
-export const identCont = choice(identStart, charClass([["0", "9"]]));
+export const IdentCont = choice(IdentStart, charClass([["0", "9"]]));
 
 /**
  * ```txt
  * Identifier <- IdentStart IdentCont* Bind? Spacing;
  * ```
  */
-export const identifier = map(
-  seq(identStart, zeroOrMore(identCont), opt(bind), spacing),
+export const Identifier = map(
+  seq(IdentStart, star(IdentCont), opt(Bind), Spacing),
   ($) => g.identifier($[0] + $[1].join(""), $[2]?.[0]),
 );
 
@@ -318,17 +314,17 @@ export const identifier = map(
  *          / DOT;
  * ```
  */
-export function primary(input: string, index: number) {
+export function Primary(input: string, pos: Pos) {
   return choice(
-    map(seq(opt(lit("@@")), identifier, not(leftArrow)), ($) => ({
+    map(seq(opt(lit("@@")), Identifier, not(LEFTARROW)), ($) => ({
       ...$[1],
       marker: $[0].length === 0 ? undefined : $[1].name,
     })),
-    map(seq(open, expression, close), ($) => ({ ...$[1], as: $[2] })),
-    literal,
-    characterClass,
-    dot,
-  )(input, index);
+    map(seq(OPEN, expression, CLOSE), ($) => ({ ...$[1], as: $[2] })),
+    Literal,
+    Class,
+    DOT,
+  )(input, pos);
 }
 
 /**
@@ -336,8 +332,8 @@ export function primary(input: string, index: number) {
  * Suffix <- Marker? Primary (QUESTION / STAR / PLUS)?;
  * ```
  */
-export const suffix = map(
-  seq(opt(marker), primary, opt(choice(question, star, plus))),
+export const Suffix = map(
+  seq(opt(Marker), Primary, opt(choice(QUESTION, STAR, PLUS))),
   ([marker, expr, quant]) => {
     if (quant.length === 0) {
       return expr;
@@ -368,8 +364,8 @@ export const suffix = map(
  * Prefix <- (AND / NOT)? Suffix;
  * ```
  */
-export const prefix = map(
-  seq(opt(choice(andPredicate, notPredicate)), suffix),
+export const Prefix = map(
+  seq(opt(choice(AND, NOT)), Suffix),
   ([prefix, expr]) => {
     if (isEmptyArray(prefix)) {
       return expr;
@@ -390,10 +386,10 @@ export const prefix = map(
 
 /**
  * ```txt
- * Sequence <- Marker? Prefix*;
+ * Sequence <- Marker? Prefix+;
  * ```
  */
-export const sequence = map(seq(opt(marker), oneOrMore(prefix)), ($) =>
+export const Sequence = map(seq(opt(Marker), plus(Prefix)), ($) =>
   $[1].length === 1 ? $[1][0] : g.seq($[1]),
 );
 
@@ -404,12 +400,12 @@ export const sequence = map(seq(opt(marker), oneOrMore(prefix)), ($) =>
  */
 export const expression: Parser<Expression> = map(
   seq(
-    sequence,
-    zeroOrMore(
+    Sequence,
+    star(
       map(
         seq(
-          slash,
-          map(seq(opt(marker), sequence), ($) => ({
+          SLASH,
+          map(seq(opt(Marker), Sequence), ($) => ({
             ...$[1],
             marker: $[0]?.[0],
           })),
@@ -430,7 +426,7 @@ export const expression: Parser<Expression> = map(
  * ```
  */
 export const definition = map(
-  seq(identifier, leftArrow, expression, semicolon),
+  seq(Identifier, LEFTARROW, expression, SEMICOLON),
   ($) => g.def($[0], $[2]),
 );
 
@@ -440,6 +436,6 @@ export const definition = map(
  * ```
  */
 export const grammar = map(
-  seq(spacing, oneOrMore(definition), endOfFile),
+  seq(Spacing, plus(definition), EndOfFile),
   ($) => $[1],
 );
